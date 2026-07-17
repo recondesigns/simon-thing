@@ -3,6 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import type { CameraStatus } from "@/components/organisms/CameraFeed/CameraFeed";
 import type { PatternStep } from "@/components/organisms/PatternContainer/PatternContainer";
+import CalibrationOverlay from "@/components/organisms/CalibrationOverlay/CalibrationOverlay";
 import Home from "./page";
 import layoutStyles from "./layout.module.css";
 
@@ -71,6 +72,34 @@ export const Default: Story = {
 // The cameraStatus control above is enough to review them in page context.
 
 /**
+ * What the user sees before tapping anything: the feed live, the grid not yet
+ * located, Record disabled.
+ *
+ * Presentational — the overlay is handed in rather than driven by a camera, so
+ * the layout can be reviewed without one. `LiveCamera` is what proves it
+ * actually reaches the screen in the real route.
+ */
+export const AwaitingCalibration: Story = {
+  args: {
+    cameraStatus: "on",
+    canRecord: false,
+    feedOverlay: (
+      <CalibrationOverlay
+        intrinsic={{ width: 1080, height: 1920 }}
+        points={[]}
+        onTap={() => {}}
+      />
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.textContent).toContain("Tap the top-left circle");
+    await expect(
+      within(canvasElement).getByRole("button", { name: "Record" }),
+    ).toBeDisabled();
+  },
+};
+
+/**
  * The real route, wired to a real camera — the only story where getUserMedia
  * actually runs. Every other story is presentational, so this is what proves
  * the hook, the Start/Stop wiring, and track cleanup genuinely work.
@@ -108,6 +137,16 @@ export const LiveCamera: Story = {
     await expect(tracks).toHaveLength(1);
     await expect(tracks[0].readyState).toBe("live");
     await expect(canvasElement.textContent).not.toContain("Camera is off");
+
+    // Calibration only exists while the feed is on, so this is the only place
+    // it can be proved to appear at all. Nothing else in the suite renders the
+    // overlay inside the real route.
+    await expect(canvasElement.textContent).toContain("Tap the top-left circle");
+
+    // Record stays disabled until the grid is calibrated — there is nowhere to
+    // look before that, and a live Record button would invite a session that
+    // silently samples nothing.
+    await expect(canvas.getByRole("button", { name: "Record" })).toBeDisabled();
 
     await userEvent.click(canvas.getByRole("button", { name: "Stop" }));
 

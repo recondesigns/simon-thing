@@ -45,11 +45,14 @@ Run them with `pnpm test`.
 
 ## Overriding MUI
 
-MUI applies its own styles through Emotion, which beats a plain `className`. An override can therefore be correct about the value and still lose. This has bitten three times, always silently, always caught by eye rather than by a test:
+MUI applies its own styles through Emotion, which beats a plain `className`. An override can therefore be correct about the value and still lose. This has bitten **four times**, always silently, never caught by a test that was already there:
 
 - `:hover` stuck on touch, because overriding MUI's hover dropped the `@media (hover: hover)` guard it wraps its own in
 - Button labels rendered in Roboto, because `typography.button` beat the font class sitting on the element
 - `size` did nothing, because hardcoded padding overrode MUI's size classes while the prop still type-checked
+- **`disabled` looked enabled** — an unconditional `backgroundColor` on `.MuiButton-contained` beat MUI's own `Mui-disabled` styling, so the button rendered full primary blue with a white label at opacity 1. It shipped. It was inert and looked pressable.
+
+It cuts both ways. The first three are MUI taking a value back. The fourth is **our override winning when it should have lost** — MUI had correct disabled styling and we overrode it by accident. Both directions are silent.
 
 So, in order of preference:
 
@@ -57,6 +60,21 @@ So, in order of preference:
 2. **If you must override, do it inside `styled()`**, never via a className.
 3. **Assert the computed result.** Any value MUI also sets is a value MUI can quietly take back, so pin it with `getComputedStyle`. `Atoms/Button > CascadeContract` is the pattern: one story asserting the whole contract in one place.
 4. **If an override makes a prop meaningless, remove it from the type.** A compile error beats a prop that type-checks and silently does nothing.
+5. **Every MUI state we override must be pinned by a *computed* assertion. An attribute check does not count.**
+
+On (5): `toBeDisabled()` passed the entire time the disabled button was rendering as an enabled one — and it passed *honestly*. The attribute was real, the element genuinely ignored taps, the state was never wrong. Only the pixels lied, and nothing was looking at pixels.
+
+So `toBeDisabled`, `toBeChecked`, `toHaveAttribute`, `toHaveValue` and friends assert that **React did what you asked**. They say nothing about what MUI then painted. They are worth keeping, but they are not the guard — pair them with the colour:
+
+```tsx
+await expect(record).toBeDisabled();
+// The assertion that would actually have caught it:
+await expect(getComputedStyle(record).backgroundColor).toBe("rgb(32, 32, 37)");
+```
+
+The tell for this whole family of bug: **a state that is real in the DOM and invisible on screen.** If a user could not tell the two states apart in a screenshot, no attribute assertion will ever fail.
+
+**If a state has no design, it has no implementation — it has a cascade winner.** The disabled button existed in code for hours before it existed in Figma, so nothing decided what it should look like and MUI's default lost a fight nobody knew was happening. Design the state first, then build from the node.
 
 ## Verifying
 

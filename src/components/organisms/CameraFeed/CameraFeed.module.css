@@ -6,6 +6,8 @@
   width: 100%;
   height: 292px;
   overflow: hidden;
+  /* Containing block for any overlay laid over the video. */
+  position: relative;
 }
 
 /* Padding lives here, not on .feed, so the video can fill edge to edge. */
