@@ -52,6 +52,14 @@ export const RecordDisabledUntilCalibrated: Story = {
   play: async ({ canvasElement }) => {
     const record = canvasElement.querySelectorAll("button")[1];
     await expect(record).toBeDisabled();
+
+    // toBeDisabled() alone is what let this ship broken: the attribute was
+    // real and taps really were ignored, while the button rendered full
+    // primary blue and looked completely pressable. The state was never the
+    // problem — the pixels were.
+    await expect(getComputedStyle(record).backgroundColor).toBe(
+      "rgb(32, 32, 37)",
+    );
   },
 };
 

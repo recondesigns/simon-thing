@@ -52,6 +52,18 @@ const StyledButton = styled(MuiButton, {
         "&:hover": { backgroundColor: bg["fill-hover"] },
       },
       "&:active": { backgroundColor: bg["fill-pressed"] },
+      // Declared here, not left to MUI. MUI does style `Mui-disabled`, but the
+      // backgroundColor above is unconditional and beat it — a disabled button
+      // shipped as full primary blue with a white label at opacity 1: visually
+      // identical to an enabled one, and silently inert. Found by measuring
+      // computed styles; `toBeDisabled()` passed the entire time.
+      //
+      // Colour-independent, per the Figma set (node 32:87): an unavailable
+      // control should not still announce which action it would have performed.
+      "&.Mui-disabled": {
+        backgroundColor: tokens.bg.surface["fill-light"],
+        color: tokens.text.surface.light,
+      },
     },
     "&.MuiButton-outlined": {
       borderColor: border.default,
@@ -64,6 +76,10 @@ const StyledButton = styled(MuiButton, {
         },
       },
       "&:active": { borderColor: border.pressed },
+      "&.Mui-disabled": {
+        borderColor: tokens.border.surface.strong,
+        color: tokens.text.surface.light,
+      },
     },
   };
 });
