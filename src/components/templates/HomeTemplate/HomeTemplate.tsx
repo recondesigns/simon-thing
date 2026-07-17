@@ -17,7 +17,6 @@ export interface HomeTemplateProps {
   /** Laid over the feed — calibration, in practice. Passed through untouched. */
   feedOverlay?: ReactNode;
   steps: PatternStep[];
-  currentStep: number;
   onStart?: () => void;
   onStop?: () => void;
   onRecord?: () => void;
@@ -36,7 +35,6 @@ export default function HomeTemplate({
   videoRef,
   feedOverlay,
   steps,
-  currentStep,
   onStart,
   onStop,
   onRecord,
@@ -56,7 +54,7 @@ export default function HomeTemplate({
         </CameraFeed>
       </div>
       <div className={styles.patternContainer}>
-        <PatternContainer steps={steps} currentStep={currentStep} />
+        <PatternContainer steps={steps} />
       </div>
       <div className={styles.actions}>
         <ActionsWrapper

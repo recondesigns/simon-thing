@@ -15,11 +15,19 @@ const CAMERA_STATUSES: CameraStatus[] = [
   "on",
 ];
 
-// Same placeholder content the route renders.
-const STEPS: PatternStep[] = Array.from({ length: 20 }, () => ({
-  color: "red",
-  label: "5",
-}));
+/**
+ * A detected run, as the route would build it: colour and number both read the
+ * cell's position off the machine's grid.
+ *
+ * This replaced 20 identical red pads labelled "5" — the mockup's filler, which
+ * the route rendered as real UI. The grid now starts empty and fills as cells
+ * are detected, so the stories start from the state a user actually opens.
+ */
+const STEPS: PatternStep[] = [
+  { color: "crimson", label: "9" },
+  { color: "pink", label: "8" },
+  { color: "green", label: "5" },
+];
 
 const meta = {
   title: "Pages/Home",
@@ -33,15 +41,13 @@ const meta = {
       options: CAMERA_STATUSES,
       description: "Drives the camera feed state. Switch to review each one.",
     },
-    // Required props, but not worth a control — steps is a 20-item array no
-    // one will hand-edit, and its length is what drives the chip total.
+    // Required, but not worth a control — an array of steps is not something
+    // anyone will hand-edit in the panel.
     steps: { table: { disable: true } },
-    currentStep: { table: { disable: true } },
   },
   args: {
     cameraStatus: "off",
     steps: STEPS,
-    currentStep: 3,
   },
   decorators: [
     // Reuses the same CSS module as app/layout.tsx rather than restating the
