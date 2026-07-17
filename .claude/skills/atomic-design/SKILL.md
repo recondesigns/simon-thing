@@ -43,6 +43,21 @@ Assert what the component is *for*: the resolved token color, the computed layou
 
 Run them with `pnpm test`.
 
+## Overriding MUI
+
+MUI applies its own styles through Emotion, which beats a plain `className`. An override can therefore be correct about the value and still lose. This has bitten three times, always silently, always caught by eye rather than by a test:
+
+- `:hover` stuck on touch, because overriding MUI's hover dropped the `@media (hover: hover)` guard it wraps its own in
+- Button labels rendered in Roboto, because `typography.button` beat the font class sitting on the element
+- `size` did nothing, because hardcoded padding overrode MUI's size classes while the prop still type-checked
+
+So, in order of preference:
+
+1. **Configure MUI rather than override it.** If MUI has a home for the value — `theme.typography.button`, the palette, `styleOverrides` — put it there. You cannot lose a cascade fight you are not in.
+2. **If you must override, do it inside `styled()`**, never via a className.
+3. **Assert the computed result.** Any value MUI also sets is a value MUI can quietly take back, so pin it with `getComputedStyle`. `Atoms/Button > CascadeContract` is the pattern: one story asserting the whole contract in one place.
+4. **If an override makes a prop meaningless, remove it from the type.** A compile error beats a prop that type-checks and silently does nothing.
+
 ## Verifying
 
 A passing build is not evidence the UI is right — it only proves the code compiled. Before calling component work done, confirm the CSS and markup that actually ship:
