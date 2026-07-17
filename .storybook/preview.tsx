@@ -1,7 +1,18 @@
 import type { Preview } from '@storybook/nextjs-vite'
+import React from 'react'
+import { ThemeProvider, CssBaseline } from '@mui/material'
+import theme from '../src/lib/theme'
 
 const preview: Preview = {
   parameters: {
+    options: {
+      // Atomic Design order. Without this, the sidebar follows file-discovery
+      // order, which puts Pages first because src/app precedes src/components.
+      storySort: {
+        order: ['Atoms', 'Molecules', 'Organisms', 'Pages'],
+      },
+    },
+
     controls: {
       matchers: {
        color: /(background|color)$/i,
@@ -16,6 +27,14 @@ const preview: Preview = {
       test: 'todo'
     }
   },
+  decorators: [
+    (Story) => (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 };
 
 export default preview;

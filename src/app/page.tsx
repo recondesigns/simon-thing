@@ -1,28 +1,30 @@
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import Counter from "@/components/Counter/Counter";
+import Header from "@/components/organisms/Header/Header";
+import CameraFeedPlaceholder from "@/components/molecules/CameraFeedPlaceholder/CameraFeedPlaceholder";
+import ActionsWrapper from "@/components/molecules/ActionsWrapper/ActionsWrapper";
+import PatternContainer, {
+  type PatternStep,
+} from "@/components/organisms/PatternContainer/PatternContainer";
+import styles from "./page.module.css";
+
+// Placeholder content matching the mockup until game state exists.
+const STEPS: PatternStep[] = Array.from({ length: 20 }, () => ({
+  color: "red",
+  label: "5",
+}));
 
 export default function Home() {
   return (
-    <main>
-      <Stack
-        spacing={2}
-        sx={{
-          minHeight: "100dvh",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography variant="h4" component="h1">
-          simon-thing
-        </Typography>
-        <Button variant="contained" startIcon={<PlayArrowIcon />}>
-          Start
-        </Button>
-        <Counter />
-      </Stack>
-    </main>
+    <div className={styles.page}>
+      <Header />
+      <div className={styles.cameraFeed}>
+        <CameraFeedPlaceholder />
+      </div>
+      <div className={styles.patternContainer}>
+        <PatternContainer steps={STEPS} currentStep={3} />
+      </div>
+      <div className={styles.actions}>
+        <ActionsWrapper />
+      </div>
+    </div>
   );
 }

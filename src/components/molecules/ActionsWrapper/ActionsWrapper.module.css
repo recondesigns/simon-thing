@@ -1,0 +1,13 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* The mockup stretches both buttons to share the row evenly, overriding the
+   fixed 159px width the Button component set uses in isolation. */
+.wrapper > button {
+  flex: 1 0 0;
+  min-width: 0;
+}
