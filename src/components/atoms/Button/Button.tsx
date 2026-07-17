@@ -5,10 +5,8 @@ import MuiButton, {
   type ButtonProps as MuiButtonProps,
 } from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
-import { Anton_SC } from "next/font/google";
+import { antonSC } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
-
-const antonSC = Anton_SC({ weight: "400", subsets: ["latin"] });
 
 export type ButtonColor = "primary" | "danger" | "success";
 export type ButtonVariant = "contained" | "outlined";

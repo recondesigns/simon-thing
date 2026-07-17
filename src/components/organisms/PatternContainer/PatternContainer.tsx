@@ -1,14 +1,12 @@
 "use client";
 
-import { Anton_SC } from "next/font/google";
 import { useTheme } from "@mui/material/styles";
 import Chip from "@/components/atoms/Chip/Chip";
 import PatternCircle, {
   type PatternCircleColor,
 } from "@/components/atoms/PatternCircle/PatternCircle";
+import { antonSC } from "@/lib/fonts";
 import styles from "./PatternContainer.module.css";
-
-const antonSC = Anton_SC({ weight: "400", subsets: ["latin"] });
 
 /** The mockup lays the pads out five to a row. */
 const COLUMNS = 5;

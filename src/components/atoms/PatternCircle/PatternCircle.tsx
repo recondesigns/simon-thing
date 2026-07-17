@@ -1,7 +1,5 @@
-import { Anton_SC } from "next/font/google";
+import { antonSC } from "@/lib/fonts";
 import styles from "./PatternCircle.module.css";
-
-const antonSC = Anton_SC({ weight: "400", subsets: ["latin"] });
 
 /**
  * Raw fills from the Figma PatternCircle component set (node 5:550). These are
