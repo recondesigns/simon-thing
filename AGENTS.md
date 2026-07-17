@@ -69,7 +69,16 @@ The mockup is built (header, camera feed, pattern grid, actions) and **the camer
 - `sampler.ts` — mean RGB per patch. Radius scales with cell spacing; never sample the whole frame (a background TV and handheld shake dominate any frame diff).
 - `fixtures/reference-clip.json` — the reference video reduced to what the detector consumes. **The video itself is local-only and not in git**, so tests depend on this instead. It is the known-answer test: `[bottom-right, bottom-middle]`.
 
+The live loop is wired end to end: Start the camera, tap the four corner circles, press Record, and detected cells render into the grid.
+
+- `hooks/useGridDetection` owns the frame loop and canvas; the detection stays pure in `lib/detection`. Frames are downscaled to 640px before `getImageData` — a 1080p read is 8MB, and at 15fps that is 100MB/s of copying to sample nine small patches.
+- `lib/detection/viewport.ts` converts taps to camera-frame pixels. **The feed is `object-fit: cover`, so element coords are not frame coords** — for a portrait frame in the 400x292 box the element's top-left is ~566px down the frame. Getting this wrong does not throw; it samples the wrong places forever and reads as a threshold problem.
+- `organisms/CalibrationOverlay` collects the taps. It renders **only while the feed is `on`** — `CameraFeed` puts it inside that branch, so there is nothing to tap with the camera off.
+- Gating is a manual **Record** button. Nothing in the pixels separates a user's tap from a pattern pulse, so the phase gate cannot come from the detector.
+
 Not yet built:
 
-- **The live loop and calibration UI.** No canvas sampling, no corner-tap flow, no record control. This is what gets it to a real machine — and **camera drift is untested by anything**: the fixture comes from a window chosen for being steady.
-- **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content matching the mockup.
+- **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content until something is detected.
+- **Diagnostics export.** The app cannot report what it saw, so testing at the machine yields anecdote rather than data. Deferred until the drift video comes back — see Notion.
+
+**Camera drift is untested by anything, and cannot be tested from the fixture** — its window was chosen for being steady. It is the risk most likely to break this. The next step is a propped-phone video, not code; the protocol is on the Notion page.
