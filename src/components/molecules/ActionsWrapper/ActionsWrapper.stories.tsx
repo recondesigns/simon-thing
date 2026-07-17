@@ -11,6 +11,7 @@ const meta = {
   args: {
     onStart: fn(),
     onStop: fn(),
+    onRecord: fn(),
   },
 } satisfies Meta<typeof ActionsWrapper>;
 
@@ -20,22 +21,47 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const buttons = canvasElement.querySelectorAll("button");
-    await expect(buttons.length).toBe(2);
+    await expect(buttons.length).toBe(3);
     await expect(buttons[0].textContent).toBe("Start");
-    await expect(buttons[1].textContent).toBe("Stop");
+    await expect(buttons[1].textContent).toBe("Record");
+    await expect(buttons[2].textContent).toBe("Stop");
 
-    // Both buttons stretch to share the row, per the mockup — the atom is a
+    // All three stretch to share the row, per the mockup — the atom is a
     // fixed width on its own, so this override has to actually take effect.
-    await expect(getComputedStyle(buttons[0]).flexGrow).toBe("1");
-    await expect(getComputedStyle(buttons[1]).flexGrow).toBe("1");
+    for (const button of buttons) {
+      await expect(getComputedStyle(button).flexGrow).toBe("1");
+    }
 
     // Start is contained (bg/success/fill), Stop is outlined (border/danger/default).
     await expect(getComputedStyle(buttons[0]).backgroundColor).toBe(
       "rgb(39, 169, 58)",
     );
-    await expect(getComputedStyle(buttons[1]).borderColor).toBe(
+    await expect(getComputedStyle(buttons[2]).borderColor).toBe(
       "rgb(247, 61, 66)",
     );
+  },
+};
+
+/**
+ * Record is disabled until the grid is calibrated — there is nowhere to look
+ * before that. Disabled rather than absent, so the row does not reflow under a
+ * thumb mid-tap.
+ */
+export const RecordDisabledUntilCalibrated: Story = {
+  args: { canRecord: false },
+  play: async ({ canvasElement }) => {
+    const record = canvasElement.querySelectorAll("button")[1];
+    await expect(record).toBeDisabled();
+  },
+};
+
+export const Recording: Story = {
+  args: { canRecord: true, recording: true },
+  play: async ({ canvasElement }) => {
+    const record = canvasElement.querySelectorAll("button")[1];
+
+    await expect(record.textContent).toBe("Recording");
+    await expect(record).toBeEnabled();
   },
 };
 

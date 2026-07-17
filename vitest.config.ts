@@ -23,6 +23,12 @@ export default defineConfig({
           environment: 'node',
           include: ['src/**/*.test.ts'],
         },
+        // The storybook project inherits the @/ alias from the Next.js plugin.
+        // This one has no plugin, so it needs the same alias spelled out or
+        // every @/ import fails to resolve.
+        resolve: {
+          alias: { '@': path.join(dirname, 'src') },
+        },
       },
       {
         extends: true,
