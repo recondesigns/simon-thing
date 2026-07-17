@@ -15,6 +15,16 @@ export default defineConfig({
   test: {
     projects: [
       {
+        // Pure logic — no DOM, no browser. Without this project a *.test.ts
+        // file is collected by nothing and silently never runs: the storybook
+        // project below only picks up stories.
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config
