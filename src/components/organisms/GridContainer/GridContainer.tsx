@@ -199,7 +199,7 @@ export function MetaGridContainer({ steps }: GridContainerProps) {
           className={`${styles.title} ${antonSC.className}`}
           style={{ color: tokens.text.surface.lightest }}
         >
-          Grid
+          Animation points
         </h2>
         <Chip count={steps.length} total={`${slotCount} Steps`} />
       </div>

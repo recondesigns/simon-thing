@@ -32,8 +32,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Live: Story = {
   play: async ({ canvasElement }) => {
-    // Heading is Grid + a Chip counting detected of 20 — same as the disc grid.
-    await expect(canvasElement.querySelector("h2")!.textContent).toBe("Grid");
+    // Heading is Animation points + a Chip counting detected of 20.
+    await expect(canvasElement.querySelector("h2")!.textContent).toBe(
+      "Animation points",
+    );
     await expect(canvasElement.textContent).toContain("5/20 Steps");
 
     // One whiteish dot per detected step, and nothing else on it.
