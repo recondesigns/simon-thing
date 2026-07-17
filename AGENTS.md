@@ -60,7 +60,16 @@ The mockup is built (header, camera feed, pattern grid, actions) and **the camer
 - No dev/prod branching: `getUserMedia` needs a **secure context**, which is a property of the URL, not the build. localhost and HTTPS qualify; a plain-HTTP LAN address does not, so an undefined `mediaDevices` means `error`, not `denied` — the user was never asked.
 - `templates/HomeTemplate` takes every value as a prop, so the route supplies data and stories drive any state.
 
+**Pattern detection is half built** — the logic exists and is tested; nothing feeds it pixels yet. The plan and measured thresholds are in Notion (Dashboard → Projects → Simon); **read that before touching it**. The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
+
+`src/lib/detection/` is pure and framework-free — RGB in, events out, no camera or DOM:
+
+- `detector.ts` — baseline, fire, debounce, ordered output. Gating is the **caller's** job: a user's tap and a pattern pulse are the same fade to white, and nothing in the pixels separates them.
+- `homography.ts` — four corner *circles* (not screen corners — that would assume where the grid sits inside the screen) map to the nine centres. Rejects non-convex quads up front; the solver happily returns a degenerate transform otherwise.
+- `sampler.ts` — mean RGB per patch. Radius scales with cell spacing; never sample the whole frame (a background TV and handheld shake dominate any frame diff).
+- `fixtures/reference-clip.json` — the reference video reduced to what the detector consumes. **The video itself is local-only and not in git**, so tests depend on this instead. It is the known-answer test: `[bottom-right, bottom-middle]`.
+
 Not yet built:
 
-- **Pattern detection.** The next feature: watch a bar-top arcade machine's 3x3 grid and read the pattern. The reference video is analyzed and the plan — measured thresholds, pipeline, risks — is in Notion (Dashboard → Projects → Simon). **Read that before building.** The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
+- **The live loop and calibration UI.** No canvas sampling, no corner-tap flow, no record control. This is what gets it to a real machine — and **camera drift is untested by anything**: the fixture comes from a window chosen for being steady.
 - **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content matching the mockup.
