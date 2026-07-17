@@ -1,5 +1,5 @@
 import { createTheme } from "@mui/material/styles";
-import { antonSC } from "../fonts";
+import { antonSC, inter } from "../fonts";
 import { tokens } from "./tokens";
 
 const CONTRAST_TEXT = "#0A0A0C"; // bg.surface.fill — dark enough to read on every "fill" main below
@@ -17,12 +17,15 @@ const theme = createTheme({
   cssVariables: true,
   tokens,
   typography: {
+    // Inter is the app-wide default. CssBaseline stamps typography.fontFamily
+    // onto `body`, so every plain element inherits it without a per-component
+    // className — Anton SC is the opt-in display exception layered on top.
+    fontFamily: inter.style.fontFamily,
     // Set here rather than overridden per-component. MUI applies
     // typography.button to every Button through Emotion, which beats a plain
     // className — a component-level override has to win a cascade fight it
     // does not need to have. Configuring MUI is safer than fighting it.
-    // Only `button` is set: the design uses Anton SC for labels, but it is a
-    // display face and would be a poor default for body copy.
+    // Button keeps Anton SC because its labels are display copy, not body text.
     button: {
       fontFamily: antonSC.style.fontFamily,
     },

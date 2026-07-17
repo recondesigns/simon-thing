@@ -1,5 +1,5 @@
 import type { CellPosition } from "@/lib/detection/detector";
-import type { PatternCircleColor } from "@/components/atoms/PatternCircle/PatternCircle";
+import type { GridCircleColor } from "@/components/atoms/GridCircle/GridCircle";
 
 /**
  * Which pad colour stands for each cell of the machine's grid.
@@ -13,7 +13,7 @@ import type { PatternCircleColor } from "@/components/atoms/PatternCircle/Patter
  * olive, its lime as green — because a readout that looks nothing like the thing
  * it describes is harder to check at a glance.
  */
-export const CELL_COLORS: Record<CellPosition, PatternCircleColor> = {
+export const CELL_COLORS: Record<CellPosition, GridCircleColor> = {
   "top-left": "magenta",
   "top-middle": "blue",
   "top-right": "red",

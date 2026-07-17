@@ -43,10 +43,11 @@ export const Empty: Story = {
     const prompt = canvasElement.querySelector("p")!;
 
     await expect(prompt.textContent).toBe("Tap the top-left circle");
-    // Anton SC via next/font, not a fallback — the app has one typeface and
-    // this copy sits on top of live video where a silent fallback would be easy
-    // to miss.
-    await expect(getComputedStyle(prompt).fontFamily).toContain("Anton SC");
+    // Inter via next/font, not a fallback — this is body copy (a full
+    // instruction), so it takes the app's body face rather than the Anton SC
+    // display face. It sits on top of live video where a silent fallback to a
+    // system font would be easy to miss.
+    await expect(getComputedStyle(prompt).fontFamily).toContain("Inter");
   },
 };
 

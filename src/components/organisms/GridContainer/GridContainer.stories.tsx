@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect } from "storybook/test";
-import PatternContainer, {
+import GridContainer, {
   RESERVED_SLOTS,
-  type PatternStep,
-} from "./PatternContainer";
-import styles from "./PatternContainer.module.css";
+  type GridStep,
+} from "./GridContainer";
+import styles from "./GridContainer.module.css";
 
 /**
  * A plausible detected run. Colour and number both come from the cell's position
  * on the machine's grid, so they always agree — `bottom-right` is crimson and 9
  * wherever it turns up.
  */
-const DETECTED: PatternStep[] = [
+const DETECTED: GridStep[] = [
   { color: "crimson", label: "9" },
   { color: "pink", label: "8" },
   { color: "green", label: "5" },
@@ -19,19 +19,19 @@ const DETECTED: PatternStep[] = [
   { color: "cyan", label: "6" },
 ];
 
-const repeat = (n: number): PatternStep[] =>
+const repeat = (n: number): GridStep[] =>
   Array.from({ length: n }, (_, i) => DETECTED[i % DETECTED.length]);
 
 const meta = {
-  title: "Organisms/PatternContainer",
-  component: PatternContainer,
+  title: "Organisms/GridContainer",
+  component: GridContainer,
   parameters: {
     layout: "padded",
   },
   args: {
     steps: DETECTED,
   },
-} satisfies Meta<typeof PatternContainer>;
+} satisfies Meta<typeof GridContainer>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -41,7 +41,7 @@ const padsIn = (root: ParentNode) =>
 
 const emptyPadsIn = (root: ParentNode) =>
   Array.from(
-    root.querySelectorAll<HTMLElement>('[data-testid="pattern-circle-empty"]'),
+    root.querySelectorAll<HTMLElement>('[data-testid="grid-circle-empty"]'),
   );
 
 /** Five detected of a 20 capacity — the state the app is in mid-pattern. */
@@ -105,13 +105,13 @@ export const HoldsItsHeightWhileFilling: Story = {
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div data-testid="at-0">
-        <PatternContainer steps={[]} />
+        <GridContainer steps={[]} />
       </div>
       <div data-testid="at-5">
-        <PatternContainer steps={DETECTED} />
+        <GridContainer steps={DETECTED} />
       </div>
       <div data-testid="at-20">
-        <PatternContainer steps={repeat(RESERVED_SLOTS)} />
+        <GridContainer steps={repeat(RESERVED_SLOTS)} />
       </div>
     </div>
   ),

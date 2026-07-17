@@ -108,7 +108,7 @@ export default function CameraFeed({
             {MESSAGES[status].title}
           </p>
           <p
-            className={`${styles.body} ${antonSC.className}`}
+            className={styles.body}
             style={{ color: theme.tokens.text.surface.light }}
           >
             {MESSAGES[status].body}

@@ -4,9 +4,9 @@ import Header from "@/components/organisms/Header/Header";
 import CameraFeed, {
   type CameraStatus,
 } from "@/components/organisms/CameraFeed/CameraFeed";
-import PatternContainer, {
-  type PatternStep,
-} from "@/components/organisms/PatternContainer/PatternContainer";
+import GridContainer, {
+  type GridStep,
+} from "@/components/organisms/GridContainer/GridContainer";
 import ActionsWrapper from "@/components/molecules/ActionsWrapper/ActionsWrapper";
 import styles from "./HomeTemplate.module.css";
 
@@ -16,7 +16,7 @@ export interface HomeTemplateProps {
   videoRef?: React.RefObject<HTMLVideoElement | null>;
   /** Laid over the feed — calibration, in practice. Passed through untouched. */
   feedOverlay?: ReactNode;
-  steps: PatternStep[];
+  steps: GridStep[];
   onStart?: () => void;
   onStop?: () => void;
   onRecord?: () => void;
@@ -53,8 +53,8 @@ export default function HomeTemplate({
           {feedOverlay}
         </CameraFeed>
       </div>
-      <div className={styles.patternContainer}>
-        <PatternContainer steps={steps} />
+      <div className={styles.gridContainer}>
+        <GridContainer steps={steps} />
       </div>
       <div className={styles.actions}>
         <ActionsWrapper

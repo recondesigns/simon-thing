@@ -2,11 +2,11 @@
 
 import { useTheme } from "@mui/material/styles";
 import Chip from "@/components/atoms/Chip/Chip";
-import PatternCircle, {
-  type PatternCircleColor,
-} from "@/components/atoms/PatternCircle/PatternCircle";
+import GridCircle, {
+  type GridCircleColor,
+} from "@/components/atoms/GridCircle/GridCircle";
 import { antonSC } from "@/lib/fonts";
-import styles from "./PatternContainer.module.css";
+import styles from "./GridContainer.module.css";
 
 /** The mockup lays the pads out five to a row. */
 const COLUMNS = 5;
@@ -18,17 +18,17 @@ const COLUMNS = 5;
  */
 export const RESERVED_SLOTS = 20;
 
-export interface PatternStep {
-  color: PatternCircleColor;
+export interface GridStep {
+  color: GridCircleColor;
   label: string;
 }
 
-export interface PatternContainerProps {
+export interface GridContainerProps {
   /**
    * Detected steps, in the order they fired. They fill the slots left to right;
    * whatever is left over stays empty.
    */
-  steps: PatternStep[];
+  steps: GridStep[];
 }
 
 /**
@@ -36,7 +36,7 @@ export interface PatternContainerProps {
  * have been detected — passing it separately made two sources of truth for one
  * number and let them disagree.
  */
-export default function PatternContainer({ steps }: PatternContainerProps) {
+export default function GridContainer({ steps }: GridContainerProps) {
   const theme = useTheme();
 
   // Twenty is a floor, not a ceiling. It is what the machine is expected to
@@ -49,7 +49,7 @@ export default function PatternContainer({ steps }: PatternContainerProps) {
     Math.ceil(steps.length / COLUMNS) * COLUMNS,
   );
 
-  const rows: (PatternStep | undefined)[][] = [];
+  const rows: (GridStep | undefined)[][] = [];
   for (let i = 0; i < slotCount; i += COLUMNS) {
     rows.push(Array.from({ length: COLUMNS }, (_, column) => steps[i + column]));
   }
@@ -72,7 +72,7 @@ export default function PatternContainer({ steps }: PatternContainerProps) {
         {rows.map((row, rowIndex) => (
           <div key={rowIndex} className={styles.row}>
             {row.map((step, columnIndex) => (
-              <PatternCircle
+              <GridCircle
                 key={rowIndex * COLUMNS + columnIndex}
                 color={step?.color}
                 label={step?.label}

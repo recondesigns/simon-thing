@@ -150,7 +150,7 @@ export default function CalibrationOverlay({
         })}
 
       <p
-        className={`${styles.prompt} ${antonSC.className}`}
+        className={styles.prompt}
         style={{ color: promptColor }}
       >
         {prompt}

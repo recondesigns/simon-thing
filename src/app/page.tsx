@@ -6,7 +6,7 @@ import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import CalibrationOverlay, {
   CALIBRATION_STEPS,
 } from "@/components/organisms/CalibrationOverlay/CalibrationOverlay";
-import type { PatternStep } from "@/components/organisms/PatternContainer/PatternContainer";
+import type { GridStep } from "@/components/organisms/GridContainer/GridContainer";
 import { useCamera } from "@/hooks/useCamera";
 import { useGridDetection } from "@/hooks/useGridDetection";
 import { useIntrinsicSize } from "@/hooks/useIntrinsicSize";
@@ -59,7 +59,7 @@ export default function Home() {
   // the same fact. Order is carried by the pad's place in the container, so a
   // pattern that hits one cell twice shows that number twice — which is the
   // truth about the pattern, not a duplicate.
-  const patternSteps: PatternStep[] = useMemo(
+  const gridSteps: GridStep[] = useMemo(
     () =>
       detected.map((position) => ({
         color: CELL_COLORS[position],
@@ -88,7 +88,7 @@ export default function Home() {
           }
         />
       }
-      steps={patternSteps}
+      steps={gridSteps}
       onStart={start}
       onStop={handleStop}
       onRecord={() => setRecording((previous) => !previous)}

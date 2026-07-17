@@ -7,7 +7,7 @@ import { CELL_COLORS } from "./cellColors";
  * Only the uniqueness of the mapping is asserted here.
  *
  * That every cell maps to a colour the pad actually defines is already
- * guaranteed by `Record<CellPosition, PatternCircleColor>` — a wrong name is a
+ * guaranteed by `Record<CellPosition, GridCircleColor>` — a wrong name is a
  * compile error, so re-checking it at runtime would prove nothing the build has
  * not already proved. It would also mean importing the pad component, which
  * drags in next/font and does not run outside the Next plugin.

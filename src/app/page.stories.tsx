@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import type { CameraStatus } from "@/components/organisms/CameraFeed/CameraFeed";
-import type { PatternStep } from "@/components/organisms/PatternContainer/PatternContainer";
+import type { GridStep } from "@/components/organisms/GridContainer/GridContainer";
 import CalibrationOverlay from "@/components/organisms/CalibrationOverlay/CalibrationOverlay";
 import Home from "./page";
 import layoutStyles from "./layout.module.css";
@@ -24,7 +24,7 @@ const CAMERA_STATUSES: CameraStatus[] = [
  * the route rendered as real UI. The grid now starts empty and fills as cells
  * are detected, so the stories start from the state a user actually opens.
  */
-const STEPS: PatternStep[] = [
+const STEPS: GridStep[] = [
   { color: "crimson", label: "9" },
   { color: "pink", label: "8" },
   { color: "green", label: "5" },
@@ -84,7 +84,7 @@ export const Default: Story = {
       leftOf(canvasElement.querySelector(`.${homeStyles.cameraFeed}`)),
     ).toBe(titleLeft);
     await expect(
-      leftOf(canvasElement.querySelector(`.${homeStyles.patternContainer}`)),
+      leftOf(canvasElement.querySelector(`.${homeStyles.gridContainer}`)),
     ).toBe(titleLeft);
   },
 };

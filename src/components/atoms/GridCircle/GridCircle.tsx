@@ -1,9 +1,9 @@
 import { antonSC } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
-import styles from "./PatternCircle.module.css";
+import styles from "./GridCircle.module.css";
 
 /**
- * Raw fills from the Figma PatternCircle component set (node 5:550). These are
+ * Raw fills from the Figma GridCircle component set (node 5:550). These are
  * deliberately not design tokens — the pads are game colors, not semantic UI
  * colors, and Figma applies them as raw solid fills per variant.
  *
@@ -12,7 +12,7 @@ import styles from "./PatternCircle.module.css";
  * the machine's own circles are red-orange and two are pink/magenta, so pad
  * colour cannot mirror the machine's colours — it identifies grid *position*.
  */
-export const PATTERN_CIRCLE_COLORS = {
+export const GRID_CIRCLE_COLORS = {
   red: "#B90000",
   crimson: "#A50024",
   blue: "#0803D7",
@@ -27,14 +27,14 @@ export const PATTERN_CIRCLE_COLORS = {
   cyan: "#00C9CE",
 } as const;
 
-export type PatternCircleColor = keyof typeof PATTERN_CIRCLE_COLORS;
+export type GridCircleColor = keyof typeof GRID_CIRCLE_COLORS;
 
-export interface PatternCircleProps {
+export interface GridCircleProps {
   /**
    * Omit for an empty slot — a position the pattern has not reached yet. The
    * label goes with it: an unfilled slot has no cell to name.
    */
-  color?: PatternCircleColor;
+  color?: GridCircleColor;
   label?: string;
 }
 
@@ -47,7 +47,7 @@ export interface PatternCircleProps {
  * and make the meaningless case unrepresentable. Same reasoning as CameraFeed,
  * whose nine Figma states the code composes rather than enumerates.
  */
-export default function PatternCircle({ color, label }: PatternCircleProps) {
+export default function GridCircle({ color, label }: GridCircleProps) {
   // Unlike the nine pad fills, the empty slot's border is token-bound. The pads
   // are raw because game colours are not semantic UI colours; an *absent* pad is
   // not a game colour at all, it is chrome, so it takes a token.
@@ -56,7 +56,7 @@ export default function PatternCircle({ color, label }: PatternCircleProps) {
       <div
         className={`${styles.circle} ${styles.empty}`}
         style={{ borderColor: tokens.border.surface.default }}
-        data-testid="pattern-circle-empty"
+        data-testid="grid-circle-empty"
       />
     );
   }
@@ -64,7 +64,7 @@ export default function PatternCircle({ color, label }: PatternCircleProps) {
   return (
     <div
       className={`${styles.circle} ${antonSC.className}`}
-      style={{ backgroundColor: PATTERN_CIRCLE_COLORS[color] }}
+      style={{ backgroundColor: GRID_CIRCLE_COLORS[color] }}
     >
       {label}
     </div>
