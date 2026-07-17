@@ -97,6 +97,51 @@ export const Complete: Story = {
 };
 
 /**
+ * The grid has left the frame, so calibration no longer describes where the
+ * circles are. Mirrors `state=out-of-frame` on the Figma CameraFeed set
+ * (node 47:69).
+ */
+export const OutOfFrame: Story = {
+  args: {
+    tone: "danger",
+    points: [
+      { x: 300, y: 700 },
+      { x: 800, y: 700 },
+      { x: 830, y: 1100 },
+      { x: 270, y: 1100 },
+    ],
+    doneMessage: "Grid is out of frame. Press Stop and set it up again.",
+  },
+  play: async ({ canvasElement }) => {
+    // Both the copy and the marks turn danger. Leaving the marks green would
+    // show the app looking confident about coordinates it has just said are
+    // wrong. text/danger/light and border/danger/default are both #F73D42.
+    const prompt = canvasElement.querySelector("p")!;
+    await expect(getComputedStyle(prompt).color).toBe("rgb(247, 61, 66)");
+
+    const mark = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="calibration-mark-0"]',
+    )!;
+    await expect(getComputedStyle(mark).borderColor).toBe("rgb(247, 61, 66)");
+  },
+};
+
+/**
+ * The default tone, asserted so the danger story above is proving a difference
+ * rather than a colour that was always there.
+ */
+export const MarksAreSuccessColoured: Story = {
+  args: { points: [{ x: 300, y: 700 }] },
+  play: async ({ canvasElement }) => {
+    const mark = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="calibration-mark-0"]',
+    )!;
+    // border/success/default
+    await expect(getComputedStyle(mark).borderColor).toBe("rgb(39, 169, 58)");
+  },
+};
+
+/**
  * The conversion this component exists for. A tap is reported in the camera
  * frame's pixels, not the element's — the two differ by the cover crop, and
  * mixing them up would not throw, it would just sample the wrong places.

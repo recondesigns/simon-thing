@@ -83,6 +83,7 @@ export default function Home() {
           intrinsic={intrinsic}
           points={corners}
           onTap={handleTap}
+          tone={outOfFrame ? "danger" : "default"}
           doneMessage={
             outOfFrame
               ? "Grid is out of frame. Press Stop and set it up again."

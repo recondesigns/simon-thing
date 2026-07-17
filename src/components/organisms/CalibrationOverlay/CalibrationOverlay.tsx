@@ -20,6 +20,16 @@ export const CALIBRATION_STEPS = [
   { key: "bottomLeft", prompt: "Tap the bottom-left circle" },
 ] as const;
 
+/**
+ * `danger` is for when the grid has left the frame.
+ *
+ * It borrows the `denied` camera state's colour for the same reason `denied`
+ * has it: the situation blocks until the user physically acts, and pressing on
+ * regardless will not fix it. Anything gentler would imply the app is still
+ * reading the machine when it is not.
+ */
+export type CalibrationTone = "default" | "danger";
+
 export interface CalibrationOverlayProps {
   /**
    * The camera frame's own dimensions. Null until the video reports them, which
@@ -31,6 +41,7 @@ export interface CalibrationOverlayProps {
   onTap: (point: Point) => void;
   /** Shown once all four are placed, in place of the next prompt. */
   doneMessage?: string;
+  tone?: CalibrationTone;
 }
 
 /**
@@ -45,8 +56,21 @@ export default function CalibrationOverlay({
   points,
   onTap,
   doneMessage = "Grid set. Press Record when the pattern starts.",
+  tone = "default",
 }: CalibrationOverlayProps) {
   const theme = useTheme();
+
+  // The marks go with the copy. Leaving them green while the message says the
+  // grid is lost would show the app looking confident about coordinates it has
+  // just admitted are wrong.
+  const markColor =
+    tone === "danger"
+      ? theme.tokens.border.danger.default
+      : theme.tokens.border.success.default;
+  const promptColor =
+    tone === "danger"
+      ? theme.tokens.text.danger.light
+      : theme.tokens.text.surface.lightest;
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<Size | null>(null);
 
@@ -112,7 +136,7 @@ export default function CalibrationOverlay({
               style={{
                 left: placed.x,
                 top: placed.y,
-                borderColor: theme.tokens.border.success.default,
+                borderColor: markColor,
               }}
             >
               <span
@@ -127,7 +151,7 @@ export default function CalibrationOverlay({
 
       <p
         className={`${styles.prompt} ${antonSC.className}`}
-        style={{ color: theme.tokens.text.surface.lightest }}
+        style={{ color: promptColor }}
       >
         {prompt}
       </p>
