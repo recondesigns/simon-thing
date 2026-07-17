@@ -9,7 +9,7 @@ const meta = {
     layout: "fullscreen",
   },
   args: {
-    title: "Fake Name",
+    title: "Bezier animation",
   },
 } satisfies Meta<typeof Header>;
 

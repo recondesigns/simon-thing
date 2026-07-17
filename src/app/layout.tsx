@@ -5,7 +5,7 @@ import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fake Name",
+  title: "Bezier animation",
   description: "A Simon-style memory game",
 };
 

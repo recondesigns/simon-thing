@@ -6,6 +6,7 @@ import type { PatternStep } from "@/components/organisms/PatternContainer/Patter
 import CalibrationOverlay from "@/components/organisms/CalibrationOverlay/CalibrationOverlay";
 import Home from "./page";
 import layoutStyles from "./layout.module.css";
+import homeStyles from "@/components/templates/HomeTemplate/HomeTemplate.module.css";
 
 const CAMERA_STATUSES: CameraStatus[] = [
   "off",
@@ -68,9 +69,23 @@ export const Default: Story = {
     const shell = canvasElement.querySelector(`.${layoutStyles.shell}`);
     await expect(getComputedStyle(shell!).maxWidth).toBe("400px");
     await expect(canvasElement.querySelector("h1")?.textContent).toBe(
-      "Fake Name",
+      "Bezier animation",
     );
     await expect(canvasElement.textContent).toContain("Camera is off");
+
+    // The header title, camera feed and pattern card share one 20px left edge.
+    // The camera is inset to match — a deliberate divergence from the mockup's
+    // full-bleed feed — so this is pinned: removing the inset would silently
+    // push the feed back to the edge and misalign the column.
+    const leftOf = (el: Element | null) =>
+      Math.round(el!.getBoundingClientRect().left);
+    const titleLeft = leftOf(canvasElement.querySelector("h1"));
+    await expect(
+      leftOf(canvasElement.querySelector(`.${homeStyles.cameraFeed}`)),
+    ).toBe(titleLeft);
+    await expect(
+      leftOf(canvasElement.querySelector(`.${homeStyles.patternContainer}`)),
+    ).toBe(titleLeft);
   },
 };
 

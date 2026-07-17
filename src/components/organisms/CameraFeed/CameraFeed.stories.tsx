@@ -31,6 +31,9 @@ export const Off: Story = {
     await expect(getComputedStyle(feed!).backgroundColor).toBe(
       "rgb(32, 32, 37)",
     );
+    // 4px radius, matching the pattern card now that the feed is inset rather
+    // than full-bleed. overflow:hidden makes it clip the video and overlay too.
+    await expect(getComputedStyle(feed!).borderRadius).toBe("4px");
 
     const title = canvasElement.querySelector("p");
     await expect(title?.textContent).toBe("Camera is off");
