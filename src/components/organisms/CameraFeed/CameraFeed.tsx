@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTheme } from "@mui/material/styles";
 import { antonSC } from "@/lib/fonts";
 import styles from "./CameraFeed.module.css";
@@ -41,22 +41,36 @@ export interface CameraFeedProps {
   status?: CameraStatus;
   /** Supplied by whoever owns the camera; this component never requests it. */
   stream?: MediaStream | null;
+  /**
+   * Lets the caller reach the video element — reading frames needs it. Optional,
+   * so the component still stands alone in a story with no one holding a ref.
+   */
+  videoRef?: React.RefObject<HTMLVideoElement | null>;
+  /**
+   * Rendered over the feed, and only while it is `on`. Keeps this component
+   * presentational: it knows how to lay an overlay on the video, and nothing
+   * about what the overlay is for.
+   */
+  children?: ReactNode;
 }
 
 export default function CameraFeed({
   status = "off",
   stream = null,
+  videoRef,
+  children,
 }: CameraFeedProps) {
   const theme = useTheme();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const internalRef = useRef<HTMLVideoElement>(null);
+  const ref = videoRef ?? internalRef;
 
   // srcObject can't be set through JSX — it takes an object, not a URL.
   useEffect(() => {
-    const video = videoRef.current;
+    const video = ref.current;
     if (video && video.srcObject !== stream) {
       video.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, ref]);
 
   // The title color carries the semantics: danger blocks until the user acts,
   // warning is usually recoverable by retrying.
@@ -73,15 +87,18 @@ export default function CameraFeed({
       style={{ backgroundColor: theme.tokens.bg.surface["fill-light"] }}
     >
       {status === "on" ? (
-        <video
-          ref={videoRef}
-          className={styles.video}
-          // playsInline: iOS Safari forces fullscreen without it.
-          // muted: required for autoplay; we capture video only anyway.
-          playsInline
-          muted
-          autoPlay
-        />
+        <>
+          <video
+            ref={ref}
+            className={styles.video}
+            // playsInline: iOS Safari forces fullscreen without it.
+            // muted: required for autoplay; we capture video only anyway.
+            playsInline
+            muted
+            autoPlay
+          />
+          {children}
+        </>
       ) : (
         <div className={styles.messages}>
           <p
