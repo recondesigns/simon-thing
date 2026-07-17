@@ -1,0 +1,10 @@
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Section gaps in the mockup vary (9px header-to-camera), so spacing lives
+   here per section rather than as a single gap on the column. */
+.cameraFeed {
+  margin-top: 9px;
+}
