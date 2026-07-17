@@ -14,7 +14,7 @@ export default function ActionsWrapper({
 }: ActionsWrapperProps) {
   return (
     <div className={styles.wrapper}>
-      <Button color="primary" variant="contained" onClick={onStart}>
+      <Button color="success" variant="contained" onClick={onStart}>
         Start
       </Button>
       <Button color="danger" variant="outlined" onClick={onStop}>

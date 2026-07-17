@@ -10,7 +10,7 @@ import { tokens } from "@/lib/theme/tokens";
 
 const antonSC = Anton_SC({ weight: "400", subsets: ["latin"] });
 
-export type ButtonColor = "primary" | "danger";
+export type ButtonColor = "primary" | "danger" | "success";
 export type ButtonVariant = "contained" | "outlined";
 
 export interface ButtonProps

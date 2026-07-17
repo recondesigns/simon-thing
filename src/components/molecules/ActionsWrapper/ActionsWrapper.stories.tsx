@@ -29,9 +29,9 @@ export const Default: Story = {
     await expect(getComputedStyle(buttons[0]).flexGrow).toBe("1");
     await expect(getComputedStyle(buttons[1]).flexGrow).toBe("1");
 
-    // Start is contained (bg/primary/fill), Stop is outlined (border/danger/default).
+    // Start is contained (bg/success/fill), Stop is outlined (border/danger/default).
     await expect(getComputedStyle(buttons[0]).backgroundColor).toBe(
-      "rgb(80, 137, 246)",
+      "rgb(39, 169, 58)",
     );
     await expect(getComputedStyle(buttons[1]).borderColor).toBe(
       "rgb(247, 61, 66)",

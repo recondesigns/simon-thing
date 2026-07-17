@@ -11,7 +11,7 @@ const meta = {
   argTypes: {
     color: {
       control: "select",
-      options: ["primary", "danger"],
+      options: ["primary", "danger", "success"],
     },
     variant: {
       control: "select",
@@ -49,6 +49,20 @@ export const ContainedDanger: Story = {
   },
 };
 
+export const ContainedSuccess: Story = {
+  args: {
+    color: "success",
+    variant: "contained",
+  },
+  play: async ({ canvasElement }) => {
+    // success fill is theme.tokens.bg.success.fill (#27A93A).
+    const button = canvasElement.querySelector("button");
+    await expect(getComputedStyle(button!).backgroundColor).toBe(
+      "rgb(39, 169, 58)",
+    );
+  },
+};
+
 export const Outlined: Story = {
   args: {
     color: "primary",
@@ -71,6 +85,13 @@ export const OutlinedDanger: Story = {
   },
 };
 
+export const OutlinedSuccess: Story = {
+  args: {
+    color: "success",
+    variant: "outlined",
+  },
+};
+
 export const Disabled: Story = {
   args: {
     color: "primary",
@@ -88,10 +109,16 @@ export const AllVariants: Story = {
       <Button color="danger" variant="contained">
         Start
       </Button>
+      <Button color="success" variant="contained">
+        Start
+      </Button>
       <Button color="primary" variant="outlined">
         Start
       </Button>
       <Button color="danger" variant="outlined">
+        Start
+      </Button>
+      <Button color="success" variant="outlined">
         Start
       </Button>
     </div>
