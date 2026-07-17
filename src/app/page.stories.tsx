@@ -68,7 +68,7 @@ export const Default: Story = {
     const shell = canvasElement.querySelector(`.${layoutStyles.shell}`);
     await expect(getComputedStyle(shell!).maxWidth).toBe("400px");
     await expect(canvasElement.querySelector("h1")?.textContent).toBe(
-      "Fake Name",
+      "Bezier animation",
     );
     await expect(canvasElement.textContent).toContain("Camera is off");
   },

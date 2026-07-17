@@ -8,7 +8,7 @@ export interface HeaderProps {
   title?: string;
 }
 
-export default function Header({ title = "Fake Name" }: HeaderProps) {
+export default function Header({ title = "Bezier animation" }: HeaderProps) {
   const theme = useTheme();
 
   return (
