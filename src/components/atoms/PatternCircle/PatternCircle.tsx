@@ -1,4 +1,5 @@
 import { antonSC } from "@/lib/fonts";
+import { tokens } from "@/lib/theme/tokens";
 import styles from "./PatternCircle.module.css";
 
 /**
@@ -29,11 +30,37 @@ export const PATTERN_CIRCLE_COLORS = {
 export type PatternCircleColor = keyof typeof PATTERN_CIRCLE_COLORS;
 
 export interface PatternCircleProps {
-  color: PatternCircleColor;
-  label: string;
+  /**
+   * Omit for an empty slot — a position the pattern has not reached yet. The
+   * label goes with it: an unfilled slot has no cell to name.
+   */
+  color?: PatternCircleColor;
+  label?: string;
 }
 
+/**
+ * Figma models the empty slot as a tenth value on its `color` axis (`color=empty`,
+ * node 68:2), because a variant is the only way it can express the appearance.
+ * The code does not copy that: `empty` is not a colour, and making it one would
+ * let a caller ask for an empty pad *with* a label — a combination that has no
+ * meaning and would silently drop the label. Optional props say the same thing
+ * and make the meaningless case unrepresentable. Same reasoning as CameraFeed,
+ * whose nine Figma states the code composes rather than enumerates.
+ */
 export default function PatternCircle({ color, label }: PatternCircleProps) {
+  // Unlike the nine pad fills, the empty slot's border is token-bound. The pads
+  // are raw because game colours are not semantic UI colours; an *absent* pad is
+  // not a game colour at all, it is chrome, so it takes a token.
+  if (color === undefined) {
+    return (
+      <div
+        className={`${styles.circle} ${styles.empty}`}
+        style={{ borderColor: tokens.border.surface.default }}
+        data-testid="pattern-circle-empty"
+      />
+    );
+  }
+
   return (
     <div
       className={`${styles.circle} ${antonSC.className}`}

@@ -11,3 +11,14 @@
   white-space: nowrap;
   flex-shrink: 0;
 }
+
+/*
+ * The empty slot. box-sizing keeps it 48px with the border on, so a slot and a
+ * filled pad occupy exactly the same space and the grid does not shift by 4px
+ * the moment a cell is detected.
+ */
+.empty {
+  box-sizing: border-box;
+  background-color: transparent;
+  border: 2px solid;
+}

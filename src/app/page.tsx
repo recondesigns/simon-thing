@@ -12,15 +12,7 @@ import { useGridDetection } from "@/hooks/useGridDetection";
 import { useIntrinsicSize } from "@/hooks/useIntrinsicSize";
 import { cellCentres, type Point } from "@/lib/detection/homography";
 import { CELL_COLORS } from "@/lib/game/cellColors";
-
-/**
- * Placeholder content matching the mockup, shown until something is detected.
- * Goes away once game state exists.
- */
-const PLACEHOLDER_STEPS: PatternStep[] = Array.from({ length: 20 }, () => ({
-  color: "red",
-  label: "5",
-}));
+import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 
 export default function Home() {
   const { status, stream, start, stop } = useCamera();
@@ -62,16 +54,19 @@ export default function Home() {
     stop();
   }, [stop]);
 
+  // Both channels describe *where* on the machine's grid the cell was, never
+  // when: the pad's colour and its telephone-keypad number are two readings of
+  // the same fact. Order is carried by the pad's place in the container, so a
+  // pattern that hits one cell twice shows that number twice — which is the
+  // truth about the pattern, not a duplicate.
   const patternSteps: PatternStep[] = useMemo(
     () =>
-      detected.map((position, i) => ({
+      detected.map((position) => ({
         color: CELL_COLORS[position],
-        label: String(i + 1),
+        label: CELL_NUMBERS[position],
       })),
     [detected],
   );
-
-  const hasDetection = patternSteps.length > 0;
 
   return (
     <HomeTemplate
@@ -93,8 +88,7 @@ export default function Home() {
           }
         />
       }
-      steps={hasDetection ? patternSteps : PLACEHOLDER_STEPS}
-      currentStep={hasDetection ? patternSteps.length : 3}
+      steps={patternSteps}
       onStart={start}
       onStop={handleStop}
       onRecord={() => setRecording((previous) => !previous)}
