@@ -5,6 +5,14 @@ import theme from '../src/lib/theme'
 
 const preview: Preview = {
   parameters: {
+    options: {
+      // Atomic Design order. Without this, the sidebar follows file-discovery
+      // order, which puts Pages first because src/app precedes src/components.
+      storySort: {
+        order: ['Atoms', 'Molecules', 'Organisms', 'Pages'],
+      },
+    },
+
     controls: {
       matchers: {
        color: /(background|color)$/i,

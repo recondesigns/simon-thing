@@ -1,10 +1,8 @@
 "use client";
 
-import { Anton_SC } from "next/font/google";
 import { useTheme } from "@mui/material/styles";
+import { antonSC } from "@/lib/fonts";
 import styles from "./Chip.module.css";
-
-const antonSC = Anton_SC({ weight: "400", subsets: ["latin"] });
 
 export interface ChipProps {
   count: number | string;
