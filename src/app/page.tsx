@@ -1,5 +1,6 @@
 import Header from "@/components/organisms/Header/Header";
 import CameraFeedPlaceholder from "@/components/molecules/CameraFeedPlaceholder/CameraFeedPlaceholder";
+import ActionsWrapper from "@/components/molecules/ActionsWrapper/ActionsWrapper";
 import PatternContainer, {
   type PatternStep,
 } from "@/components/organisms/PatternContainer/PatternContainer";
@@ -20,6 +21,9 @@ export default function Home() {
       </div>
       <div className={styles.patternContainer}>
         <PatternContainer steps={STEPS} currentStep={3} />
+      </div>
+      <div className={styles.actions}>
+        <ActionsWrapper />
       </div>
     </div>
   );
