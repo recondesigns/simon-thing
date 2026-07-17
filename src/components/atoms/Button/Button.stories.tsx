@@ -36,9 +36,13 @@ export const Default: Story = {
     // primary fill is theme.tokens.bg.primary.fill (#5089F6) — verifies the
     // Figma token maps through, not MUI's default palette.primary.main.
     const button = canvasElement.querySelector("button");
-    await expect(getComputedStyle(button!).backgroundColor).toBe(
-      "rgb(80, 137, 246)",
-    );
+    const computed = getComputedStyle(button!);
+    await expect(computed.backgroundColor).toBe("rgb(80, 137, 246)");
+
+    // Every label in the design is Anton SC. MUI sets typography.button's
+    // font-family through Emotion, which silently beat our className and left
+    // the label in Roboto — so this has to be asserted, not assumed.
+    await expect(computed.fontFamily).toContain("Anton SC");
   },
 };
 

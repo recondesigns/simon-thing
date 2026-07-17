@@ -11,8 +11,17 @@ import { tokens } from "@/lib/theme/tokens";
 export type ButtonColor = "primary" | "danger" | "success";
 export type ButtonVariant = "contained" | "outlined";
 
+/**
+ * Every other MUI Button prop passes through — `sx`, `fullWidth`, `disabled`,
+ * `startIcon`, and so on all still work.
+ *
+ * `color` and `variant` are narrowed to what the design actually defines.
+ * `size` is dropped because the styled overrides below hardcode padding, so
+ * MUI's size classes have no effect — better a compile error than a prop that
+ * type-checks and silently does nothing.
+ */
 export interface ButtonProps
-  extends Omit<MuiButtonProps, "color" | "variant"> {
+  extends Omit<MuiButtonProps, "color" | "variant" | "size"> {
   color?: ButtonColor;
   variant?: ButtonVariant;
 }
@@ -25,6 +34,10 @@ const StyledButton = styled(MuiButton, {
   const text = tokens.text[tokenColor];
 
   return {
+    // Set here rather than via antonSC.className: MUI applies its own
+    // typography.button font-family through Emotion, which beats a plain class,
+    // so the label silently fell back to Roboto while the class sat unused.
+    fontFamily: antonSC.style.fontFamily,
     borderRadius: 8,
     fontSize: 16,
     lineHeight: "16px",
@@ -68,7 +81,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
       variant={variant}
       disableElevation
       disableRipple
-      className={[antonSC.className, className].filter(Boolean).join(" ")}
+      className={className}
       {...props}
     />
   );

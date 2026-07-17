@@ -9,7 +9,7 @@ const meta = {
     layout: "fullscreen",
   },
   args: {
-    title: "Simon thing",
+    title: "Fake Name",
   },
 } satisfies Meta<typeof Header>;
 
