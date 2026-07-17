@@ -5,7 +5,6 @@ import MuiButton, {
   type ButtonProps as MuiButtonProps,
 } from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
-import { antonSC } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
 
 export type ButtonColor = "primary" | "danger" | "success";
@@ -34,10 +33,9 @@ const StyledButton = styled(MuiButton, {
   const text = tokens.text[tokenColor];
 
   return {
-    // Set here rather than via antonSC.className: MUI applies its own
-    // typography.button font-family through Emotion, which beats a plain class,
-    // so the label silently fell back to Roboto while the class sat unused.
-    fontFamily: antonSC.style.fontFamily,
+    // No fontFamily here on purpose — it comes from theme.typography.button,
+    // which is where MUI expects it. Overriding it at component level meant
+    // fighting MUI's own cascade, a fight this once silently lost.
     borderRadius: 8,
     fontSize: 16,
     lineHeight: "16px",

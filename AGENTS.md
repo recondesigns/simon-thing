@@ -54,7 +54,13 @@ The short version: one component per directory with its `.tsx`, `.module.css`, a
 
 ## Current state
 
-The mockup is built: header, camera placeholder, pattern grid, actions. Not yet built:
+The mockup is built (header, camera feed, pattern grid, actions) and **the camera works end to end**.
 
-- **The camera feed.** `CameraFeedPlaceholder` takes `isOn` and renders an empty div when on — that's the seam for the video stream. It needs a client component and a secure context (localhost and Vercel both qualify); iOS Safari needs `playsInline` or it forces fullscreen.
-- **Game state.** Zustand is installed but has no stores; the pattern grid and step count render placeholder content matching the mockup.
+- `hooks/useCamera` owns `getUserMedia` and returns `{ status, stream, start, stop }`. `organisms/CameraFeed` stays presentational — it takes the stream rather than requesting it, so its five states (`off`, `requesting`, `denied`, `error`, `on`) are storyable without mocking.
+- No dev/prod branching: `getUserMedia` needs a **secure context**, which is a property of the URL, not the build. localhost and HTTPS qualify; a plain-HTTP LAN address does not, so an undefined `mediaDevices` means `error`, not `denied` — the user was never asked.
+- `templates/HomeTemplate` takes every value as a prop, so the route supplies data and stories drive any state.
+
+Not yet built:
+
+- **Pattern detection.** The next feature: watch a bar-top arcade machine's 3x3 grid and read the pattern. The reference video is analyzed and the plan — measured thresholds, pipeline, risks — is in Notion (Dashboard → Projects → Simon). **Read that before building.** The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
+- **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content matching the mockup.
