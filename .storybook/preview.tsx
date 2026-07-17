@@ -1,4 +1,7 @@
 import type { Preview } from '@storybook/nextjs-vite'
+import React from 'react'
+import { ThemeProvider, CssBaseline } from '@mui/material'
+import theme from '../src/lib/theme'
 
 const preview: Preview = {
   parameters: {
@@ -16,6 +19,14 @@ const preview: Preview = {
       test: 'todo'
     }
   },
+  decorators: [
+    (Story) => (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Story />
+      </ThemeProvider>
+    ),
+  ],
 };
 
 export default preview;
