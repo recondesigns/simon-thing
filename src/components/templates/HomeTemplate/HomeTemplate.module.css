@@ -7,6 +7,10 @@
    so spacing lives here per section rather than as a single gap on the column. */
 .cameraFeed {
   margin-top: 9px;
+  /* Inset 20px to share the column's left edge with the header title, the
+     pattern card and the actions row. A deliberate divergence from the mockup,
+     which drew the feed full-bleed. */
+  margin-inline: 20px;
 }
 
 .patternContainer {
