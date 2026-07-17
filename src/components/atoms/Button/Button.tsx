@@ -29,20 +29,28 @@ const StyledButton = styled(MuiButton, {
     fontSize: 16,
     lineHeight: "16px",
     textTransform: "none",
+    // Hover is guarded because touch devices fire :hover on tap and never
+    // clear it, leaving the state stuck until you tap elsewhere. MUI guards
+    // its own hover rules the same way; overriding them opts back out.
+    // :active is deliberately unguarded — it should fire on tap.
     "&.MuiButton-contained": {
       backgroundColor: bg.fill,
       color: "#FFFFFF",
       padding: "12px 16px",
-      "&:hover": { backgroundColor: bg["fill-hover"] },
+      "@media (hover: hover)": {
+        "&:hover": { backgroundColor: bg["fill-hover"] },
+      },
       "&:active": { backgroundColor: bg["fill-pressed"] },
     },
     "&.MuiButton-outlined": {
       borderColor: border.default,
       color: text.default,
       padding: "13px 17px",
-      "&:hover": {
-        borderColor: border.hover,
-        backgroundColor: "transparent",
+      "@media (hover: hover)": {
+        "&:hover": {
+          borderColor: border.hover,
+          backgroundColor: "transparent",
+        },
       },
       "&:active": { borderColor: border.pressed },
     },
