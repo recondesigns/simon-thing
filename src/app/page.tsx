@@ -1,28 +1,5 @@
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import Counter from "@/components/Counter/Counter";
+import Header from "@/components/organisms/Header/Header";
 
 export default function Home() {
-  return (
-    <main>
-      <Stack
-        spacing={2}
-        sx={{
-          minHeight: "100dvh",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Typography variant="h4" component="h1">
-          simon-thing
-        </Typography>
-        <Button variant="contained" startIcon={<PlayArrowIcon />}>
-          Start
-        </Button>
-        <Counter />
-      </Stack>
-    </main>
-  );
+  return <Header />;
 }
