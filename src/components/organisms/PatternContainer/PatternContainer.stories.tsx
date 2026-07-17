@@ -31,7 +31,7 @@ export const Default: Story = {
     const circles = canvasElement.querySelectorAll(`.${styles.row} > div`);
     await expect(rows.length).toBe(4);
     await expect(circles.length).toBe(20);
-    await expect(canvasElement.textContent).toContain("Pattern");
+    await expect(canvasElement.textContent).toContain("Grid");
     await expect(canvasElement.textContent).toContain("20 Steps");
   },
 };

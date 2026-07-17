@@ -26,7 +26,20 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            provider: playwright({}),
+            provider: playwright({
+              launchOptions: {
+                args: [
+                  // Give Chromium a synthetic camera and auto-grant access, so
+                  // stories that exercise getUserMedia test the real code path
+                  // instead of landing in the denied state.
+                  '--use-fake-ui-for-media-stream',
+                  '--use-fake-device-for-media-stream',
+                ],
+              },
+              contextOptions: {
+                permissions: ['camera'],
+              },
+            }),
             instances: [{ browser: 'chromium' }],
           },
         },

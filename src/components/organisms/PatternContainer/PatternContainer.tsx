@@ -42,7 +42,7 @@ export default function PatternContainer({
           className={`${styles.title} ${antonSC.className}`}
           style={{ color: theme.tokens.text.surface.lightest }}
         >
-          Pattern
+          Grid
         </h2>
         <Chip count={currentStep} total={`${steps.length} Steps`} />
       </div>
