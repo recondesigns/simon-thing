@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect } from "storybook/test";
-import PatternCircle, {
-  PATTERN_CIRCLE_COLORS,
-  type PatternCircleColor,
-} from "./PatternCircle";
+import GridCircle, {
+  GRID_CIRCLE_COLORS,
+  type GridCircleColor,
+} from "./GridCircle";
 
-const COLORS = Object.keys(PATTERN_CIRCLE_COLORS) as PatternCircleColor[];
+const COLORS = Object.keys(GRID_CIRCLE_COLORS) as GridCircleColor[];
 
 const meta = {
-  title: "Atoms/PatternCircle",
-  component: PatternCircle,
+  title: "Atoms/GridCircle",
+  component: GridCircle,
   parameters: {
     layout: "centered",
   },
@@ -23,7 +23,7 @@ const meta = {
     color: "red",
     label: "5",
   },
-} satisfies Meta<typeof PatternCircle>;
+} satisfies Meta<typeof GridCircle>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -70,7 +70,7 @@ export const AllColors: Story = {
   render: () => (
     <div style={{ display: "flex", gap: 17, flexWrap: "wrap" }}>
       {COLORS.map((color) => (
-        <PatternCircle key={color} color={color} label="5" />
+        <GridCircle key={color} color={color} label="5" />
       ))}
     </div>
   ),

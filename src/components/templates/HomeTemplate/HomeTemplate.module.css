@@ -13,9 +13,12 @@
   margin-inline: 20px;
 }
 
-.patternContainer {
+.gridContainer {
   margin-top: 32px;
   margin-inline: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .actions {

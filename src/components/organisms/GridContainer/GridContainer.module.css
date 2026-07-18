@@ -1,0 +1,134 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding-block: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 100%;
+  padding-inline: 20px;
+}
+
+.title {
+  /* h2 carries a default UA margin; zero it here so the 20px container gap is
+     all that sits below the heading text, not the app-wide reset (absent when
+     this renders in isolation). */
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.circles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 100%;
+  padding-inline: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* MetaGridContainer variant — count dots over animation-property tracking. */
+.contentWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* One whiteish dot per detected step, added left to right. Wraps rather than
+   clipping so a long pattern never hides part of the count. */
+.countContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  min-height: 12px;
+  padding-inline: 20px;
+}
+
+.countDot {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.trackingWrapper {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding-inline: 20px;
+  overflow: hidden;
+}
+
+.trackingColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 0 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.trackingLine {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.trackingLabel {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.trackingValue {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  color: var(--meta-normal);
+  /* A fresh value holds success-green for GREEN_HOLD_MS (driven in JS), then
+     this fades it back to normal. Duration matches FADE_MS in metaReadout.ts. */
+  transition: color 1200ms linear;
+}
+
+/* Both flash states snap instantly (no transition); only the return to normal
+   fades, via the base rule above. */
+.trackingValue.success {
+  color: var(--meta-success);
+  transition: none;
+}
+
+.trackingValue.danger {
+  color: var(--meta-danger);
+  transition: none;
+}

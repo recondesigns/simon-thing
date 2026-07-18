@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Bezier animation",
-  description: "A Simon-style memory game",
+  description: "A bezier curve animation demo",
 };
 
 export const viewport: Viewport = {
