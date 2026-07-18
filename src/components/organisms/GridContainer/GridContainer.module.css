@@ -118,7 +118,7 @@
   color: var(--meta-normal);
   /* A fresh value holds success-green for GREEN_HOLD_MS (driven in JS), then
      this fades it back to normal. Duration matches FADE_MS in metaReadout.ts. */
-  transition: color 2000ms linear;
+  transition: color 1200ms linear;
 }
 
 /* Both flash states snap instantly (no transition); only the return to normal

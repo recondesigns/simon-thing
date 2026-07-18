@@ -6,8 +6,8 @@
 
 /** Solid success-green a fresh reading holds before it starts fading. */
 export const GREEN_HOLD_MS = 1500;
-/** Success-green → normal fade. Mirrored by the CSS transition on `.metaValue`. */
-export const FADE_MS = 2000;
+/** Success-green → normal fade. Mirrored by the CSS transition on `.trackingValue`. */
+export const FADE_MS = 1200;
 /** A reading left unchanged this long turns danger-red until it next changes. */
 export const STALE_MS = 15000;
 /** How often readings are re-evaluated. Fine-grained enough for the 1.5s hold. */
