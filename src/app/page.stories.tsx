@@ -86,6 +86,18 @@ export const Default: Story = {
     await expect(
       leftOf(canvasElement.querySelector(`.${homeStyles.gridContainer}`)),
     ).toBe(titleLeft);
+
+    // Temporary dual view: both grid variants are collapsible, Animation points
+    // open by default and Grid collapsed. The summary background is pinned so an
+    // MUI cascade win over our `sx` can't silently restyle the header.
+    const canvas = within(canvasElement);
+    const animPoints = canvas.getByRole("button", { name: "Animation points" });
+    const grid = canvas.getByRole("button", { name: "Grid" });
+    await expect(animPoints).toHaveAttribute("aria-expanded", "true");
+    await expect(grid).toHaveAttribute("aria-expanded", "false");
+    await expect(getComputedStyle(animPoints).backgroundColor).toBe(
+      "rgb(32, 32, 37)", // bg.surface.fill-light #202025
+    );
   },
 };
 
