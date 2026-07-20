@@ -8,7 +8,7 @@ import {
   type ResultStep,
 } from "@/components/organisms/ResultsContainer/ResultsContainer";
 import { useGameStore } from "@/lib/store/gameStore";
-import { speakSequence, cancelSpeech } from "@/lib/speech";
+import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
 import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -48,7 +48,13 @@ export default function Home() {
   const canTap = startedAt !== null && !locked && taps.length < RESULT_SLOTS;
 
   const handleTap = useCallback(
-    (index: number) => tap(index, RESULT_SLOTS),
+    (index: number) => {
+      // Unlock audio *now*, inside the tap gesture — the read-back itself is
+      // deferred ~1.5s and would otherwise be blocked on iOS. Only worth doing
+      // when read-back is on.
+      if (useGameStore.getState().speechEnabled) primeSpeech();
+      tap(index, RESULT_SLOTS);
+    },
     [tap],
   );
 
