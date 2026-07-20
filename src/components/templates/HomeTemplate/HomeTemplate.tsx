@@ -12,8 +12,8 @@ export interface HomeTemplateProps {
   results: ResultStep[];
   /** Which round is in progress; shown on the results readout. */
   round?: number;
-  /** Whether a game is running — the pads are live only then. */
-  started?: boolean;
+  /** Whether the pads are live — a game is running, no round mid-read-back. */
+  canTap?: boolean;
   /** Fired with a pad's index (0–8) when the input board is tapped. */
   onTap?: (index: number) => void;
 }
@@ -29,14 +29,14 @@ export interface HomeTemplateProps {
 export default function HomeTemplate({
   results,
   round = 1,
-  started = false,
+  canTap = false,
   onTap,
 }: HomeTemplateProps) {
   return (
     <div className={styles.page}>
       <Header />
       <div className={styles.inputSection}>
-        <TapGrid onTap={onTap} disabled={!started} />
+        <TapGrid onTap={onTap} disabled={!canTap} />
       </div>
       <div className={styles.resultsSection}>
         <ResultsContainer steps={results} round={round} />
