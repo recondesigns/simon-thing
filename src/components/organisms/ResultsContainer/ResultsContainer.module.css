@@ -27,6 +27,14 @@
   white-space: nowrap;
 }
 
+/* Round and step counts sit together at the right of the heading. */
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* A single line of pads that scrolls sideways once it overflows, rather than
    wrapping. min-height reserves a pad's worth of space so the card holds its
    height with nothing recorded yet. The pads are flex-shrink:0 (set on the

@@ -17,7 +17,15 @@
 }
 
 .actions {
+  display: flex;
+  gap: 20px;
   margin-top: 32px;
   margin-inline: 20px;
   padding-bottom: 40px;
+}
+
+/* Both buttons share the row evenly, overriding the Button set's fixed width. */
+.actions > button {
+  flex: 1 0 0;
+  min-width: 0;
 }
