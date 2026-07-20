@@ -5,9 +5,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   width: 100%;
-  padding-block: 12px;
+  padding-block: 10px;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -35,7 +35,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-shrink: 0;
   width: 100%;
 }
@@ -68,10 +68,10 @@
    column with room to spare. Overriding the GridCircle's size from outside
    rather than adding a size prop keeps this local. Label scales with the pad. */
 .pad > div {
-  width: 80px;
-  height: 80px;
-  font-size: 30px;
-  line-height: 30px;
+  width: 64px;
+  height: 64px;
+  font-size: 24px;
+  line-height: 24px;
 }
 
 .pad:active {

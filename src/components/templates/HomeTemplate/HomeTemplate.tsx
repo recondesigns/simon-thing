@@ -13,31 +13,31 @@ export interface HomeTemplateProps {
   results: ResultStep[];
   /** Which round is in progress; shown on the results readout. */
   round?: number;
-  /** Whether a round is running — gates the pads and drives the round button's label. */
+  /** Whether a game is running — gates the pads and drives the button's label. */
   started?: boolean;
   /** Fired with a pad's index (0–8) when the input board is tapped. */
   onTap?: (index: number) => void;
-  /** Start round (first press) then New round: banks the round and starts the next. */
-  onAdvanceRound?: () => void;
-  /** Ends the current game, recording it, and starts a fresh one. */
+  /** Begins the game and starts the clock (shown as "Start game"). */
+  onStart?: () => void;
+  /** Records the current game and starts a fresh one (shown as "New game"). */
   onNewGame?: () => void;
-  /** Abandons the current game without recording it, and starts a fresh one. */
-  onEndGame?: () => void;
 }
 
 /**
  * Layout skeleton for the home route. Owns placement only — every value it
  * renders arrives as a prop, so the route supplies real data and stories can
  * drive any state without mocking.
+ *
+ * End game and the read-back toggle live in the Header, which reads them from
+ * the store directly, so they aren't threaded through here.
  */
 export default function HomeTemplate({
   results,
   round = 1,
   started = false,
   onTap,
-  onAdvanceRound,
+  onStart,
   onNewGame,
-  onEndGame,
 }: HomeTemplateProps) {
   return (
     <div className={styles.page}>
@@ -49,14 +49,12 @@ export default function HomeTemplate({
         <ResultsContainer steps={results} round={round} />
       </div>
       <div className={styles.actions}>
-        <Button color="primary" variant="contained" onClick={onAdvanceRound}>
-          {started ? "New round" : "Start round"}
-        </Button>
-        <Button color="danger" variant="outlined" onClick={onNewGame}>
-          New game
-        </Button>
-        <Button color="danger" variant="outlined" onClick={onEndGame}>
-          End game
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={started ? onNewGame : onStart}
+        >
+          {started ? "New game" : "Start game"}
         </Button>
       </div>
     </div>
