@@ -1,0 +1,44 @@
+/* Card chrome, matching TapGrid and the readout so all three read as one family. */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding-block: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 100%;
+  padding-inline: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* A single line of pads that scrolls sideways once it overflows, rather than
+   wrapping. min-height reserves a pad's worth of space so the card holds its
+   height with nothing recorded yet. The pads are flex-shrink:0 (set on the
+   GridCircle), so they keep their size and the track scrolls instead. */
+.track {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  width: 100%;
+  min-height: 48px;
+  padding-inline: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}

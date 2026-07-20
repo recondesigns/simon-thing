@@ -1,0 +1,77 @@
+/* Card chrome, matching the readout's GridContainer so the two sections read as
+   one family. Kept as its own module rather than shared: colocation is the
+   repo's convention, and the two cards are free to drift. */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  padding-block: 12px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  width: 100%;
+  padding-inline: 20px;
+}
+
+.title {
+  /* h2 carries a default UA margin; zero it here so the 20px container gap is
+     all that sits below the heading text. */
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.circles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  flex-shrink: 0;
+}
+
+/* A bare tap target around the pad — no chrome of its own, so the GridCircle is
+   all that shows. The scale nudge gives touch feedback the pad's own fill can't
+   (:hover sticks on touch; :active fires and clears on tap). */
+.pad {
+  display: flex;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Twice the atom's default here only — the input pads are the tap target, so
+   they want to be big, while the results pads stay 48px. Overriding the
+   GridCircle's own size from outside rather than adding a size prop keeps this
+   local to the one section that wants it. Label scales with the pad. */
+.pad > div {
+  width: 96px;
+  height: 96px;
+  font-size: 36px;
+  line-height: 36px;
+}
+
+.pad:active {
+  transform: scale(0.94);
+}

@@ -41,3 +41,20 @@ export const NearComplete: Story = {
     total: "20 Steps",
   },
 };
+
+/**
+ * A labelled count rather than a fraction — the results readout, which has no
+ * fixed total. The "/" is gone, so nothing reads the count as N *of* something;
+ * the 4px flex gap still separates number from unit.
+ */
+export const LabelledCount: Story = {
+  args: {
+    count: 3,
+    total: "Steps",
+    divider: false,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.textContent).toBe("3Steps");
+    await expect(canvasElement.textContent).not.toContain("/");
+  },
+};

@@ -3,22 +3,17 @@
   flex-direction: column;
 }
 
-/* Section gaps in the mockup vary (9px header-to-camera, 32px camera-to-pattern),
-   so spacing lives here per section rather than as a single gap on the column. */
-.cameraFeed {
-  margin-top: 9px;
-  /* Inset 20px to share the column's left edge with the header title, the
-     pattern card and the actions row. A deliberate divergence from the mockup,
-     which drew the feed full-bleed. */
+/* Sections share the column's 20px left edge with the header title. Gaps are set
+   per section here rather than as one column gap, matching the mockup where they
+   vary. */
+.inputSection {
+  margin-top: 32px;
   margin-inline: 20px;
 }
 
-.gridContainer {
-  margin-top: 32px;
+.resultsSection {
+  margin-top: 16px;
   margin-inline: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 
 .actions {
