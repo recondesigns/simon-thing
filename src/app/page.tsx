@@ -1,99 +1,36 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import CalibrationOverlay, {
-  CALIBRATION_STEPS,
-} from "@/components/organisms/CalibrationOverlay/CalibrationOverlay";
-import type { GridStep } from "@/components/organisms/GridContainer/GridContainer";
-import { useCamera } from "@/hooks/useCamera";
-import { useGridDetection } from "@/hooks/useGridDetection";
-import { useIntrinsicSize } from "@/hooks/useIntrinsicSize";
-import { cellCentres, type Point } from "@/lib/detection/homography";
+import type { ResultStep } from "@/components/organisms/ResultsContainer/ResultsContainer";
+import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 
 export default function Home() {
-  const { status, stream, start, stop } = useCamera();
-  const videoRef = useRef<HTMLVideoElement>(null);
+  // Each tap is the index of a pad (0–8, telephone-keypad order). Order is the
+  // pattern; a repeated pad is a repeated entry, so this is a list, not a set.
+  const [taps, setTaps] = useState<number[]>([]);
 
-  const [corners, setCorners] = useState<Point[]>([]);
-  const [recording, setRecording] = useState(false);
-
-  const intrinsic = useIntrinsicSize(videoRef, status === "on");
-
-  // Null until all four corners are placed, and null again if they describe
-  // something a camera could not have seen — three in a line, or tapped out of
-  // order. Either way there is no grid to look at.
-  const centres = useMemo(() => {
-    if (corners.length < CALIBRATION_STEPS.length) return null;
-    return cellCentres({
-      topLeft: corners[0],
-      topRight: corners[1],
-      bottomRight: corners[2],
-      bottomLeft: corners[3],
-    });
-  }, [corners]);
-
-  const { steps: detected, outOfFrame } = useGridDetection({
-    video: videoRef,
-    centres,
-    recording,
-  });
-
-  const handleTap = useCallback((point: Point) => {
-    setCorners((previous) => [...previous, point]);
-  }, []);
-
-  const handleStop = useCallback(() => {
-    setRecording(false);
-    // Corners describe where the machine was in this frame. Once the camera is
-    // off, they describe nothing.
-    setCorners([]);
-    stop();
-  }, [stop]);
-
-  // Both channels describe *where* on the machine's grid the cell was, never
-  // when: the pad's colour and its telephone-keypad number are two readings of
-  // the same fact. Order is carried by the pad's place in the container, so a
-  // pattern that hits one cell twice shows that number twice — which is the
-  // truth about the pattern, not a duplicate.
-  const gridSteps: GridStep[] = useMemo(
+  // A pad's colour and number both read its position off the grid, so the
+  // result always matches the pad that was tapped.
+  const results: ResultStep[] = useMemo(
     () =>
-      detected.map((position) => ({
-        color: CELL_COLORS[position],
-        label: CELL_NUMBERS[position],
-      })),
-    [detected],
+      taps.map((index) => {
+        const position = CELL_POSITIONS[index];
+        return { color: CELL_COLORS[position], label: CELL_NUMBERS[position] };
+      }),
+    [taps],
   );
 
+  const handleTap = useCallback((index: number) => {
+    setTaps((previous) => [...previous, index]);
+  }, []);
+
+  const handleClear = useCallback(() => setTaps([]), []);
+
   return (
-    <HomeTemplate
-      cameraStatus={status}
-      cameraStream={stream}
-      videoRef={videoRef}
-      feedOverlay={
-        <CalibrationOverlay
-          intrinsic={intrinsic}
-          points={corners}
-          onTap={handleTap}
-          tone={outOfFrame ? "danger" : "default"}
-          doneMessage={
-            outOfFrame
-              ? "Grid is out of frame. Press Stop and set it up again."
-              : recording
-                ? "Recording. Press Stop when the pattern ends."
-                : "Grid set. Press Record when the pattern starts."
-          }
-        />
-      }
-      steps={gridSteps}
-      onStart={start}
-      onStop={handleStop}
-      onRecord={() => setRecording((previous) => !previous)}
-      recording={recording}
-      canRecord={centres !== null}
-    />
+    <HomeTemplate results={results} onTap={handleTap} onClear={handleClear} />
   );
 }
