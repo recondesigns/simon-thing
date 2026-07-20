@@ -47,8 +47,13 @@ export interface TapGridProps {
  * position; nothing is stored here.
  */
 export default function TapGrid({ onTap, disabled = false }: TapGridProps) {
+  // A one-shot "ready" glow: the class is added the moment the board goes from
+  // gated to live (Start, or an unlock after a read-back), so the CSS animation
+  // replays each time and signals you can tap again. Purely derived — no state.
+  const gridClass = disabled ? styles.grid : `${styles.grid} ${styles.ready}`;
+
   return (
-    <div className={styles.grid}>
+    <div className={gridClass}>
       {ROWS.map((row, rowIndex) => (
         <div key={rowIndex} className={styles.row}>
           {row.map((pad) => (

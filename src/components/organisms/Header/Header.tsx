@@ -17,9 +17,9 @@ export interface HeaderProps {
 /**
  * The app bar, identical on every route since it lives in the layout. The title
  * links home; beside it are the two at-a-glance controls — the primary button
- * (Start, flipping to an outlined-danger End game once running) and the read-back
- * on/off icon, read straight from the store — plus the hamburger menu, which
- * holds navigation (Home, Times), New game, and the sound setting.
+ * (Start, flipping to an outlined-danger End round once running) and the
+ * read-back on/off icon, read straight from the store — plus the hamburger menu,
+ * which holds navigation (Home, Times), New round / New session, and the settings.
  */
 export default function Header({ title = "Dots" }: HeaderProps) {
   const theme = useTheme();
@@ -27,7 +27,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const start = useGameStore((state) => state.start);
-  const endGame = useGameStore((state) => state.endGame);
+  const endRound = useGameStore((state) => state.endRound);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
 
   return (
@@ -46,7 +46,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
           type="button"
           className={styles.gameButton}
           onClick={() => {
-            if (started) endGame();
+            if (started) endRound();
             else start();
             scrollToTop();
           }}
@@ -54,7 +54,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
             started
               ? {
                   // Outlined danger once running — the button's job flips from
-                  // starting the game to ending it.
+                  // starting the round to ending it.
                   color: theme.tokens.text.danger.light,
                   borderColor: theme.tokens.text.danger.light,
                 }
@@ -65,7 +65,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
                 }
           }
         >
-          {started ? "End game" : "Start"}
+          {started ? "End round" : "Start"}
         </button>
         <button
           type="button"

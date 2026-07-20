@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, within } from "storybook/test";
-import ResultsContainer, { type ResultStep } from "./ResultsContainer";
+import ResultsContainer, { type ResultDot } from "./ResultsContainer";
 
 /**
  * A recorded run, as the route builds it: colour and number both read the pad's
  * position, so they always agree — 1 is magenta, 9 is crimson wherever it lands.
  * The repeated 1 is the point: a pattern that hits a cell twice is two steps.
  */
-const RESULTS: ResultStep[] = [
+const RESULTS: ResultDot[] = [
   { color: "magenta", label: "1" },
   { color: "green", label: "5" },
   { color: "crimson", label: "9" },
@@ -24,7 +24,7 @@ const meta = {
     layout: "padded",
   },
   args: {
-    steps: RESULTS,
+    dots: RESULTS,
   },
 } satisfies Meta<typeof ResultsContainer>;
 
@@ -63,7 +63,7 @@ export const WithSteps: Story = {
  * track) so nothing below it jumps when the first result lands.
  */
 export const Empty: Story = {
-  args: { steps: [] },
+  args: { dots: [] },
   play: async ({ canvasElement }) => {
     await expect(track(canvasElement).children.length).toBe(0);
     await expect(canvasElement.textContent).toContain("0Steps");

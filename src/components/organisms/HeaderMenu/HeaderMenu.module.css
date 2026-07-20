@@ -92,3 +92,39 @@
   font-size: 15px;
   font-weight: 500;
 }
+
+.settingColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px 4px;
+}
+
+.settingName {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* A segmented control for the read-back cadence. One rounded track, a divider
+   between segments, the active one filled. */
+.segment {
+  display: flex;
+  border: 1px solid;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.segmentButton {
+  flex: 1 0 0;
+  padding: 7px 4px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segmentButton + .segmentButton {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}

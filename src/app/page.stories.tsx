@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, within } from "storybook/test";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import type { ResultStep } from "@/components/organisms/ResultsContainer/ResultsContainer";
+import type { ResultDot } from "@/components/organisms/ResultsContainer/ResultsContainer";
 import Home from "./page";
 import layoutStyles from "./layout.module.css";
 import homeStyles from "@/components/templates/HomeTemplate/HomeTemplate.module.css";
@@ -10,7 +10,7 @@ import homeStyles from "@/components/templates/HomeTemplate/HomeTemplate.module.
  * A recorded run, as the route would build it: colour and number both read the
  * pad's position off the grid, so they always agree.
  */
-const RESULTS: ResultStep[] = [
+const RESULTS: ResultDot[] = [
   { color: "magenta", label: "1" },
   { color: "green", label: "5" },
   { color: "crimson", label: "9" },
