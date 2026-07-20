@@ -1,4 +1,3 @@
-import Header from "@/components/organisms/Header/Header";
 import GameTimesContainer from "@/components/organisms/GameTimesContainer/GameTimesContainer";
 import Button from "@/components/atoms/Button/Button";
 import styles from "./TimeResultsTemplate.module.css";
@@ -15,8 +14,9 @@ export interface TimeResultsTemplateProps {
 }
 
 /**
- * Layout skeleton for the Time Results route: the shared header, a card per
- * game, and a Reset. Placement only — the route supplies the games.
+ * Layout skeleton for the Time Results route: a card per game and a Reset. The
+ * header is supplied by the root layout. Placement only — the route supplies the
+ * games.
  */
 export default function TimeResultsTemplate({
   games,
@@ -24,7 +24,6 @@ export default function TimeResultsTemplate({
 }: TimeResultsTemplateProps) {
   return (
     <div className={styles.page}>
-      <Header />
       {games.map((durations, index) => (
         <div key={index} className={styles.section}>
           <GameTimesContainer game={index + 1} durations={durations} />
