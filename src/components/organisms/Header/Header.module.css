@@ -24,7 +24,25 @@
 .right {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* The primary game action (Start / New game) — a filled pill that stands out
+   from the text controls beside it. Compact to keep the busy bar inside the
+   column. Colour comes from a token, inline. */
+.gameButton {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .iconButton {

@@ -7,32 +7,29 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import { antonSC } from "@/lib/fonts";
 import { useGameStore } from "@/lib/store/gameStore";
+import { scrollToTop } from "@/lib/scroll";
 import styles from "./Header.module.css";
 
 export interface HeaderProps {
   title?: string;
 }
 
-function scrollToTop() {
-  if (typeof window !== "undefined") {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-}
-
 /**
  * The app bar. The title is always the way home. On the home route it also
- * carries the game-wide controls — read-back on/off, End game, and the link to
- * Times — which it reads straight from the store rather than via props, so they
- * cost no vertical space below. Off the home route it shows only a Home link.
+ * carries the game controls — Start/New game, read-back on/off, End game, and
+ * the link to Times — read straight from the store, so they cost no vertical
+ * space below. Off the home route it shows only a Home link.
  */
 export default function Header({ title = "Dots" }: HeaderProps) {
   const theme = useTheme();
   const onHome = usePathname() === "/";
 
-  const speechEnabled = useGameStore((state) => state.speechEnabled);
-  const toggleSpeech = useGameStore((state) => state.toggleSpeech);
-  const endGame = useGameStore((state) => state.endGame);
   const started = useGameStore((state) => state.startedAt !== null);
+  const speechEnabled = useGameStore((state) => state.speechEnabled);
+  const start = useGameStore((state) => state.start);
+  const newGame = useGameStore((state) => state.newGame);
+  const endGame = useGameStore((state) => state.endGame);
+  const toggleSpeech = useGameStore((state) => state.toggleSpeech);
 
   return (
     <header className={styles.header}>
@@ -47,6 +44,18 @@ export default function Header({ title = "Dots" }: HeaderProps) {
 
       {onHome ? (
         <div className={styles.right}>
+          <button
+            type="button"
+            className={styles.gameButton}
+            onClick={() => {
+              if (started) newGame();
+              else start();
+              scrollToTop();
+            }}
+            style={{ backgroundColor: theme.tokens.bg.primary.fill }}
+          >
+            {started ? "New game" : "Start"}
+          </button>
           <button
             type="button"
             className={styles.iconButton}
