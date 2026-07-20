@@ -7,21 +7,21 @@
    per section here rather than as one column gap, matching the mockup where they
    vary. */
 .inputSection {
-  margin-top: 32px;
+  margin-top: 16px;
   margin-inline: 20px;
 }
 
 .resultsSection {
-  margin-top: 16px;
+  margin-top: 12px;
   margin-inline: 20px;
 }
 
 .actions {
   display: flex;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: 16px;
   margin-inline: 20px;
-  padding-bottom: 40px;
+  padding-bottom: 24px;
 }
 
 /* All three buttons share the row as equal thirds. min-width:0 lets a long label

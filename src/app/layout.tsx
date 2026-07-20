@@ -6,8 +6,8 @@ import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bezier animation",
-  description: "A bezier curve animation demo",
+  title: "Dots",
+  description: "Record a Simon-style memory game",
 };
 
 export const viewport: Viewport = {
