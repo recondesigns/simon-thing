@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import ThemeRegistry from "@/providers/ThemeRegistry";
+import StoreHydrator from "@/providers/StoreHydrator";
 import { tokens } from "@/lib/theme/tokens";
 import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Bezier animation",
-  description: "A bezier curve animation demo",
+  title: "Dots",
+  description: "Record a Simon-style memory game",
 };
 
 export const viewport: Viewport = {
@@ -24,6 +25,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ThemeRegistry>
+          <StoreHydrator />
           <div className={styles.shell}>{children}</div>
         </ThemeRegistry>
       </body>

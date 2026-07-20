@@ -1,6 +1,7 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
   width: 100%;
   height: 48px;
@@ -8,7 +9,73 @@
 }
 
 .title {
+  margin: 0;
   font-size: 32px;
   font-weight: 400;
   white-space: nowrap;
+}
+
+/* The link inherits the h1's font and colour so the title looks unchanged. */
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The primary game action (Start / New game) — a filled pill that stands out
+   from the text controls beside it. Compact to keep the busy bar inside the
+   column. Colour comes from a token, inline. */
+.gameButton {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.endButton {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Disabled until a game is running — nothing to end before then. */
+.endButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.link {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
 }

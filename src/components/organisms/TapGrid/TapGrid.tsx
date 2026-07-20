@@ -1,8 +1,6 @@
 "use client";
 
-import { useTheme } from "@mui/material/styles";
 import GridCircle from "@/components/atoms/GridCircle/GridCircle";
-import { antonSC } from "@/lib/fonts";
 import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -34,46 +32,39 @@ export interface TapGridProps {
    * because a pattern that hits a cell twice is two steps, not one.
    */
   onTap?: (index: number) => void;
+  /**
+   * Gates the whole board. A round has to be started before there is anything
+   * to record, so the pads are inert until then rather than banking taps against
+   * a clock that isn't running.
+   */
+  disabled?: boolean;
 }
 
 /**
- * The input surface: a 3×3 board of the nine colored pads, numbered 1–9. Styled
- * as the grid card (same chrome as the readout) but static — it shows no steps,
- * it produces them. Tapping a pad reports its position; nothing is stored here.
+ * The input surface: a bare 3×3 board of the nine colored pads, numbered 1–9.
+ * No card or heading of its own — it sits straight on the page, leaving the
+ * results readout as the only section with chrome. Tapping a pad reports its
+ * position; nothing is stored here.
  */
-export default function TapGrid({ onTap }: TapGridProps) {
-  const { tokens } = useTheme();
-
+export default function TapGrid({ onTap, disabled = false }: TapGridProps) {
   return (
-    <section
-      className={styles.container}
-      style={{ backgroundColor: tokens.bg.surface["fill-light"] }}
-    >
-      <div className={styles.heading}>
-        <h2
-          className={`${styles.title} ${antonSC.className}`}
-          style={{ color: tokens.text.surface.lightest }}
-        >
-          Grid
-        </h2>
-      </div>
-      <div className={styles.circles}>
-        {ROWS.map((row, rowIndex) => (
-          <div key={rowIndex} className={styles.row}>
-            {row.map((pad) => (
-              <button
-                key={pad.index}
-                type="button"
-                className={styles.pad}
-                onClick={() => onTap?.(pad.index)}
-                aria-label={`Tap ${pad.label}`}
-              >
-                <GridCircle color={pad.color} label={pad.label} />
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-    </section>
+    <div className={styles.grid}>
+      {ROWS.map((row, rowIndex) => (
+        <div key={rowIndex} className={styles.row}>
+          {row.map((pad) => (
+            <button
+              key={pad.index}
+              type="button"
+              className={styles.pad}
+              onClick={() => onTap?.(pad.index)}
+              disabled={disabled}
+              aria-label={`Tap ${pad.label}`}
+            >
+              <GridCircle color={pad.color} label={pad.label} />
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }

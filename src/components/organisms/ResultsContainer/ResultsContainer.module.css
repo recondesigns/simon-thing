@@ -3,9 +3,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 14px;
   width: 100%;
-  padding-block: 12px;
+  padding-block: 10px;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -27,18 +27,66 @@
   white-space: nowrap;
 }
 
-/* A single line of pads that scrolls sideways once it overflows, rather than
-   wrapping. min-height reserves a pad's worth of space so the card holds its
-   height with nothing recorded yet. The pads are flex-shrink:0 (set on the
-   GridCircle), so they keep their size and the track scrolls instead. */
-.track {
+/* Round and step counts sit together at the right of the heading. */
+.chips {
   display: flex;
   align-items: center;
-  gap: 17px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Five rows of four, matching the grid readout. The full twenty slots render
+   from the start — filled pads and outlined empties alike — so the card is as
+   tall with nothing recorded as with a full round, and the buttons below never
+   move under a thumb mid-tap. */
+.circles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
   width: 100%;
-  min-height: 48px;
   padding-inline: 20px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 17px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* A newly landed pad pops in with a quick white flash — the bloom is what the
+   eye catches out of the corner, the overshoot confirms it up close. Played once
+   on mount (the pad's key flips when the slot fills), so it never loops. */
+.pop {
+  animation: resultPop 450ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes resultPop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  45% {
+    box-shadow: 0 0 18px 6px rgba(255, 255, 255, 0.8);
+  }
+  65% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Respect a reduced-motion preference: the pad still appears, just without the
+   pop and flash. */
+@media (prefers-reduced-motion: reduce) {
+  .pop {
+    animation: none;
+  }
 }
