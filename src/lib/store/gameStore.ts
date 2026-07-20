@@ -86,9 +86,13 @@ export interface GameStore {
    * tap/start), up to `max` dots. Ignored before Start or once the cap is reached.
    */
   tap: (index: number, max: number) => void;
-  /** Save the current round into the active session and reset to a fresh round. */
+  /**
+   * Finish the current round: bank it into the active session and roll straight
+   * into the next one with the clock running, so play continues without a Start.
+   * This is the normal "the round is over, log it" action.
+   */
   newRound: () => void;
-  /** Discard the current round without saving it, and reset. */
+  /** Discard the current round without saving it, and reset to Start. */
   endRound: () => void;
   /**
    * Close the active session (banking any round in progress first) so the next
@@ -185,10 +189,25 @@ export const useGameStore = create<GameStore>()(
         }),
 
       newRound: () =>
-        set((state) => ({
-          sessions: bankRound(state.sessions, state.dotDurations, Date.now()),
-          ...freshRound,
-        })),
+        set((state) => {
+          const now = Date.now();
+          let sessions = bankRound(state.sessions, state.dotDurations, now);
+          // Roll straight into the next round — keep (or open) a session for it.
+          if (!activeSession(sessions)) {
+            sessions = [
+              ...sessions,
+              { startedAt: now, endedAt: null, rounds: [] },
+            ];
+          }
+          return {
+            sessions,
+            taps: [],
+            dotDurations: [],
+            startedAt: now,
+            lastTapAt: now,
+            locked: false,
+          };
+        }),
 
       endRound: () => set({ ...freshRound }),
 

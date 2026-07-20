@@ -28,8 +28,6 @@ export default function HeaderMenu() {
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const cadence = useGameStore((state) => state.cadence);
-  const start = useGameStore((state) => state.start);
-  const newRound = useGameStore((state) => state.newRound);
   const endRound = useGameStore((state) => state.endRound);
   const newSession = useGameStore((state) => state.newSession);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
@@ -38,16 +36,9 @@ export default function HeaderMenu() {
 
   const close = () => setOpen(false);
 
-  // The primary Tools action mirrors the header button's other half: save the
-  // current round and start fresh, or begin one if none is running.
-  const handleStart = () => {
-    if (started) newRound();
-    else start();
-    scrollToTop();
-    close();
-  };
-
-  const handleEnd = () => {
+  // The escape hatch for a fumbled recording: throw the round away without
+  // logging it. The normal "round's over, log it" action is the header button.
+  const handleDiscard = () => {
     endRound();
     scrollToTop();
     close();
@@ -143,27 +134,19 @@ export default function HeaderMenu() {
             <button
               type="button"
               className={styles.item}
-              onClick={handleStart}
-              style={{ color: theme.tokens.text.surface.lightest }}
-            >
-              {started ? "New round" : "Start round"}
-            </button>
-            <button
-              type="button"
-              className={styles.item}
-              onClick={handleEnd}
-              disabled={!started}
-              style={{ color: theme.tokens.text.danger.light }}
-            >
-              End round
-            </button>
-            <button
-              type="button"
-              className={styles.item}
               onClick={handleNewSession}
               style={{ color: theme.tokens.text.surface.lightest }}
             >
               New session
+            </button>
+            <button
+              type="button"
+              className={styles.item}
+              onClick={handleDiscard}
+              disabled={!started}
+              style={{ color: theme.tokens.text.danger.light }}
+            >
+              Discard round
             </button>
           </div>
 
