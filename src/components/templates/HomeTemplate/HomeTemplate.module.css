@@ -7,12 +7,13 @@
    per section here rather than as one column gap, matching the mockup where they
    vary. */
 .inputSection {
-  margin-top: 16px;
+  /* 20px above the grid; the results section adds the matching 20px below. */
+  margin-top: 20px;
   margin-inline: 20px;
 }
 
 .resultsSection {
-  margin-top: 12px;
+  margin-top: 20px;
   margin-inline: 20px;
   /* The last section on the page now the button row is gone — hold a little
      breathing room below it. */
