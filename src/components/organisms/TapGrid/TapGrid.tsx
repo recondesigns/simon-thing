@@ -34,6 +34,12 @@ export interface TapGridProps {
    * because a pattern that hits a cell twice is two steps, not one.
    */
   onTap?: (index: number) => void;
+  /**
+   * Gates the whole board. A round has to be started before there is anything
+   * to record, so the pads are inert until then rather than banking taps against
+   * a clock that isn't running.
+   */
+  disabled?: boolean;
 }
 
 /**
@@ -41,7 +47,7 @@ export interface TapGridProps {
  * as the grid card (same chrome as the readout) but static — it shows no steps,
  * it produces them. Tapping a pad reports its position; nothing is stored here.
  */
-export default function TapGrid({ onTap }: TapGridProps) {
+export default function TapGrid({ onTap, disabled = false }: TapGridProps) {
   const { tokens } = useTheme();
 
   return (
@@ -66,6 +72,7 @@ export default function TapGrid({ onTap }: TapGridProps) {
                 type="button"
                 className={styles.pad}
                 onClick={() => onTap?.(pad.index)}
+                disabled={disabled}
                 aria-label={`Tap ${pad.label}`}
               >
                 <GridCircle color={pad.color} label={pad.label} />

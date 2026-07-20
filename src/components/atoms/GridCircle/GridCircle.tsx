@@ -36,6 +36,8 @@ export interface GridCircleProps {
    */
   color?: GridCircleColor;
   label?: string;
+  /** Extra class on the circle — used by callers to animate it, for instance. */
+  className?: string;
 }
 
 /**
@@ -47,14 +49,20 @@ export interface GridCircleProps {
  * and make the meaningless case unrepresentable. Same reasoning as CameraFeed,
  * whose nine Figma states the code composes rather than enumerates.
  */
-export default function GridCircle({ color, label }: GridCircleProps) {
+export default function GridCircle({
+  color,
+  label,
+  className,
+}: GridCircleProps) {
+  const extra = className ? ` ${className}` : "";
+
   // Unlike the nine pad fills, the empty slot's border is token-bound. The pads
   // are raw because game colours are not semantic UI colours; an *absent* pad is
   // not a game colour at all, it is chrome, so it takes a token.
   if (color === undefined) {
     return (
       <div
-        className={`${styles.circle} ${styles.empty}`}
+        className={`${styles.circle} ${styles.empty}${extra}`}
         style={{ borderColor: tokens.border.surface.default }}
         data-testid="grid-circle-empty"
       />
@@ -63,7 +71,7 @@ export default function GridCircle({ color, label }: GridCircleProps) {
 
   return (
     <div
-      className={`${styles.circle} ${antonSC.className}`}
+      className={`${styles.circle} ${antonSC.className}${extra}`}
       style={{ backgroundColor: GRID_CIRCLE_COLORS[color] }}
     >
       {label}

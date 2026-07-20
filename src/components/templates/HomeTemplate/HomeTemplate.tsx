@@ -13,12 +13,16 @@ export interface HomeTemplateProps {
   results: ResultStep[];
   /** Which round is in progress; shown on the results readout. */
   round?: number;
+  /** Whether a round is running — gates the pads and drives the round button's label. */
+  started?: boolean;
   /** Fired with a pad's index (0–8) when the input board is tapped. */
   onTap?: (index: number) => void;
-  /** Starts a fresh round: clears the results and bumps the round count. */
-  onNewRound?: () => void;
-  /** Clears everything — the results and the round count. */
-  onClear?: () => void;
+  /** Start round (first press) then New round: banks the round and starts the next. */
+  onAdvanceRound?: () => void;
+  /** Ends the current game, recording it, and starts a fresh one. */
+  onNewGame?: () => void;
+  /** Abandons the current game without recording it, and starts a fresh one. */
+  onEndGame?: () => void;
 }
 
 /**
@@ -29,25 +33,30 @@ export interface HomeTemplateProps {
 export default function HomeTemplate({
   results,
   round = 1,
+  started = false,
   onTap,
-  onNewRound,
-  onClear,
+  onAdvanceRound,
+  onNewGame,
+  onEndGame,
 }: HomeTemplateProps) {
   return (
     <div className={styles.page}>
       <Header />
       <div className={styles.inputSection}>
-        <TapGrid onTap={onTap} />
+        <TapGrid onTap={onTap} disabled={!started} />
       </div>
       <div className={styles.resultsSection}>
         <ResultsContainer steps={results} round={round} />
       </div>
       <div className={styles.actions}>
-        <Button color="primary" variant="contained" onClick={onNewRound}>
-          New round
+        <Button color="primary" variant="contained" onClick={onAdvanceRound}>
+          {started ? "New round" : "Start round"}
         </Button>
-        <Button color="danger" variant="outlined" onClick={onClear}>
-          Clear
+        <Button color="danger" variant="outlined" onClick={onNewGame}>
+          New game
+        </Button>
+        <Button color="danger" variant="outlined" onClick={onEndGame}>
+          End game
         </Button>
       </div>
     </div>

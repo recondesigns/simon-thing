@@ -61,17 +61,30 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Twice the atom's default here only — the input pads are the tap target, so
-   they want to be big, while the results pads stay 48px. Overriding the
-   GridCircle's own size from outside rather than adding a size prop keeps this
-   local to the one section that wants it. Label scales with the pad. */
+/* Bigger than the atom's 48px default here only — the input pads are the tap
+   target, so they want to be large, while the results pads stay 48px. 96px
+   overflowed the 400px column on mobile (3 pads + gaps + card padding + section
+   margin came to ~402px) and clipped the buttons; 80px keeps the row inside the
+   column with room to spare. Overriding the GridCircle's size from outside
+   rather than adding a size prop keeps this local. Label scales with the pad. */
 .pad > div {
-  width: 96px;
-  height: 96px;
-  font-size: 36px;
-  line-height: 36px;
+  width: 80px;
+  height: 80px;
+  font-size: 30px;
+  line-height: 30px;
 }
 
 .pad:active {
   transform: scale(0.94);
+}
+
+/* Gated until the round starts: dimmed and unpressable, so it's clear the board
+   is waiting on Start round rather than broken. */
+.pad:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.pad:disabled:active {
+  transform: none;
 }
