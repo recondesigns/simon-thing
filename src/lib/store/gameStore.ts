@@ -8,9 +8,9 @@ import { persist } from "zustand/middleware";
  *
  * The pattern is cumulative, Simon-style: round N is round N-1 plus one more
  * circle, so each tap *is* a round — it appends a circle and completes that
- * round. `taps` therefore holds the whole current game (up to 20), not a single
- * round, and round N's time is the gap between tap N-1 and tap N (round 1 counts
- * from Start game).
+ * round automatically. `taps` therefore holds the whole current game (up to 20),
+ * not one round, and round N's time is the gap between tap N-1 and tap N (round 1
+ * counts from Start).
  *
  * `roundDurations` holds the current game's round times; `games` holds the games
  * finished before it. New game archives the current one; End game discards it;
@@ -18,14 +18,13 @@ import { persist } from "zustand/middleware";
  *
  * Finished games and the speech preference are persisted to localStorage; the
  * in-progress game and its running clock are not, so a reload keeps your history
- * and drops you back to Start game. Rehydration is deferred (`skipHydration`)
- * and run after mount by StoreHydrator, so the first client render matches the
- * server's empty paint.
+ * and drops you back to Start. Rehydration is deferred (`skipHydration`) and run
+ * after mount by StoreHydrator, so the first client render matches the server's.
  */
 export interface GameStore {
   /** The accumulated pattern (pad indices 0–8) for the current game, in order. */
   taps: number[];
-  /** Epoch ms when the game started, or null before Start game (pads gated). */
+  /** Epoch ms when the game started, or null before Start (pads gated). */
   startedAt: number | null;
   /** Epoch ms of the last tap (or the start), used to time the next round. */
   lastTapAt: number | null;
@@ -39,9 +38,9 @@ export interface GameStore {
   /** Begin the game: start the clock and ungate the pads. No-op once started. */
   start: () => void;
   /**
-   * Add a circle — completing a round: appends the pad, banks the round's time
-   * (now minus the last tap/start), up to `max` circles. Ignored before Start
-   * game or once the cap is reached.
+   * Add a circle — completing a round: appends the pad and banks the round's
+   * time (now minus the last tap/start), up to `max` circles. Ignored before
+   * Start or once the cap is reached.
    */
   tap: (index: number, max: number) => void;
   /** Record the current game and reset to a fresh, not-yet-started game. */
@@ -73,7 +72,7 @@ export const useGameStore = create<GameStore>()(
 
       tap: (index, max) =>
         set((state) => {
-          if (state.startedAt === null) return {}; // gated until Start game
+          if (state.startedAt === null) return {}; // gated until Start
           if (state.taps.length >= max) return {}; // capped at `max` rounds
           const now = Date.now();
           const duration = now - (state.lastTapAt ?? now);

@@ -14,20 +14,7 @@
 .resultsSection {
   margin-top: 12px;
   margin-inline: 20px;
-}
-
-.actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-  margin-inline: 20px;
+  /* The last section on the page now the button row is gone — hold a little
+     breathing room below it. */
   padding-bottom: 24px;
-}
-
-/* All three buttons share the row as equal thirds. min-width:0 lets a long label
-   (e.g. "Start round") wrap inside its button on a narrow phone rather than
-   pushing the row past the column edge. */
-.actions > button {
-  flex: 1 0 0;
-  min-width: 0;
 }
