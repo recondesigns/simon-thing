@@ -15,6 +15,22 @@ export default defineConfig({
   test: {
     projects: [
       {
+        // Pure logic — no DOM, no browser. Without this project a *.test.ts
+        // file is collected by nothing and silently never runs: the storybook
+        // project below only picks up stories.
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.test.ts'],
+        },
+        // The storybook project inherits the @/ alias from the Next.js plugin.
+        // This one has no plugin, so it needs the same alias spelled out or
+        // every @/ import fails to resolve.
+        resolve: {
+          alias: { '@': path.join(dirname, 'src') },
+        },
+      },
+      {
         extends: true,
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config

@@ -1,24 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import type { CameraStatus } from "@/components/organisms/CameraFeed/CameraFeed";
-import type { PatternStep } from "@/components/organisms/PatternContainer/PatternContainer";
+import type { ResultStep } from "@/components/organisms/ResultsContainer/ResultsContainer";
 import Home from "./page";
 import layoutStyles from "./layout.module.css";
+import homeStyles from "@/components/templates/HomeTemplate/HomeTemplate.module.css";
 
-const CAMERA_STATUSES: CameraStatus[] = [
-  "off",
-  "requesting",
-  "denied",
-  "error",
-  "on",
+/**
+ * A recorded run, as the route would build it: colour and number both read the
+ * pad's position off the grid, so they always agree.
+ */
+const RESULTS: ResultStep[] = [
+  { color: "magenta", label: "1" },
+  { color: "green", label: "5" },
+  { color: "crimson", label: "9" },
 ];
-
-// Same placeholder content the route renders.
-const STEPS: PatternStep[] = Array.from({ length: 20 }, () => ({
-  color: "red",
-  label: "5",
-}));
 
 const meta = {
   title: "Pages/Home",
@@ -27,20 +23,12 @@ const meta = {
     layout: "fullscreen",
   },
   argTypes: {
-    cameraStatus: {
-      control: "select",
-      options: CAMERA_STATUSES,
-      description: "Drives the camera feed state. Switch to review each one.",
-    },
-    // Required props, but not worth a control — steps is a 20-item array no
-    // one will hand-edit, and its length is what drives the chip total.
-    steps: { table: { disable: true } },
-    currentStep: { table: { disable: true } },
+    // Required, but not worth a control — an array of steps is not something
+    // anyone will hand-edit in the panel.
+    results: { table: { disable: true } },
   },
   args: {
-    cameraStatus: "off",
-    steps: STEPS,
-    currentStep: 3,
+    results: RESULTS,
   },
   decorators: [
     // Reuses the same CSS module as app/layout.tsx rather than restating the
@@ -61,64 +49,66 @@ export const Default: Story = {
     const shell = canvasElement.querySelector(`.${layoutStyles.shell}`);
     await expect(getComputedStyle(shell!).maxWidth).toBe("400px");
     await expect(canvasElement.querySelector("h1")?.textContent).toBe(
-      "Fake Name",
+      "Bezier animation",
     );
-    await expect(canvasElement.textContent).toContain("Camera is off");
+
+    // The header title and both cards share one 20px left edge. Pinned so a
+    // dropped inset would fail here rather than silently misalign the column.
+    const leftOf = (el: Element | null) =>
+      Math.round(el!.getBoundingClientRect().left);
+    const titleLeft = leftOf(canvasElement.querySelector("h1"));
+    await expect(
+      leftOf(canvasElement.querySelector(`.${homeStyles.inputSection}`)),
+    ).toBe(titleLeft);
+    await expect(
+      leftOf(canvasElement.querySelector(`.${homeStyles.resultsSection}`)),
+    ).toBe(titleLeft);
+
+    // Both cards are on the page: the input board (nine numbered pads) and the
+    // readout (the three recorded steps, counted by the chip).
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("button", { name: "Tap 1" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Tap 9" })).toBeVisible();
+    await expect(canvasElement.textContent).toContain("3Steps");
+    await expect(canvas.getByRole("button", { name: "Clear" })).toBeVisible();
   },
 };
 
-// Per-state stories live on Organisms/CameraFeed, which asserts each one.
-// The cameraStatus control above is enough to review them in page context.
-
 /**
- * The real route, wired to a real camera — the only story where getUserMedia
- * actually runs. Every other story is presentational, so this is what proves
- * the hook, the Start/Stop wiring, and track cleanup genuinely work.
- *
- * Chromium gets a synthetic camera via the launch args in vitest.config.ts.
- * Opening this story in `pnpm storybook` will prompt for real camera access.
+ * The real route, wired to its own state. Tapping a pad records a step; the same
+ * pad twice records it twice; Clear empties the run. This is what proves the
+ * page's tap → results → clear loop, not just the layout.
  */
-export const LiveCamera: Story = {
+export const RecordsTaps: Story = {
   render: () => <Home />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvasElement.textContent).toContain("Camera is off");
+    const track = () =>
+      canvasElement.querySelector('[data-testid="results-track"]')!;
 
-    await userEvent.click(canvas.getByRole("button", { name: "Start" }));
+    // Starts empty.
+    await expect(track().children.length).toBe(0);
+    await expect(canvasElement.textContent).toContain("0Steps");
 
-    const video = await waitFor(() => {
-      const el = canvasElement.querySelector("video");
-      if (!el) throw new Error("video element never appeared");
-      return el;
-    });
+    // Tap 1 twice, then 9: three steps, in order, repeats kept.
+    await userEvent.click(canvas.getByRole("button", { name: "Tap 1" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Tap 1" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Tap 9" }));
 
-    // Wait for decoded frames, not just the element — an empty <video> would
-    // pass a mere existence check while the feed was actually broken.
-    await waitFor(
-      () => {
-        if (!video.videoWidth) throw new Error("no frames decoded yet");
-      },
-      { timeout: 5000 },
+    await expect(track().children.length).toBe(3);
+    await expect(canvasElement.textContent).toContain("3Steps");
+    // The recorded pad wears the tapped pad's colour: 1 is magenta, 9 crimson.
+    await expect(getComputedStyle(track().children[0]).backgroundColor).toBe(
+      "rgb(206, 0, 253)", // magenta #CE00FD
     );
+    await expect(getComputedStyle(track().children[2]).backgroundColor).toBe(
+      "rgb(165, 0, 36)", // crimson #A50024
+    );
+    await expect(track().children[2].textContent).toBe("9");
 
-    const stream = video.srcObject as MediaStream | null;
-    await expect(stream).not.toBeNull();
-
-    const tracks = stream!.getVideoTracks();
-    await expect(tracks).toHaveLength(1);
-    await expect(tracks[0].readyState).toBe("live");
-    await expect(canvasElement.textContent).not.toContain("Camera is off");
-
-    await userEvent.click(canvas.getByRole("button", { name: "Stop" }));
-
-    // Stop must release the track, not just hide the element: iOS allows one
-    // active camera stream, so a leaked track breaks the next Start.
-    await waitFor(() => {
-      if (canvasElement.querySelector("video")) {
-        throw new Error("video still mounted after Stop");
-      }
-    });
-    await expect(tracks[0].readyState).toBe("ended");
-    await expect(canvasElement.textContent).toContain("Camera is off");
+    // Clear empties the run.
+    await userEvent.click(canvas.getByRole("button", { name: "Clear" }));
+    await expect(track().children.length).toBe(0);
+    await expect(canvasElement.textContent).toContain("0Steps");
   },
 };

@@ -5,8 +5,8 @@ import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Fake Name",
-  description: "A Simon-style memory game",
+  title: "Bezier animation",
+  description: "A bezier curve animation demo",
 };
 
 export const viewport: Viewport = {

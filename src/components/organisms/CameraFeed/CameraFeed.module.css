@@ -5,7 +5,11 @@
   flex-shrink: 0;
   width: 100%;
   height: 292px;
+  border-radius: 4px;
+  /* Also clips the video and any overlay to the rounded corners. */
   overflow: hidden;
+  /* Containing block for any overlay laid over the video. */
+  position: relative;
 }
 
 /* Padding lives here, not on .feed, so the video can fill edge to edge. */

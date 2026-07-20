@@ -145,11 +145,74 @@ export const OutlinedSuccess: Story = {
   },
 };
 
+/**
+ * Disabled is the fourth time MUI's cascade bit, and the first that reached a
+ * user: `backgroundColor` on `.MuiButton-contained` is unconditional, so it beat
+ * MUI's own `Mui-disabled` styling. The button shipped as full primary blue with
+ * a white label at opacity 1 — indistinguishable from an enabled one, and inert.
+ *
+ * The old story here asserted nothing, and the ActionsWrapper one asserted only
+ * `toBeDisabled()`. Both passed throughout: `disabled` was a real attribute, and
+ * the element really did ignore taps. Only the pixels lied. That is why this
+ * asserts colour rather than state.
+ */
 export const Disabled: Story = {
   args: {
     color: "primary",
     variant: "contained",
     disabled: true,
+  },
+  play: async ({ canvasElement }) => {
+    const button = canvasElement.querySelector("button")!;
+    const computed = getComputedStyle(button);
+
+    // bg/surface/fill-light and text/surface/light, per the Figma set — not
+    // the primary fill, and not MUI's default grey.
+    await expect(computed.backgroundColor).toBe("rgb(32, 32, 37)");
+    await expect(computed.color).toBe("rgb(141, 141, 148)");
+
+    // The bug in one line: it must not look like the enabled button.
+    await expect(computed.backgroundColor).not.toBe("rgb(80, 137, 246)");
+  },
+};
+
+/**
+ * Disabled is colour-independent by design — all six disabled variants in Figma
+ * are identical apart from contained vs outlined. A disabled control should not
+ * still be announcing which action it would have performed.
+ */
+export const DisabledIgnoresColor: Story = {
+  render: () => (
+    <div style={{ display: "flex", gap: 16 }}>
+      <Button data-testid="d-primary" color="primary" disabled>
+        Record
+      </Button>
+      <Button data-testid="d-danger" color="danger" disabled>
+        Record
+      </Button>
+      <Button data-testid="d-success" color="success" disabled>
+        Record
+      </Button>
+      <Button data-testid="d-outlined" color="danger" variant="outlined" disabled>
+        Record
+      </Button>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const bg = (id: string) =>
+      getComputedStyle(
+        canvasElement.querySelector<HTMLElement>(`[data-testid="${id}"]`)!,
+      ).backgroundColor;
+
+    await expect(bg("d-primary")).toBe(bg("d-danger"));
+    await expect(bg("d-danger")).toBe(bg("d-success"));
+
+    // Outlined disabled drops the border to border/surface/strong.
+    const outlined = getComputedStyle(
+      canvasElement.querySelector<HTMLElement>('[data-testid="d-outlined"]')!,
+    );
+    await expect(outlined.borderColor).toBe("rgb(113, 113, 120)");
+    await expect(outlined.color).toBe("rgb(141, 141, 148)");
   },
 };
 

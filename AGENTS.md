@@ -60,7 +60,25 @@ The mockup is built (header, camera feed, pattern grid, actions) and **the camer
 - No dev/prod branching: `getUserMedia` needs a **secure context**, which is a property of the URL, not the build. localhost and HTTPS qualify; a plain-HTTP LAN address does not, so an undefined `mediaDevices` means `error`, not `denied` — the user was never asked.
 - `templates/HomeTemplate` takes every value as a prop, so the route supplies data and stories drive any state.
 
+**Pattern detection is half built** — the logic exists and is tested; nothing feeds it pixels yet. The plan and measured thresholds are in Notion (Dashboard → Projects → Simon); **read that before touching it**. The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
+
+`src/lib/detection/` is pure and framework-free — RGB in, events out, no camera or DOM:
+
+- `detector.ts` — baseline, fire, debounce, ordered output. Gating is the **caller's** job: a user's tap and a pattern pulse are the same fade to white, and nothing in the pixels separates them.
+- `homography.ts` — four corner *circles* (not screen corners — that would assume where the grid sits inside the screen) map to the nine centres. Rejects non-convex quads up front; the solver happily returns a degenerate transform otherwise.
+- `sampler.ts` — mean RGB per patch. Radius scales with cell spacing; never sample the whole frame (a background TV and handheld shake dominate any frame diff).
+- `fixtures/reference-clip.json` — the reference video reduced to what the detector consumes. **The video itself is local-only and not in git**, so tests depend on this instead. It is the known-answer test: `[bottom-right, bottom-middle]`.
+
+The live loop is wired end to end: Start the camera, tap the four corner circles, press Record, and detected cells render into the grid.
+
+- `hooks/useGridDetection` owns the frame loop and canvas; the detection stays pure in `lib/detection`. Frames are downscaled to 640px before `getImageData` — a 1080p read is 8MB, and at 15fps that is 100MB/s of copying to sample nine small patches.
+- `lib/detection/viewport.ts` converts taps to camera-frame pixels. **The feed is `object-fit: cover`, so element coords are not frame coords** — for a portrait frame in the 400x292 box the element's top-left is ~566px down the frame. Getting this wrong does not throw; it samples the wrong places forever and reads as a threshold problem.
+- `organisms/CalibrationOverlay` collects the taps. It renders **only while the feed is `on`** — `CameraFeed` puts it inside that branch, so there is nothing to tap with the camera off.
+- Gating is a manual **Record** button. Nothing in the pixels separates a user's tap from a pattern pulse, so the phase gate cannot come from the detector.
+
 Not yet built:
 
-- **Pattern detection.** The next feature: watch a bar-top arcade machine's 3x3 grid and read the pattern. The reference video is analyzed and the plan — measured thresholds, pipeline, risks — is in Notion (Dashboard → Projects → Simon). **Read that before building.** The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
-- **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content matching the mockup.
+- **Game state.** Zustand is installed but has no stores; the grid and step count render placeholder content until something is detected.
+- **Diagnostics export.** The app cannot report what it saw, so testing at the machine yields anecdote rather than data. Deferred until the drift video comes back — see Notion.
+
+**Camera drift is untested by anything, and cannot be tested from the fixture** — its window was chosen for being steady. It is the risk most likely to break this. The next step is a propped-phone video, not code; the protocol is on the Notion page.
