@@ -27,16 +27,17 @@
   gap: 12px;
 }
 
-/* The primary game action (Start / New game) — a filled pill that stands out
-   from the text controls beside it. Compact to keep the busy bar inside the
-   column. Colour comes from a token, inline. */
+/* The primary game action — a compact pill. Start is filled primary; once a
+   game's running it flips to an outlined-danger End game. Both share this shape;
+   the fill, text and border colours are set inline from tokens per state, and
+   the 1px transparent border keeps the two states the same size. */
 .gameButton {
   display: flex;
   align-items: center;
   padding: 6px 14px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 999px;
-  color: #ffffff;
+  background: transparent;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
@@ -54,28 +55,4 @@
   background: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-}
-
-.endButton {
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Disabled until a game is running — nothing to end before then. */
-.endButton:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.link {
-  font-size: 15px;
-  font-weight: 500;
-  white-space: nowrap;
-  text-decoration: none;
 }

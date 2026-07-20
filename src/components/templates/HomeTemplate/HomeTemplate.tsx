@@ -1,6 +1,5 @@
 "use client";
 
-import Header from "@/components/organisms/Header/Header";
 import TapGrid from "@/components/organisms/TapGrid/TapGrid";
 import ResultsContainer, {
   type ResultStep,
@@ -34,7 +33,6 @@ export default function HomeTemplate({
 }: HomeTemplateProps) {
   return (
     <div className={styles.page}>
-      <Header />
       <div className={styles.inputSection}>
         <TapGrid onTap={onTap} disabled={!canTap} />
       </div>

@@ -28,6 +28,16 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* The input pads run larger than the 48px results circles — a comfier tap
+   target. Scoped here (higher specificity than GridCircle's own .circle) so only
+   the board grows; the readout keeps its size. The numeral scales with it. */
+.pad > div {
+  width: 56px;
+  height: 56px;
+  font-size: 21px;
+  line-height: 21px;
+}
+
 .pad:active {
   transform: scale(0.94);
 }
