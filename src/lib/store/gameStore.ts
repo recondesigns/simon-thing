@@ -34,6 +34,13 @@ export interface GameStore {
   games: number[][];
   /** Whether tapped numbers are read back aloud. Persisted preference. */
   speechEnabled: boolean;
+  /**
+   * True from the moment a round's circle is tapped until its read-back ends —
+   * one tap per round. It gates the pads so a stray or early second tap can't
+   * slip in around the audio. The unlock is timed by the route (it knows how
+   * long the read-back runs) and applied via `unlock`.
+   */
+  locked: boolean;
 
   /** Begin the game: start the clock and ungate the pads. No-op once started. */
   start: () => void;
@@ -49,6 +56,8 @@ export interface GameStore {
   endGame: () => void;
   /** Clear every game and the current one (keeps the speech preference). */
   reset: () => void;
+  /** Release the one-tap-per-round lock once the read-back has finished. */
+  unlock: () => void;
   /** Flip number read-back on/off. */
   toggleSpeech: () => void;
 }
@@ -62,17 +71,19 @@ export const useGameStore = create<GameStore>()(
       roundDurations: [],
       games: [],
       speechEnabled: true,
+      locked: false,
 
       start: () =>
         set((state) => {
           if (state.startedAt !== null) return {};
           const now = Date.now();
-          return { startedAt: now, lastTapAt: now };
+          return { startedAt: now, lastTapAt: now, locked: false };
         }),
 
       tap: (index, max) =>
         set((state) => {
           if (state.startedAt === null) return {}; // gated until Start
+          if (state.locked) return {}; // one tap per round
           if (state.taps.length >= max) return {}; // capped at `max` rounds
           const now = Date.now();
           const duration = now - (state.lastTapAt ?? now);
@@ -80,6 +91,7 @@ export const useGameStore = create<GameStore>()(
             taps: [...state.taps, index],
             roundDurations: [...state.roundDurations, duration],
             lastTapAt: now,
+            locked: true, // held until the round's read-back ends
           };
         }),
 
@@ -96,6 +108,7 @@ export const useGameStore = create<GameStore>()(
             roundDurations: [],
             startedAt: null,
             lastTapAt: null,
+            locked: false,
           };
         }),
 
@@ -105,6 +118,7 @@ export const useGameStore = create<GameStore>()(
           roundDurations: [],
           startedAt: null,
           lastTapAt: null,
+          locked: false,
         }),
 
       reset: () =>
@@ -114,7 +128,10 @@ export const useGameStore = create<GameStore>()(
           startedAt: null,
           lastTapAt: null,
           games: [],
+          locked: false,
         }),
+
+      unlock: () => set({ locked: false }),
 
       toggleSpeech: () =>
         set((state) => ({ speechEnabled: !state.speechEnabled })),

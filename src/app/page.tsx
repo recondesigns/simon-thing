@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import {
@@ -13,11 +13,22 @@ import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 
+// The beat after a tap before the read-back starts speaking.
+const READBACK_PAUSE_MS = 1500;
+// Gap between spoken numbers.
+const READBACK_STEP_MS = 800;
+// Held after the last number actually finishes before the pads reopen.
+const POST_AUDIO_MS = 500;
+// With read-back off there's no audio to wait on, so the lock is just a brief
+// debounce against an accidental double-tap.
+const SILENT_LOCK_MS = 600;
+
 export default function Home() {
   const taps = useGameStore((state) => state.taps);
   const startedAt = useGameStore((state) => state.startedAt);
-  const speechEnabled = useGameStore((state) => state.speechEnabled);
+  const locked = useGameStore((state) => state.locked);
   const tap = useGameStore((state) => state.tap);
+  const unlock = useGameStore((state) => state.unlock);
 
   // A pad's colour and number both read its position off the grid, so the
   // result always matches the pad that was tapped.
@@ -33,31 +44,78 @@ export default function Home() {
   // Each tap completes a round, so the round you're on is one past the count.
   const round = taps.length + 1;
 
+  // Live only while a game is running, not mid-lock, and not already full.
+  const canTap = startedAt !== null && !locked && taps.length < RESULT_SLOTS;
+
   const handleTap = useCallback(
     (index: number) => tap(index, RESULT_SLOTS),
     [tap],
   );
 
-  // Read the whole pattern back after each round: a beat to let the tap settle,
-  // then each number spoken slowly. A new tap re-runs this — cancelling the
-  // pending read and any speech mid-flight — so it always reads the latest
-  // sequence. Ending or clearing the game empties `taps`, which cancels playback
-  // via the cleanup.
+  // How many taps this mount has already reacted to. Null until the first effect
+  // run, which lets us tell a genuinely new tap from a pattern that was already
+  // on screen when the page (re)mounted — e.g. after coming back from Times.
+  const handledCount = useRef<number | null>(null);
+
+  // Read the pattern back after a *new* tap, and release the one-tap-per-round
+  // lock when it's done. speechEnabled is read fresh (not a dependency) so
+  // toggling it never re-runs this and replays or strands the lock.
   useEffect(() => {
-    if (!speechEnabled || taps.length === 0) return;
+    const count = taps.length;
+    const previous = handledCount.current;
+    handledCount.current = count;
+
+    // First run for this mount. A pattern already present is not a new tap:
+    // don't replay it, and release any lock left from navigating away mid-read.
+    if (previous === null) {
+      if (count > 0) unlock();
+      return;
+    }
+
+    // A reset (New/End game) or no growth — nothing new to read.
+    if (count <= previous) return;
+
+    // A new tap. With speech off, just a short debounce before unlocking.
+    if (!useGameStore.getState().speechEnabled) {
+      const release = setTimeout(unlock, SILENT_LOCK_MS);
+      return () => clearTimeout(release);
+    }
+
+    // With speech on: pause, speak each number slowly, then unlock 500ms after
+    // the last number actually finishes (its end event, not a guessed time).
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
-    const pause = setTimeout(() => speakSequence(words), 800);
+    let release: ReturnType<typeof setTimeout> | undefined;
+
+    const startSpeaking = setTimeout(() => {
+      speakSequence(words, {
+        stepMs: READBACK_STEP_MS,
+        onDone: () => {
+          release = setTimeout(unlock, POST_AUDIO_MS);
+        },
+      });
+    }, READBACK_PAUSE_MS);
+
+    // Safety net: if the browser never fires the end event, don't leave the
+    // board locked forever. Generous so it never pre-empts a slow-but-working
+    // voice.
+    const fallback = setTimeout(
+      unlock,
+      READBACK_PAUSE_MS + count * READBACK_STEP_MS * 2 + 4000,
+    );
+
     return () => {
-      clearTimeout(pause);
+      clearTimeout(startSpeaking);
+      clearTimeout(fallback);
+      if (release) clearTimeout(release);
       cancelSpeech();
     };
-  }, [taps, speechEnabled]);
+  }, [taps, unlock]);
 
   return (
     <HomeTemplate
       results={results}
       round={round}
-      started={startedAt !== null}
+      canTap={canTap}
       onTap={handleTap}
     />
   );
