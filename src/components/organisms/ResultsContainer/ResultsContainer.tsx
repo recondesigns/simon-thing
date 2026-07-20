@@ -20,6 +20,11 @@ export interface ResultsContainerProps {
    * cell twice is two steps.
    */
   steps: ResultStep[];
+  /**
+   * Which round is in progress. Shown in the header and starts at 1 — a new
+   * round clears the steps and bumps this; Clear resets it to 1.
+   */
+  round?: number;
 }
 
 /**
@@ -28,7 +33,10 @@ export interface ResultsContainerProps {
  * wrapping into rows the track scrolls sideways, keeping the whole run on one
  * line however long it gets. The chip keeps the running count.
  */
-export default function ResultsContainer({ steps }: ResultsContainerProps) {
+export default function ResultsContainer({
+  steps,
+  round = 1,
+}: ResultsContainerProps) {
   const { tokens } = useTheme();
 
   return (
@@ -43,7 +51,14 @@ export default function ResultsContainer({ steps }: ResultsContainerProps) {
         >
           Results
         </h2>
-        <Chip count={steps.length} total="Steps" divider={false} />
+        <div className={styles.chips}>
+          <Chip
+            count={round}
+            total={round === 1 ? "Round" : "Rounds"}
+            divider={false}
+          />
+          <Chip count={steps.length} total="Steps" divider={false} />
+        </div>
       </div>
       <div className={styles.track} data-testid="results-track">
         {steps.map((step, i) => (

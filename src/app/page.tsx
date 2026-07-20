@@ -13,6 +13,10 @@ export default function Home() {
   // pattern; a repeated pad is a repeated entry, so this is a list, not a set.
   const [taps, setTaps] = useState<number[]>([]);
 
+  // The round in play, from 1. A new round keeps the count climbing while
+  // wiping the pattern; Clear resets both.
+  const [round, setRound] = useState(1);
+
   // A pad's colour and number both read its position off the grid, so the
   // result always matches the pad that was tapped.
   const results: ResultStep[] = useMemo(
@@ -28,9 +32,23 @@ export default function Home() {
     setTaps((previous) => [...previous, index]);
   }, []);
 
-  const handleClear = useCallback(() => setTaps([]), []);
+  const handleNewRound = useCallback(() => {
+    setRound((previous) => previous + 1);
+    setTaps([]);
+  }, []);
+
+  const handleClear = useCallback(() => {
+    setRound(1);
+    setTaps([]);
+  }, []);
 
   return (
-    <HomeTemplate results={results} onTap={handleTap} onClear={handleClear} />
+    <HomeTemplate
+      results={results}
+      round={round}
+      onTap={handleTap}
+      onNewRound={handleNewRound}
+      onClear={handleClear}
+    />
   );
 }
