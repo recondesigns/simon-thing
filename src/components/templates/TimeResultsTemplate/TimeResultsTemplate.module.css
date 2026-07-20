@@ -1,0 +1,26 @@
+.page {
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  margin-top: 16px;
+  margin-inline: 20px;
+}
+
+/* First game card clears the header by the same gap the home sections use. */
+.section:first-of-type {
+  margin-top: 32px;
+}
+
+.actions {
+  display: flex;
+  margin-top: 32px;
+  margin-inline: 20px;
+  padding-bottom: 40px;
+}
+
+.actions > button {
+  flex: 1 0 0;
+  min-width: 0;
+}

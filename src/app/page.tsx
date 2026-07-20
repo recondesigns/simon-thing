@@ -1,21 +1,25 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import type { ResultStep } from "@/components/organisms/ResultsContainer/ResultsContainer";
+import {
+  RESULT_SLOTS,
+  type ResultStep,
+} from "@/components/organisms/ResultsContainer/ResultsContainer";
+import { useGameStore } from "@/lib/store/gameStore";
 import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 
 export default function Home() {
-  // Each tap is the index of a pad (0–8, telephone-keypad order). Order is the
-  // pattern; a repeated pad is a repeated entry, so this is a list, not a set.
-  const [taps, setTaps] = useState<number[]>([]);
-
-  // The round in play, from 1. A new round keeps the count climbing while
-  // wiping the pattern; Clear resets both.
-  const [round, setRound] = useState(1);
+  const taps = useGameStore((state) => state.taps);
+  const roundStartAt = useGameStore((state) => state.roundStartAt);
+  const roundDurations = useGameStore((state) => state.roundDurations);
+  const tap = useGameStore((state) => state.tap);
+  const advanceRound = useGameStore((state) => state.advanceRound);
+  const newGame = useGameStore((state) => state.newGame);
+  const endGame = useGameStore((state) => state.endGame);
 
   // A pad's colour and number both read its position off the grid, so the
   // result always matches the pad that was tapped.
@@ -28,27 +32,23 @@ export default function Home() {
     [taps],
   );
 
-  const handleTap = useCallback((index: number) => {
-    setTaps((previous) => [...previous, index]);
-  }, []);
+  // The round you're on is one past however many have been banked.
+  const round = roundDurations.length + 1;
 
-  const handleNewRound = useCallback(() => {
-    setRound((previous) => previous + 1);
-    setTaps([]);
-  }, []);
-
-  const handleClear = useCallback(() => {
-    setRound(1);
-    setTaps([]);
-  }, []);
+  const handleTap = useCallback(
+    (index: number) => tap(index, RESULT_SLOTS),
+    [tap],
+  );
 
   return (
     <HomeTemplate
       results={results}
       round={round}
+      started={roundStartAt !== null}
       onTap={handleTap}
-      onNewRound={handleNewRound}
-      onClear={handleClear}
+      onAdvanceRound={advanceRound}
+      onNewGame={newGame}
+      onEndGame={endGame}
     />
   );
 }

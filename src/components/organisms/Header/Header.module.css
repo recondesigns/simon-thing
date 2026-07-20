@@ -1,6 +1,7 @@
 .header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-shrink: 0;
   width: 100%;
   height: 48px;
@@ -11,4 +12,17 @@
   font-size: 32px;
   font-weight: 400;
   white-space: nowrap;
+}
+
+/* The link inherits the h1's font and colour so the title looks unchanged. */
+.titleLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.link {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
 }

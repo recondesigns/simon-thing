@@ -8,6 +8,16 @@ import GridCircle, {
 import { antonSC } from "@/lib/fonts";
 import styles from "./ResultsContainer.module.css";
 
+/** Four to a row. */
+const COLUMNS = 4;
+
+/**
+ * Twenty slots — five rows of four — and that is the ceiling, not a floor. A
+ * round holds at most twenty steps: the grid never grows past this, and the
+ * route stops recording once it is full.
+ */
+export const RESULT_SLOTS = 20;
+
 export interface ResultStep {
   color: GridCircleColor;
   label: string;
@@ -15,8 +25,8 @@ export interface ResultStep {
 
 export interface ResultsContainerProps {
   /**
-   * One entry per tap, in the order they were tapped. They lay out left to
-   * right; a repeated pad is a repeated entry, because a pattern that hits a
+   * One entry per tap, in the order they were tapped. They fill the slots left
+   * to right; a repeated pad is a repeated entry, because a pattern that hits a
    * cell twice is two steps.
    */
   steps: ResultStep[];
@@ -28,16 +38,21 @@ export interface ResultsContainerProps {
 }
 
 /**
- * The recorded pattern: every tap as its own coloured, numbered pad. Unlike the
- * input board this is unbounded — it grows a step per tap — so instead of
- * wrapping into rows the track scrolls sideways, keeping the whole run on one
- * line however long it gets. The chip keeps the running count.
+ * The recorded pattern, drawn like the grid readout: a fixed board of twenty
+ * slots. A tapped step is its own coloured, numbered pad; a slot not yet reached
+ * is an outlined empty. Because the board is always twenty slots, it holds its
+ * height from the first paint and nothing below it shifts as pads arrive.
  */
 export default function ResultsContainer({
   steps,
   round = 1,
 }: ResultsContainerProps) {
   const { tokens } = useTheme();
+
+  const rows: (ResultStep | undefined)[][] = [];
+  for (let i = 0; i < RESULT_SLOTS; i += COLUMNS) {
+    rows.push(Array.from({ length: COLUMNS }, (_, column) => steps[i + column]));
+  }
 
   return (
     <section
@@ -57,12 +72,27 @@ export default function ResultsContainer({
             total={round === 1 ? "Round" : "Rounds"}
             divider={false}
           />
-          <Chip count={steps.length} total="Steps" divider={false} />
+          <Chip count={steps.length} total={`${RESULT_SLOTS} Steps`} />
         </div>
       </div>
-      <div className={styles.track} data-testid="results-track">
-        {steps.map((step, i) => (
-          <GridCircle key={i} color={step.color} label={step.label} />
+      <div className={styles.circles} data-testid="results-grid">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className={styles.row}>
+            {row.map((step, columnIndex) => {
+              const index = rowIndex * COLUMNS + columnIndex;
+              return (
+                <GridCircle
+                  // The key flips filled↔empty so the slot that just filled
+                  // remounts and plays the pop once, while pads already on
+                  // screen keep their identity and don't replay it.
+                  key={step ? `filled-${index}` : `empty-${index}`}
+                  color={step?.color}
+                  label={step?.label}
+                  className={step ? styles.pop : undefined}
+                />
+              );
+            })}
+          </div>
         ))}
       </div>
     </section>
