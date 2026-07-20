@@ -2,16 +2,14 @@
 
 import TapGrid from "@/components/organisms/TapGrid/TapGrid";
 import ResultsContainer, {
-  type ResultStep,
+  type ResultDot,
 } from "@/components/organisms/ResultsContainer/ResultsContainer";
 import styles from "./HomeTemplate.module.css";
 
 export interface HomeTemplateProps {
   /** The recorded pattern so far — one entry per tap, in order. */
-  results: ResultStep[];
-  /** Which round is in progress; shown on the results readout. */
-  round?: number;
-  /** Whether the pads are live — a game is running, no round mid-read-back. */
+  results: ResultDot[];
+  /** Whether the pads are live — a round is running, no dot mid-read-back. */
   canTap?: boolean;
   /** Fired with a pad's index (0–8) when the input board is tapped. */
   onTap?: (index: number) => void;
@@ -27,7 +25,6 @@ export interface HomeTemplateProps {
  */
 export default function HomeTemplate({
   results,
-  round = 1,
   canTap = false,
   onTap,
 }: HomeTemplateProps) {
@@ -37,7 +34,7 @@ export default function HomeTemplate({
         <TapGrid onTap={onTap} disabled={!canTap} />
       </div>
       <div className={styles.resultsSection}>
-        <ResultsContainer steps={results} round={round} />
+        <ResultsContainer dots={results} />
       </div>
     </div>
   );

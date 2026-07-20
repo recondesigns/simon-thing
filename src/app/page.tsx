@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import {
   RESULT_SLOTS,
-  type ResultStep,
+  type ResultDot,
 } from "@/components/organisms/ResultsContainer/ResultsContainer";
-import { useGameStore } from "@/lib/store/gameStore";
+import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
 import { CELL_POSITIONS } from "@/lib/detection/detector";
 import { CELL_COLORS } from "@/lib/game/cellColors";
@@ -15,8 +15,6 @@ import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 
 // The beat after a tap before the read-back starts speaking.
 const READBACK_PAUSE_MS = 1500;
-// Gap between spoken numbers.
-const READBACK_STEP_MS = 800;
 // Held after the last number actually finishes before the pads reopen.
 const POST_AUDIO_MS = 500;
 // With read-back off there's no audio to wait on, so the lock is just a brief
@@ -32,7 +30,7 @@ export default function Home() {
 
   // A pad's colour and number both read its position off the grid, so the
   // result always matches the pad that was tapped.
-  const results: ResultStep[] = useMemo(
+  const results: ResultDot[] = useMemo(
     () =>
       taps.map((index) => {
         const position = CELL_POSITIONS[index];
@@ -41,10 +39,7 @@ export default function Home() {
     [taps],
   );
 
-  // Each tap completes a round, so the round you're on is one past the count.
-  const round = taps.length + 1;
-
-  // Live only while a game is running, not mid-lock, and not already full.
+  // Live only while a round is running, not mid-lock, and not already full.
   const canTap = startedAt !== null && !locked && taps.length < RESULT_SLOTS;
 
   const handleTap = useCallback(
@@ -87,14 +82,16 @@ export default function Home() {
       return () => clearTimeout(release);
     }
 
-    // With speech on: pause, speak each number slowly, then unlock 500ms after
-    // the last number actually finishes (its end event, not a guessed time).
+    // With speech on: pause, speak each number with the chosen cadence, then
+    // unlock 500ms after the last number actually finishes (its end event, not a
+    // guessed time). Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
+    const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
     let release: ReturnType<typeof setTimeout> | undefined;
 
     const startSpeaking = setTimeout(() => {
       speakSequence(words, {
-        stepMs: READBACK_STEP_MS,
+        gapMs,
         onDone: () => {
           release = setTimeout(unlock, POST_AUDIO_MS);
         },
@@ -106,7 +103,7 @@ export default function Home() {
     // voice.
     const fallback = setTimeout(
       unlock,
-      READBACK_PAUSE_MS + count * READBACK_STEP_MS * 2 + 4000,
+      READBACK_PAUSE_MS + count * (1500 + gapMs) + 5000,
     );
 
     return () => {
@@ -118,11 +115,6 @@ export default function Home() {
   }, [taps, unlock]);
 
   return (
-    <HomeTemplate
-      results={results}
-      round={round}
-      canTap={canTap}
-      onTap={handleTap}
-    />
+    <HomeTemplate results={results} canTap={canTap} onTap={handleTap} />
   );
 }

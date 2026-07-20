@@ -7,16 +7,16 @@ import Drawer from "@mui/material/Drawer";
 import Switch from "@mui/material/Switch";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import { useGameStore } from "@/lib/store/gameStore";
+import { useGameStore, CADENCE_OPTIONS } from "@/lib/store/gameStore";
 import { scrollToTop } from "@/lib/scroll";
 import styles from "./HeaderMenu.module.css";
 
 /**
  * The header's hamburger menu: a trigger button plus a right-anchored slide-in
  * drawer. It gathers the controls that don't need to sit on the bar full-time —
- * Navigation (Times), Tools (Start / End game), and Settings (sound) — reading
- * and writing the store directly. Start and the sound icon stay in the Header
- * too; this is the fuller home for the same actions.
+ * Navigation (Home, Times), Tools (Start / New round, End round, New session),
+ * and Settings (sound + read-back speed) — reading and writing the store
+ * directly.
  *
  * Owns its own open state and the MUI Drawer handles the scrim, focus trap and
  * Escape-to-close. Every action closes the drawer after it runs.
@@ -27,22 +27,33 @@ export default function HeaderMenu() {
 
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
+  const cadence = useGameStore((state) => state.cadence);
   const start = useGameStore((state) => state.start);
-  const newGame = useGameStore((state) => state.newGame);
-  const endGame = useGameStore((state) => state.endGame);
+  const newRound = useGameStore((state) => state.newRound);
+  const endRound = useGameStore((state) => state.endRound);
+  const newSession = useGameStore((state) => state.newSession);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
+  const setCadence = useGameStore((state) => state.setCadence);
 
   const close = () => setOpen(false);
 
+  // The primary Tools action mirrors the header button's other half: save the
+  // current round and start fresh, or begin one if none is running.
   const handleStart = () => {
-    if (started) newGame();
+    if (started) newRound();
     else start();
     scrollToTop();
     close();
   };
 
   const handleEnd = () => {
-    endGame();
+    endRound();
+    scrollToTop();
+    close();
+  };
+
+  const handleNewSession = () => {
+    newSession();
     scrollToTop();
     close();
   };
@@ -128,7 +139,7 @@ export default function HeaderMenu() {
               onClick={handleStart}
               style={{ color: theme.tokens.text.surface.lightest }}
             >
-              {started ? "New game" : "Start game"}
+              {started ? "New round" : "Start round"}
             </button>
             <button
               type="button"
@@ -137,7 +148,15 @@ export default function HeaderMenu() {
               disabled={!started}
               style={{ color: theme.tokens.text.danger.light }}
             >
-              End game
+              End round
+            </button>
+            <button
+              type="button"
+              className={styles.item}
+              onClick={handleNewSession}
+              style={{ color: theme.tokens.text.surface.lightest }}
+            >
+              New session
             </button>
           </div>
 
@@ -165,6 +184,43 @@ export default function HeaderMenu() {
                   },
                 }}
               />
+            </div>
+            <div className={styles.settingColumn}>
+              <span
+                className={styles.settingName}
+                style={{ color: theme.tokens.text.surface.lightest }}
+              >
+                Read-back speed
+              </span>
+              <div
+                className={styles.segment}
+                role="group"
+                aria-label="Read-back speed"
+                style={{ borderColor: theme.tokens.border.surface.default }}
+              >
+                {CADENCE_OPTIONS.map((option) => {
+                  const active = cadence === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={styles.segmentButton}
+                      onClick={() => setCadence(option.value)}
+                      aria-pressed={active}
+                      style={{
+                        backgroundColor: active
+                          ? theme.tokens.bg.primary.fill
+                          : "transparent",
+                        color: active
+                          ? "#ffffff"
+                          : theme.tokens.text.surface.light,
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

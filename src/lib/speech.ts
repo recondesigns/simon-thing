@@ -51,18 +51,24 @@ export function primeSpeech(): void {
 }
 
 export interface SpeakSequenceOptions {
-  /** Gap between spoken words, in ms. */
-  stepMs?: number;
+  /** Silence to leave between one number finishing and the next starting, in ms. */
+  gapMs?: number;
   /** Fired when the last word actually finishes speaking (its `onend`). */
   onDone?: () => void;
 }
 
+// If a word's `onend` never arrives (iOS occasionally drops it), advance anyway
+// after this long so the chain can't stall. Generous — a single digit is well
+// under a second, so this never pre-empts a word that's genuinely still speaking.
+const WORD_WATCHDOG_MS = 3000;
+
 /**
- * Speak each word in turn, one every `stepMs`, so the sequence lands slowly
- * enough to follow. Cancels any read-back already in flight first, so calling it
- * again on a new tap always speaks the latest pattern. `onDone` reports true
- * completion — the last number's end event — rather than a guessed time, so a
- * slow voice can't run past it.
+ * Speak each word in turn, starting the next only once the previous has finished
+ * plus a `gapMs` pause. Chaining off the end event (rather than firing every
+ * fixed interval) keeps the spacing even no matter how long a given number takes
+ * to say, and stops two numbers overlapping. Cancels any read-back already in
+ * flight first, so a new tap always speaks the latest pattern. `onDone` reports
+ * the last number's real finish, not a guessed time.
  */
 export function speakSequence(
   words: string[],
@@ -72,25 +78,45 @@ export function speakSequence(
   const synth = window.speechSynthesis;
   if (!synth) return;
 
-  const { stepMs = 800, onDone } = options;
+  const { gapMs = 700, onDone } = options;
 
   cancelSpeech();
   const thisGeneration = generation;
 
-  words.forEach((word, index) => {
-    const timer = setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(word);
-      utterance.lang = "en-US";
-      utterance.rate = 1; // clear and unhurried for playback
-      if (index === words.length - 1 && onDone) {
-        utterance.onend = () => {
-          // Ignore the end event a cancel triggers — only a genuine finish of
-          // the still-current sequence counts.
-          if (generation === thisGeneration) onDone();
-        };
+  if (words.length === 0) {
+    onDone?.();
+    return;
+  }
+
+  let index = 0;
+  const speakNext = () => {
+    // A cancel (which bumps the generation) leaves this chain stale — stop.
+    if (generation !== thisGeneration) return;
+
+    const utterance = new SpeechSynthesisUtterance(words[index]);
+    utterance.lang = "en-US";
+    utterance.rate = 1; // clear and unhurried for playback
+
+    let advanced = false;
+    const advance = () => {
+      // Only the first of onend/watchdog wins, and only for the live sequence.
+      // A stray watchdog after a normal onend is a harmless guarded no-op.
+      if (advanced || generation !== thisGeneration) return;
+      advanced = true;
+      index += 1;
+      if (index < words.length) {
+        const timer = setTimeout(speakNext, gapMs);
+        timers.push(timer);
+      } else {
+        onDone?.();
       }
-      synth.speak(utterance);
-    }, index * stepMs);
-    timers.push(timer);
-  });
+    };
+
+    utterance.onend = advance;
+    const watchdog = setTimeout(advance, WORD_WATCHDOG_MS);
+    timers.push(watchdog);
+    synth.speak(utterance);
+  };
+
+  speakNext();
 }
