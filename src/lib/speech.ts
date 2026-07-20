@@ -30,6 +30,26 @@ export function cancelSpeech(): void {
   window.speechSynthesis?.cancel();
 }
 
+/**
+ * Unlock speech synthesis from within a user gesture. iOS only lets audio start
+ * when `speak()` is called *inside* a tap/click; our read-back is deliberately
+ * deferred ~1.5s after the tap, which lands outside that window, so the delayed
+ * `speak()` is silently blocked. Speaking a silent utterance synchronously on
+ * the tap grants the page audio permission for the rest of the session, so the
+ * later read-back is allowed to sound. Call it from the tap handler, not an
+ * effect — an effect runs after paint and no longer counts as the gesture.
+ */
+export function primeSpeech(): void {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+  // A single space starts the synthesizer (which is what unlocks it) without an
+  // audible sound; volume 0 is belt-and-suspenders in case a voice vocalises it.
+  const warmup = new SpeechSynthesisUtterance(" ");
+  warmup.volume = 0;
+  synth.speak(warmup);
+}
+
 export interface SpeakSequenceOptions {
   /** Gap between spoken words, in ms. */
   stepMs?: number;
