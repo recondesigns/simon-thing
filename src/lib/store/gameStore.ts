@@ -97,6 +97,12 @@ export interface GameStore {
   newSession: () => void;
   /** Clear every session and the current round (keeps the preferences). */
   clearHistory: () => void;
+  /**
+   * Hard reset: wipe sessions *and* the preferences back to defaults, and remove
+   * the persisted key from storage entirely — unlike Clear history, which keeps
+   * the preferences. The key reappears (with defaults) on the next state change.
+   */
+  resetApp: () => void;
   /** Release the one-tap-per-dot lock once the read-back has finished. */
   unlock: () => void;
   /** Flip number read-back on/off. */
@@ -199,6 +205,18 @@ export const useGameStore = create<GameStore>()(
         }),
 
       clearHistory: () => set({ sessions: [], ...freshRound }),
+
+      resetApp: () => {
+        // Reset in-memory to defaults first (this re-persists), then drop the
+        // stored key so nothing is left behind on disk.
+        set({
+          sessions: [],
+          speechEnabled: true,
+          cadence: "relaxed",
+          ...freshRound,
+        });
+        useGameStore.persist.clearStorage();
+      },
 
       unlock: () => set({ locked: false }),
 

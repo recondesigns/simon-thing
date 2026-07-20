@@ -34,6 +34,7 @@ export default function HeaderMenu() {
   const newSession = useGameStore((state) => state.newSession);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
   const setCadence = useGameStore((state) => state.setCadence);
+  const resetApp = useGameStore((state) => state.resetApp);
 
   const close = () => setOpen(false);
 
@@ -54,6 +55,12 @@ export default function HeaderMenu() {
 
   const handleNewSession = () => {
     newSession();
+    scrollToTop();
+    close();
+  };
+
+  const handleResetApp = () => {
+    resetApp();
     scrollToTop();
     close();
   };
@@ -222,6 +229,17 @@ export default function HeaderMenu() {
                 })}
               </div>
             </div>
+          </div>
+
+          <div className={styles.section}>
+            <button
+              type="button"
+              className={styles.item}
+              onClick={handleResetApp}
+              style={{ color: theme.tokens.text.danger.light }}
+            >
+              Reset app
+            </button>
           </div>
         </div>
       </Drawer>
