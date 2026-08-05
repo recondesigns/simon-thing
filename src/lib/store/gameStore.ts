@@ -65,6 +65,13 @@ export interface GameStore {
   lastTapAt: number | null;
   /** The current round's dot times in ms, one per tapped circle, oldest first. */
   dotDurations: number[];
+  /**
+   * Times freed by {@link GameStore.undoDot}, oldest first, waiting for the taps
+   * that replace them. A mis-tap is a wrong *pad*, not a wrong moment — the gap
+   * it measured was real — so the correction inherits that time instead of being
+   * re-measured and charged for the fumble.
+   */
+  pendingDurations: number[];
   /** Every session, oldest first. The last one is active if its `endedAt` is null. */
   sessions: Session[];
   /** Whether tapped numbers are read back aloud. Persisted preference. */
@@ -86,6 +93,17 @@ export interface GameStore {
    * tap/start), up to `max` dots. Ignored before Start or once the cap is reached.
    */
   tap: (index: number, max: number) => void;
+  /**
+   * Take the last dot back so the right pad can be tapped instead. Its time is
+   * parked in `pendingDurations` for the replacement and the board unlocks at
+   * once, since the whole point is to re-tap before the next dot arrives.
+   *
+   * `lastTapAt` deliberately does *not* move: the mis-tapped dot landed at the
+   * right moment, so the dot after the correction is still measured from there
+   * and the fumble doesn't stretch it. Press twice to walk back two dots — the
+   * freed times are handed back in order.
+   */
+  undoDot: () => void;
   /**
    * Finish the current round: bank it into the active session and roll straight
    * into the next one with the clock running, so play continues without a Start.
@@ -146,6 +164,7 @@ function bankRound(
 const freshRound = {
   taps: [] as number[],
   dotDurations: [] as number[],
+  pendingDurations: [] as number[],
   startedAt: null as number | null,
   lastTapAt: null as number | null,
   locked: false,
@@ -158,6 +177,7 @@ export const useGameStore = create<GameStore>()(
       startedAt: null,
       lastTapAt: null,
       dotDurations: [],
+      pendingDurations: [],
       sessions: [],
       speechEnabled: true,
       cadence: "relaxed",
@@ -180,12 +200,35 @@ export const useGameStore = create<GameStore>()(
           if (state.locked) return {}; // one tap per dot
           if (state.taps.length >= max) return {}; // capped at `max` dots
           const now = Date.now();
-          const duration = now - (state.lastTapAt ?? now);
+          // Replacing an undone dot? Inherit the time it measured and leave the
+          // clock where it was, so the fumble stretches neither this dot nor the
+          // next one. Otherwise time it normally, from the last tap or Start.
+          const [inherited, ...rest] = state.pendingDurations;
+          const replacing = inherited !== undefined;
           return {
             taps: [...state.taps, index],
-            dotDurations: [...state.dotDurations, duration],
-            lastTapAt: now,
+            dotDurations: [
+              ...state.dotDurations,
+              replacing ? inherited : now - (state.lastTapAt ?? now),
+            ],
+            pendingDurations: replacing ? rest : state.pendingDurations,
+            lastTapAt: replacing ? state.lastTapAt : now,
             locked: true, // held until the dot's read-back ends
+          };
+        }),
+
+      undoDot: () =>
+        set((state) => {
+          if (state.taps.length === 0) return {};
+          const duration = state.dotDurations[state.dotDurations.length - 1];
+          return {
+            taps: state.taps.slice(0, -1),
+            dotDurations: state.dotDurations.slice(0, -1),
+            // Prepended, so walking back several dots refills them in order.
+            pendingDurations: [duration, ...state.pendingDurations],
+            // Unlock now — the read-back of the wrong number is moot, and the
+            // replacement tap is urgent. The route cancels the audio.
+            locked: false,
           };
         }),
 
@@ -204,6 +247,7 @@ export const useGameStore = create<GameStore>()(
             sessions,
             taps: [],
             dotDurations: [],
+            pendingDurations: [],
             startedAt: now,
             lastTapAt: now,
             locked: false,

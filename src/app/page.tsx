@@ -26,6 +26,7 @@ export default function Home() {
   const startedAt = useGameStore((state) => state.startedAt);
   const locked = useGameStore((state) => state.locked);
   const tap = useGameStore((state) => state.tap);
+  const undoDot = useGameStore((state) => state.undoDot);
   const unlock = useGameStore((state) => state.unlock);
 
   // A pad's colour and number both read its position off the grid, so the
@@ -114,7 +115,15 @@ export default function Home() {
     };
   }, [taps, unlock]);
 
+  // No handler of its own: the store unlocks the board, and the effect above
+  // cancels the half-spoken wrong number on its way out, because `taps` changed.
   return (
-    <HomeTemplate results={results} canTap={canTap} onTap={handleTap} />
+    <HomeTemplate
+      results={results}
+      canTap={canTap}
+      onTap={handleTap}
+      lastDotLabel={results[results.length - 1]?.label ?? null}
+      onUndo={undoDot}
+    />
   );
 }
