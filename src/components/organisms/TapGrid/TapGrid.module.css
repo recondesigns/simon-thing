@@ -52,3 +52,28 @@
 .pad:disabled:active {
   transform: none;
 }
+
+/* Ready cue: a brief white halo around the pads when the board unlocks, so it's
+   clear you can tap again rather than guessing when the read-back has ended. The
+   drop-shadow hugs each circle's shape, so it reads as a glow, not a box. */
+@keyframes ready {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+  35% {
+    filter: drop-shadow(0 0 9px rgba(255, 255, 255, 0.55));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+}
+
+.ready {
+  animation: ready 620ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ready {
+    animation: none;
+  }
+}

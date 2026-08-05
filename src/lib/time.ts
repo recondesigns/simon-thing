@@ -16,3 +16,18 @@ export function formatDuration(ms: number): string {
   }
   return `${minutes}:${ss}`;
 }
+
+/**
+ * A session's start time as a short, local label like "Jul 20, 3:14 PM" — enough
+ * to tell one visit from another. Only ever called client-side (the store
+ * rehydrates after mount), so the viewer's locale and timezone are correct and
+ * there's no SSR mismatch to worry about.
+ */
+export function formatSessionStart(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

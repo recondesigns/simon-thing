@@ -8,9 +8,14 @@
   margin-inline: 20px;
 }
 
-/* First game card clears the header by the same gap the home sections use. */
+/* First session card clears the header by the same gap the home sections use. */
 .section:first-of-type {
   margin-top: 32px;
+}
+
+.empty {
+  margin: 32px 20px 0;
+  font-size: 15px;
 }
 
 .actions {
