@@ -89,11 +89,12 @@ export interface GameStore {
   /**
    * Finish the current round: bank it into the active session and roll straight
    * into the next one with the clock running, so play continues without a Start.
-   * This is the normal "the round is over, log it" action.
+   * This is the normal "the round is over, log it" action, and it's what the
+   * header's End round button calls.
    */
-  newRound: () => void;
+  logRound: () => void;
   /** Discard the current round without saving it, and reset to Start. */
-  endRound: () => void;
+  discardRound: () => void;
   /**
    * Close the active session (banking any round in progress first) so the next
    * round starts a fresh visit. New rounds re-open a session on the next Start.
@@ -188,7 +189,7 @@ export const useGameStore = create<GameStore>()(
           };
         }),
 
-      newRound: () =>
+      logRound: () =>
         set((state) => {
           const now = Date.now();
           let sessions = bankRound(state.sessions, state.dotDurations, now);
@@ -209,7 +210,7 @@ export const useGameStore = create<GameStore>()(
           };
         }),
 
-      endRound: () => set({ ...freshRound }),
+      discardRound: () => set({ ...freshRound }),
 
       newSession: () =>
         set((state) => {

@@ -28,7 +28,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const start = useGameStore((state) => state.start);
-  const newRound = useGameStore((state) => state.newRound);
+  const logRound = useGameStore((state) => state.logRound);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
 
   return (
@@ -47,7 +47,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
           type="button"
           className={styles.gameButton}
           onClick={() => {
-            if (started) newRound();
+            if (started) logRound();
             else start();
             scrollToTop();
           }}
