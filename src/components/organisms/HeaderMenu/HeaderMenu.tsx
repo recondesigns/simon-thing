@@ -14,9 +14,8 @@ import styles from "./HeaderMenu.module.css";
 /**
  * The header's hamburger menu: a trigger button plus a right-anchored slide-in
  * drawer. It gathers the controls that don't need to sit on the bar full-time —
- * Navigation (Home, Times), Tools (Start / New round, End round, New session),
- * and Settings (sound + read-back speed) — reading and writing the store
- * directly.
+ * Navigation (Home, Times), Tools (New session, Discard round), Settings (sound
+ * + read-back speed) and Reset app — reading and writing the store directly.
  *
  * Owns its own open state and the MUI Drawer handles the scrim, focus trap and
  * Escape-to-close. Every action closes the drawer after it runs.
@@ -28,7 +27,7 @@ export default function HeaderMenu() {
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const cadence = useGameStore((state) => state.cadence);
-  const endRound = useGameStore((state) => state.endRound);
+  const discardRound = useGameStore((state) => state.discardRound);
   const newSession = useGameStore((state) => state.newSession);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
   const setCadence = useGameStore((state) => state.setCadence);
@@ -39,7 +38,7 @@ export default function HeaderMenu() {
   // The escape hatch for a fumbled recording: throw the round away without
   // logging it. The normal "round's over, log it" action is the header button.
   const handleDiscard = () => {
-    endRound();
+    discardRound();
     scrollToTop();
     close();
   };
