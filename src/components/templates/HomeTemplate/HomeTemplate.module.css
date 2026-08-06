@@ -12,10 +12,16 @@
   margin-inline: 20px;
 }
 
+/* Deliberately its own row below the grid rather than a tenth pad: the mistake it
+   fixes is a mis-aimed thumb, so the fix must not sit where the miss happened. */
+.undoSection {
+  margin-top: 16px;
+  margin-inline: 20px;
+}
+
 .resultsSection {
   margin-top: 20px;
   margin-inline: 20px;
-  /* The last section on the page now the button row is gone — hold a little
-     breathing room below it. */
+  /* The last section on the page — hold a little breathing room below it. */
   padding-bottom: 24px;
 }
