@@ -1,0 +1,101 @@
+/* MUI owns the positioning and the transition; these rules only dress the
+   surface. Specificity is a single class because the classes are passed
+   through slotProps rather than fighting the theme. */
+.paper {
+  max-width: var(--column-max);
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: var(--space-2) var(--space-4) var(--space-6);
+  background-color: var(--sem-bg-surface-raised);
+  background-image: none;
+  border: 1px solid var(--sem-border-surface-strong);
+  border-bottom: none;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--elev-3);
+}
+
+.scrim {
+  background-color: var(--sem-bg-scrim);
+}
+
+.grabHandle {
+  width: var(--size-hit-min);
+  height: 5px;
+  margin: 0 auto 10px;
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-border-surface-strong);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  flex: 1;
+  font: 400 18px/1 var(--font-display);
+  color: var(--sem-text-surface);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-control);
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--sem-text-surface);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-tap) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .item:hover:not(:disabled) {
+    background-color: var(--sem-bg-surface-hover);
+  }
+}
+
+.item:active:not(:disabled) {
+  background-color: var(--sem-bg-surface-pressed);
+}
+
+.item:focus-visible {
+  box-shadow: inset var(--elev-glow-focus);
+}
+
+.item:disabled {
+  color: var(--sem-text-disabled);
+  cursor: not-allowed;
+}
+
+.danger {
+  color: var(--sem-text-danger);
+}
+
+.itemLabel {
+  flex: 1;
+  font: var(--type-h3);
+}
+
+.itemMeta {
+  font: var(--type-numeral-sm);
+  color: var(--sem-text-secondary);
+}
+
+.footer {
+  margin-top: var(--space-4);
+}

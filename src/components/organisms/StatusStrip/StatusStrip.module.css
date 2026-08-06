@@ -1,0 +1,22 @@
+.strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fixed, not min — the slot holds its size whether it's showing a one-line
+     hint or the indicator pill, so nothing below it ever moves. */
+  height: var(--size-hit-min);
+  flex-shrink: 0;
+}
+
+.hint {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.success {
+  color: var(--sem-text-success);
+}

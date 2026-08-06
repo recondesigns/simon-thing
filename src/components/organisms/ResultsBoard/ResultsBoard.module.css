@@ -1,0 +1,32 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* space-between rather than a gap: the slots are a fixed 40px and the column is
+   fixed too, so distributing the remainder keeps the grid flush to both edges
+   at any column width. */
+.row {
+  display: flex;
+  justify-content: space-between;
+}
