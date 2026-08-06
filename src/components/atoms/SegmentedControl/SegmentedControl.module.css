@@ -38,8 +38,13 @@
   /* Above the indicator, which is a sibling painted first. */
   z-index: 1;
   flex: 1;
+  /* min-width:0 lets a segment shrink below its label's intrinsic width rather
+     than forcing the control wider than its container. Padding is tight because
+     four segments in a 334px column leaves ~80px each, and the longest label
+     ("Relaxed") needs most of it. */
+  min-width: 0;
   height: 36px;
-  padding: 0 14px;
+  padding: 0 8px;
   border: none;
   border-radius: var(--radius-pill);
   background-color: transparent;
