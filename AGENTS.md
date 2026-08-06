@@ -28,10 +28,19 @@ Next.js 16 (App Router) · React 19 · TypeScript · MUI v9 + Emotion · CSS mod
 
 ## Design system
 
-- **Colors come from `theme.tokens`** (`useTheme().tokens`, or import `tokens` directly in a styled call). Never hardcode hex.
-- `src/lib/theme/tokens.ts` is **generated** from the Figma "Semantic" variable collection. Don't hand-edit it; regenerate from Figma.
-- One exception, on purpose: `PatternCircle`'s 8 pad colors are raw fills, because game colors aren't semantic UI colors. Figma treats them the same way.
-- **Fonts:** import `antonSC` from `@/lib/fonts`. Never call `Anton_SC()` in a component — `next/font` emits a `@font-face` block per call site, so a second call duplicates CSS and can drift.
+Tokens are **generated from the Figma file `eOTvsRFGbnUcvxzXeuOr0M`** (collections: Semantic, Game, Spacing, Radius, Size, Motion). Don't hand-edit either emitted file — regenerate from Figma.
+
+There are two emitted forms of the same source, and they aren't interchangeable:
+
+- **`src/app/tokens.css`** — CSS custom properties, plus the seven `dots-*` keyframes. **Prefer these in CSS modules.** They're named exactly as the design system's own stylesheet names them — including `--sem-icon-*` singular against Figma's `icons/*` — so a rule can be lifted from the reference implementation without translation.
+- **`src/lib/theme/tokens.ts`** — the same values in TypeScript, for the MUI theme and anything needing a literal (`viewport.themeColor`, a `styled()` call). Reach it as `useTheme().tokens`, or import `tokens` directly.
+
+**Never hardcode a hex.** Two invisible-label bugs shipped from `#ffffff` literals left over from when the key colour was blue.
+
+- **`primary` is a light cream, not a blue.** Anything painted with `bg.primary` takes `text.inverse` on top — white vanishes on it. Outlined controls are the reverse: no fill, so they take `text.primary` against the dark page. `danger` and `success` are *deep tinted surfaces* meant to sit under bright text, not bright fills, and they have no hover/pressed steps.
+- **The nine pad colours are tokens now**, under `Game` — `tokens.game[n]` / `--game-N`, keyed by telephone-keypad position, each with `fill` / `dim` / `ink` / `glow`. They keep their own collection rather than folding into Semantic, because a game colour still isn't a semantic UI colour; they're just no longer raw fills.
+- **Fonts:** three faces, each declared exactly once in `src/lib/fonts.ts` and exposed as a CSS variable — `bungee` / `--font-display` (arcade signage: short copy, loud), `spaceGrotesk` / `--font-body`, `spaceMono` / `--font-numeral` (monospaced, so a ticking time doesn't jitter as digits change). Never call a `next/font` loader in a component: it emits a `@font-face` block per call site, so a second call duplicates CSS and lets the options drift apart silently.
+- Figma also holds a 115-token **Component tier** (`button/primary/bg-default`, …). It is **deliberately not emitted to code** — every entry resolves to a Semantic or Game value, so shipping it would add a lookup and buy nothing. It exists to tell a designer which token to reach for.
 
 ## Layout
 
