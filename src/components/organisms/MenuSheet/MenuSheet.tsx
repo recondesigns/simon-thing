@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import SwipeableDrawer from "@mui/material/SwipeableDrawer";
+import Fade from "@mui/material/Fade";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import Icon, { type IconName } from "@/components/atoms/Icon/Icon";
 import IconButton from "@/components/atoms/IconButton/IconButton";
 import styles from "./MenuSheet.module.css";
@@ -45,6 +47,11 @@ export default function MenuSheet({
   items = [],
   footer,
 }: MenuSheetProps) {
+  // A full-height sheet travelling up the screen is exactly the kind of large
+  // transform reduced motion exists to avoid, so it swaps to a crossfade rather
+  // than merely running the same slide faster.
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+
   return (
     <SwipeableDrawer
       anchor="bottom"
@@ -54,9 +61,21 @@ export default function MenuSheet({
       // Nothing should summon the sheet by dragging from the screen edge — that
       // gesture belongs to the OS, and the board fills the bottom of the screen.
       disableSwipeToOpen
+      transitionDuration={reducedMotion ? 160 : 320}
+      slots={reducedMotion ? { transition: Fade } : undefined}
       slotProps={{
         paper: { className: styles.paper },
         backdrop: { className: styles.scrim },
+        // Springs on the way in, eases on the way out. An exit that overshoots
+        // draws attention back to something already being dismissed.
+        transition: reducedMotion
+          ? {}
+          : {
+              easing: {
+                enter: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+                exit: "cubic-bezier(0.22, 1, 0.36, 1)",
+              },
+            },
       }}
     >
       <div className={styles.grabHandle} aria-hidden="true" />

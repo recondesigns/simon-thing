@@ -13,6 +13,12 @@ export interface ResultsBoardProps {
   dots: GameColor[];
   /** Plays the landing spring on the newest dot. Cleared once it has settled. */
   arriving?: boolean;
+  /**
+   * The round that just ended, held on screen for the length of its fade so the
+   * board doesn't blink empty. `dots` is already the new (empty) round by then,
+   * which is what lets the counter reset while the slots are still leaving.
+   */
+  exitingDots?: GameColor[];
   label?: string;
   className?: string;
 }
@@ -27,6 +33,7 @@ export interface ResultsBoardProps {
 export default function ResultsBoard({
   dots,
   arriving = false,
+  exitingDots,
   label = "This round",
   className,
 }: ResultsBoardProps) {
@@ -44,12 +51,15 @@ export default function ResultsBoard({
           <div key={row} className={styles.row}>
             {Array.from({ length: SLOTS_PER_ROW }, (_, column) => {
               const position = row * SLOTS_PER_ROW + column;
+              const current = dots[position];
+              const leaving = current === undefined ? exitingDots?.[position] : undefined;
               return (
                 <ResultSlot
                   key={position}
-                  color={dots[position]}
+                  color={current ?? leaving}
                   index={position + 1}
                   arriving={arriving && position === dots.length - 1}
+                  exiting={leaving !== undefined}
                 />
               );
             })}

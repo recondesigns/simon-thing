@@ -19,6 +19,8 @@ export interface HomeTemplateProps {
   justUnlocked?: boolean;
   /** Plays the landing spring on the newest dot. */
   arriving?: boolean;
+  /** The round just banked, held on screen for the length of its fade. */
+  exitingDots?: GameColor[];
   /** Present while the read-back is running — drives the progress indicator. */
   spoken?: number;
   /** True once the round is running. Flips the primary control's label. */
@@ -47,6 +49,7 @@ export default function HomeTemplate({
   padState,
   justUnlocked = false,
   arriving = false,
+  exitingDots,
   spoken,
   started,
   full = false,
@@ -60,7 +63,7 @@ export default function HomeTemplate({
 
   return (
     <div className={styles.page}>
-      <ResultsBoard dots={dots} arriving={arriving} />
+      <ResultsBoard dots={dots} arriving={arriving} exitingDots={exitingDots} />
 
       <StatusStrip>
         {reading ? (

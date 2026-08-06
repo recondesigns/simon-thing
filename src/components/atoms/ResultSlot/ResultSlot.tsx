@@ -13,6 +13,8 @@ export interface ResultSlotProps {
   index?: number;
   /** Plays the landing spring. Set on the newest dot, cleared once it settles. */
   arriving?: boolean;
+  /** The round has been banked and this dot is fading out. */
+  exiting?: boolean;
   className?: string;
 }
 
@@ -24,6 +26,7 @@ export default function ResultSlot({
   color,
   index,
   arriving = false,
+  exiting = false,
   className,
 }: ResultSlotProps) {
   const filled = color !== undefined;
@@ -32,6 +35,7 @@ export default function ResultSlot({
     styles.slot,
     filled ? styles.filled : styles.empty,
     filled && arriving && styles.arriving,
+    filled && exiting && styles.exiting,
     className,
   ]
     .filter(Boolean)
