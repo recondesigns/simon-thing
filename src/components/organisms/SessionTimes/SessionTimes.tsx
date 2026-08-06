@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import { formatDuration } from "@/lib/time";
 import styles from "./SessionTimes.module.css";
 
@@ -53,7 +53,7 @@ export default function SessionTimes({
   return (
     <section
       className={styles.container}
-      style={{ backgroundColor: tokens.bg.surface["fill-light"] }}
+      style={{ backgroundColor: tokens.bg["surface-raised"] }}
     >
       <button
         type="button"
@@ -65,22 +65,22 @@ export default function SessionTimes({
           <ChevronRightIcon
             fontSize="small"
             className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
-            style={{ color: tokens.text.surface.light }}
+            style={{ color: tokens.text.secondary }}
           />
           <span
-            className={`${styles.title} ${antonSC.className}`}
-            style={{ color: tokens.text.surface.lightest }}
+            className={`${styles.title} ${bungee.className}`}
+            style={{ color: tokens.text.surface }}
           >
             {title}
           </span>
         </span>
         <span className={styles.summary}>
-          <span style={{ color: tokens.text.surface.default }}>
+          <span style={{ color: tokens.text.disabled }}>
             {rounds.length} {roundWord}
           </span>
           <span
-            className={antonSC.className}
-            style={{ color: tokens.text.surface.lightest }}
+            className={bungee.className}
+            style={{ color: tokens.text.surface }}
           >
             {formatDuration(sessionTotal)}
           </span>
@@ -92,7 +92,7 @@ export default function SessionTimes({
           {rounds.length === 0 ? (
             <p
               className={styles.empty}
-              style={{ color: tokens.text.surface.light }}
+              style={{ color: tokens.text.secondary }}
             >
               No rounds yet.
             </p>
@@ -112,23 +112,23 @@ export default function SessionTimes({
                       <ChevronRightIcon
                         fontSize="small"
                         className={`${styles.chevron} ${roundOpen ? styles.chevronOpen : ""}`}
-                        style={{ color: tokens.text.surface.light }}
+                        style={{ color: tokens.text.secondary }}
                       />
                       <span
                         className={styles.roundLabel}
-                        style={{ color: tokens.text.surface.lightest }}
+                        style={{ color: tokens.text.surface }}
                       >
                         Round {roundIndex + 1}
                         {live && (
-                          <span style={{ color: tokens.text.surface.default }}>
+                          <span style={{ color: tokens.text.disabled }}>
                             {" · in progress"}
                           </span>
                         )}
                       </span>
                     </span>
                     <span
-                      className={`${styles.roundValue} ${antonSC.className}`}
-                      style={{ color: tokens.text.surface.lightest }}
+                      className={`${styles.roundValue} ${bungee.className}`}
+                      style={{ color: tokens.text.surface }}
                     >
                       {formatDuration(sum(round))}
                     </span>
@@ -140,13 +140,13 @@ export default function SessionTimes({
                         <li key={dotIndex} className={styles.dotRow}>
                           <span
                             className={styles.dotLabel}
-                            style={{ color: tokens.text.surface.light }}
+                            style={{ color: tokens.text.secondary }}
                           >
                             Dot {dotIndex + 1}
                           </span>
                           <span
-                            className={`${styles.dotValue} ${antonSC.className}`}
-                            style={{ color: tokens.text.surface.lighter }}
+                            className={`${styles.dotValue} ${bungee.className}`}
+                            style={{ color: tokens.text.secondary }}
                           >
                             {formatDuration(duration)}
                           </span>

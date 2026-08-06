@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useTheme } from "@mui/material/styles";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import { useGameStore } from "@/lib/store/gameStore";
 import { scrollToTop } from "@/lib/scroll";
 import HeaderMenu from "@/components/organisms/HeaderMenu/HeaderMenu";
@@ -34,8 +34,8 @@ export default function Header({ title = "Dots" }: HeaderProps) {
   return (
     <header className={styles.header}>
       <h1
-        className={`${styles.title} ${antonSC.className}`}
-        style={{ color: theme.tokens.text.surface.lightest }}
+        className={`${styles.title} ${bungee.className}`}
+        style={{ color: theme.tokens.text.surface }}
       >
         <Link href="/" className={styles.titleLink}>
           {title}
@@ -56,13 +56,16 @@ export default function Header({ title = "Dots" }: HeaderProps) {
               ? {
                   // Outlined primary once running — it logs the round and starts
                   // the next, so it's a positive action, not a destructive one.
-                  color: theme.tokens.text.primary.light,
-                  borderColor: theme.tokens.text.primary.light,
+                  color: theme.tokens.text.primary,
+                  borderColor: theme.tokens.text.primary,
                 }
               : {
-                  color: "#ffffff",
-                  backgroundColor: theme.tokens.bg.primary.fill,
-                  borderColor: theme.tokens.bg.primary.fill,
+                  // `text.inverse`, not white: the key colour is a light cream
+                  // now, so the white this used to hardcode (from when primary
+                  // was blue) rendered the label invisible against it.
+                  color: theme.tokens.text.inverse,
+                  backgroundColor: theme.tokens.bg.primary,
+                  borderColor: theme.tokens.bg.primary,
                 }
           }
         >
@@ -78,7 +81,7 @@ export default function Header({ title = "Dots" }: HeaderProps) {
               ? "Turn number read-back off"
               : "Turn number read-back on"
           }
-          style={{ color: theme.tokens.text.surface.light }}
+          style={{ color: theme.tokens.text.secondary }}
         >
           {speechEnabled ? (
             <VolumeUpIcon fontSize="small" />

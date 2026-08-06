@@ -1,526 +1,169 @@
 /**
- * Design tokens generated from the "Semantic" Figma variable collection.
+ * Design tokens generated from the Figma file `eOTvsRFGbnUcvxzXeuOr0M`
+ * (collections: Semantic, Game, Spacing, Radius, Size, Motion).
  * Do not hand-edit — regenerate from Figma when the source variables change.
+ *
+ * There are two emitted forms of the same source, and they are not
+ * interchangeable:
+ *
+ * - **this file** — for the MUI theme and any TypeScript that needs a literal
+ *   value (`viewport.themeColor`, a `styled()` call).
+ * - **`src/app/tokens.css`** — the same values as CSS custom properties, for
+ *   CSS modules. Prefer these; they are what the design system's own stylesheet
+ *   uses, so rules can be lifted from the reference implementation unchanged.
+ *
+ * Figma's Component collection (115 aliases such as `button/primary/bg-default`)
+ * is deliberately not emitted. Every one of them resolves to a Semantic or Game
+ * value, so shipping them would add a layer of indirection that costs a lookup
+ * and buys nothing at runtime. They stay in Figma, where they tell a designer
+ * which token to reach for.
  */
 export const tokens = {
   bg: {
-    surface: {
-      fill: "#0A0A0C",
-      "fill-light": "#202025",
-      "fill-lighter": "#303036",
-      scrim: "rgba(0, 0, 0, 0.6)",
-    },
-    primary: {
-      fill: "#5089F6",
-      "fill-hover": "#326AD8",
-      "fill-pressed": "#375895",
-      "alpha-8": "rgba(82, 142, 255, 0.964)",
-      "alpha-3": "rgba(141, 187, 255, 0.128)",
-      "alpha-5": "rgba(114, 165, 255, 0.371)",
-    },
-    success: {
-      fill: "#27A93A",
-      "fill-hover": "#3B8440",
-      "fill-pressed": "#3E643F",
-      "alpha-8": "rgba(54, 255, 83, 0.65)",
-      "alpha-3": "rgba(193, 255, 174, 0.1)",
-      "alpha-5": "rgba(174, 255, 170, 0.261)",
-    },
-    danger: {
-      fill: "#F73D42",
-      "fill-hover": "#BD413F",
-      "fill-pressed": "#86423E",
-      "alpha-8": "rgba(255, 63, 67, 0.969)",
-      "alpha-3": "rgba(255, 161, 137, 0.126)",
-      "alpha-5": "rgba(255, 142, 129, 0.344)",
-    },
-    warning: {
-      fill: "#AF8721",
-      "fill-hover": "#876E36",
-      "fill-pressed": "#66583A",
-      "alpha-8": "rgba(255, 195, 44, 0.675)",
-      "alpha-3": "rgba(255, 231, 165, 0.1)",
-      "alpha-5": "rgba(255, 225, 157, 0.264)",
-    },
-    info: {
-      fill: "#269BC5",
-      "fill-hover": "#3A7A95",
-      "fill-pressed": "#3E5F6E",
-      "alpha-8": "rgba(47, 200, 255, 0.76)",
-      "alpha-3": "rgba(194, 248, 255, 0.098)",
-      "alpha-5": "rgba(164, 230, 255, 0.276)",
-    },
-    accent: {
-      ruby: {
-        fill: "#F83172",
-        "fill-hover": "#BA3F60",
-        "fill-pressed": "#84414F",
-        "alpha-8": "rgba(255, 50, 118, 0.969)",
-        "alpha-3": "rgba(255, 161, 161, 0.125)",
-        "alpha-5": "rgba(255, 142, 159, 0.34)",
-      },
-      orange: {
-        fill: "#D07121",
-        "fill-hover": "#9D6135",
-        "fill-pressed": "#73513A",
-        "alpha-8": "rgba(255, 138, 38, 0.808)",
-        "alpha-3": "rgba(255, 201, 150, 0.11)",
-        "alpha-5": "rgba(255, 189, 141, 0.296)",
-      },
-      amber: {
-        fill: "#AF8721",
-        "fill-hover": "#876E36",
-        "fill-pressed": "#66583A",
-        "alpha-8": "rgba(255, 195, 44, 0.675)",
-        "alpha-3": "rgba(255, 231, 165, 0.1)",
-        "alpha-5": "rgba(255, 225, 157, 0.264)",
-      },
-      lime: {
-        fill: "#839922",
-        "fill-hover": "#6B7A36",
-        "fill-pressed": "#555E3A",
-        "alpha-8": "rgba(217, 255, 49, 0.585)",
-        "alpha-3": "rgba(238, 255, 174, 0.095)",
-        "alpha-5": "rgba(234, 255, 168, 0.247)",
-      },
-      jade: {
-        fill: "#27A580",
-        "fill-hover": "#3C8169",
-        "fill-pressed": "#3E6254",
-        "alpha-8": "rgba(56, 255, 195, 0.631)",
-        "alpha-3": "rgba(197, 255, 212, 0.098)",
-        "alpha-5": "rgba(179, 255, 218, 0.256)",
-      },
-      teal: {
-        fill: "#27A299",
-        "fill-hover": "#3C7F79",
-        "fill-pressed": "#3E615E",
-        "alpha-8": "rgba(57, 255, 240, 0.619)",
-        "alpha-3": "rgba(198, 255, 230, 0.097)",
-        "alpha-5": "rgba(180, 255, 241, 0.253)",
-      },
-      cyan: {
-        fill: "#279FAB",
-        "fill-hover": "#3B7D84",
-        "fill-pressed": "#3E6064",
-        "alpha-8": "rgba(54, 238, 255, 0.654)",
-        "alpha-3": "rgba(199, 255, 243, 0.096)",
-        "alpha-5": "rgba(179, 252, 255, 0.254)",
-      },
-      sky: {
-        fill: "#269BC5",
-        "fill-hover": "#3A7A95",
-        "fill-pressed": "#3E5F6E",
-        "alpha-8": "rgba(47, 200, 255, 0.76)",
-        "alpha-3": "rgba(194, 248, 255, 0.098)",
-        "alpha-5": "rgba(164, 230, 255, 0.276)",
-      },
-      violet: {
-        fill: "#8379F6",
-        "fill-hover": "#6959D8",
-        "fill-pressed": "#534AA2",
-        "alpha-8": "rgba(136, 125, 255, 0.964)",
-        "alpha-3": "rgba(161, 162, 255, 0.137)",
-        "alpha-5": "rgba(142, 136, 255, 0.401)",
-      },
-      purple: {
-        fill: "#A367F6",
-        "fill-hover": "#8746D8",
-        "fill-pressed": "#654694",
-        "alpha-8": "rgba(169, 106, 255, 0.964)",
-        "alpha-3": "rgba(201, 167, 255, 0.126)",
-        "alpha-5": "rgba(184, 140, 255, 0.367)",
-      },
-      fuchsia: {
-        fill: "#CF36F6",
-        "fill-hover": "#9E41B8",
-        "fill-pressed": "#734282",
-        "alpha-8": "rgba(214, 56, 255, 0.964)",
-        "alpha-3": "rgba(249, 178, 255, 0.113)",
-        "alpha-5": "rgba(234, 151, 255, 0.325)",
-      },
-      pink: {
-        fill: "#E82AC3",
-        "fill-hover": "#AE3F94",
-        "fill-pressed": "#7D416D",
-        "alpha-8": "rgba(255, 45, 214, 0.905)",
-        "alpha-3": "rgba(255, 168, 213, 0.119)",
-        "alpha-5": "rgba(255, 149, 220, 0.322)",
-      },
-    },
-  },
-  border: {
-    surface: {
-      subtle: "#303036",
-      default: "#434349",
-      strong: "#717178",
-    },
-    primary: {
-      default: "#5089F6",
-      hover: "#326AD8",
-      pressed: "#375895",
-      "alpha-3": "rgba(141, 187, 255, 0.128)",
-      "alpha-5": "rgba(114, 165, 255, 0.371)",
-      "alpha-8": "rgba(82, 142, 255, 0.964)",
-    },
-    success: {
-      default: "#27A93A",
-      hover: "#3B8440",
-      pressed: "#3E643F",
-      "alpha-3": "rgba(193, 255, 174, 0.1)",
-      "alpha-5": "rgba(174, 255, 170, 0.261)",
-      "alpha-8": "rgba(54, 255, 83, 0.65)",
-    },
-    danger: {
-      default: "#F73D42",
-      hover: "#BD413F",
-      pressed: "#86423E",
-      "alpha-3": "rgba(255, 161, 137, 0.126)",
-      "alpha-5": "rgba(255, 142, 129, 0.344)",
-      "alpha-8": "rgba(255, 63, 67, 0.969)",
-    },
-    warning: {
-      default: "#AF8721",
-      hover: "#876E36",
-      pressed: "#66583A",
-      "alpha-3": "rgba(255, 231, 165, 0.1)",
-      "alpha-5": "rgba(255, 225, 157, 0.264)",
-      "alpha-8": "rgba(255, 195, 44, 0.675)",
-    },
-    info: {
-      default: "#269BC5",
-      hover: "#3A7A95",
-      pressed: "#3E5F6E",
-      "alpha-3": "rgba(194, 248, 255, 0.098)",
-      "alpha-5": "rgba(164, 230, 255, 0.276)",
-      "alpha-8": "rgba(47, 200, 255, 0.76)",
-    },
-    accent: {
-      ruby: {
-        default: "#F83172",
-        hover: "#BA3F60",
-        pressed: "#84414F",
-        "alpha-3": "rgba(255, 161, 161, 0.125)",
-        "alpha-5": "rgba(255, 142, 159, 0.34)",
-        "alpha-8": "rgba(255, 50, 118, 0.969)",
-      },
-      orange: {
-        default: "#D07121",
-        hover: "#9D6135",
-        pressed: "#73513A",
-        "alpha-3": "rgba(255, 201, 150, 0.11)",
-        "alpha-5": "rgba(255, 189, 141, 0.296)",
-        "alpha-8": "rgba(255, 138, 38, 0.808)",
-      },
-      amber: {
-        default: "#AF8721",
-        hover: "#876E36",
-        pressed: "#66583A",
-        "alpha-3": "rgba(255, 231, 165, 0.1)",
-        "alpha-5": "rgba(255, 225, 157, 0.264)",
-        "alpha-8": "rgba(255, 195, 44, 0.675)",
-      },
-      lime: {
-        default: "#839922",
-        hover: "#6B7A36",
-        pressed: "#555E3A",
-        "alpha-3": "rgba(238, 255, 174, 0.095)",
-        "alpha-5": "rgba(234, 255, 168, 0.247)",
-        "alpha-8": "rgba(217, 255, 49, 0.585)",
-      },
-      jade: {
-        default: "#27A580",
-        hover: "#3C8169",
-        pressed: "#3E6254",
-        "alpha-3": "rgba(197, 255, 212, 0.098)",
-        "alpha-5": "rgba(179, 255, 218, 0.256)",
-        "alpha-8": "rgba(56, 255, 195, 0.631)",
-      },
-      teal: {
-        default: "#27A299",
-        hover: "#3C7F79",
-        pressed: "#3E615E",
-        "alpha-3": "rgba(198, 255, 230, 0.097)",
-        "alpha-5": "rgba(180, 255, 241, 0.253)",
-        "alpha-8": "rgba(57, 255, 240, 0.619)",
-      },
-      cyan: {
-        default: "#279FAB",
-        hover: "#3B7D84",
-        pressed: "#3E6064",
-        "alpha-3": "rgba(199, 255, 243, 0.096)",
-        "alpha-5": "rgba(179, 252, 255, 0.254)",
-        "alpha-8": "rgba(54, 238, 255, 0.654)",
-      },
-      sky: {
-        default: "#269BC5",
-        hover: "#3A7A95",
-        pressed: "#3E5F6E",
-        "alpha-3": "rgba(194, 248, 255, 0.098)",
-        "alpha-5": "rgba(164, 230, 255, 0.276)",
-        "alpha-8": "rgba(47, 200, 255, 0.76)",
-      },
-      violet: {
-        default: "#8379F6",
-        hover: "#6959D8",
-        pressed: "#534AA2",
-        "alpha-3": "rgba(161, 162, 255, 0.137)",
-        "alpha-5": "rgba(142, 136, 255, 0.401)",
-        "alpha-8": "rgba(136, 125, 255, 0.964)",
-      },
-      purple: {
-        default: "#A367F6",
-        hover: "#8746D8",
-        pressed: "#654694",
-        "alpha-3": "rgba(201, 167, 255, 0.126)",
-        "alpha-5": "rgba(184, 140, 255, 0.367)",
-        "alpha-8": "rgba(169, 106, 255, 0.964)",
-      },
-      fuchsia: {
-        default: "#CF36F6",
-        hover: "#9E41B8",
-        pressed: "#734282",
-        "alpha-3": "rgba(249, 178, 255, 0.113)",
-        "alpha-5": "rgba(234, 151, 255, 0.325)",
-        "alpha-8": "rgba(214, 56, 255, 0.964)",
-      },
-      pink: {
-        default: "#E82AC3",
-        hover: "#AE3F94",
-        pressed: "#7D416D",
-        "alpha-3": "rgba(255, 168, 213, 0.119)",
-        "alpha-5": "rgba(255, 149, 220, 0.322)",
-        "alpha-8": "rgba(255, 45, 214, 0.905)",
-      },
-    },
-    inverse: {
-      default: "#8D8D94",
-      lighter: "#AFAFB4",
-      lightest: "#D7D7DB",
-    },
+    surface: "#0B0B0F",
+    "surface-raised": "#15151C",
+    "surface-sunken": "#060609",
+    "surface-hover": "#1B1B24",
+    "surface-pressed": "#22222D",
+    "surface-disabled": "#101015",
+    primary: "#F2EFE3",
+    "primary-hover": "#FFFDF2",
+    "primary-pressed": "#DAD6C3",
+    "primary-disabled": "#2B2B33",
+    success: "#10331F",
+    danger: "#3A1216",
+    "danger-hover": "#4A171C",
+    "danger-pressed": "#5C1D23",
+    warning: "#3A2A10",
+    info: "#10233A",
+    inverse: "#EDECE6",
+    scrim: "rgba(6, 6, 10, 0.72)",
+    "scrim-heavy": "rgba(6, 6, 10, 0.88)",
   },
   text: {
-    surface: {
-      default: "#717178",
-      light: "#8D8D94",
-      lighter: "#AFAFB4",
-      lightest: "#D7D7DB",
-    },
-    primary: {
-      default: "#326AD8",
-      light: "#5089F6",
-      lighter: "#8AB0F3",
-      lightest: "#CED8E9",
-    },
-    success: {
-      default: "#3B8440",
-      light: "#27A93A",
-      lighter: "#46CF55",
-      lightest: "#A9EBAB",
-    },
-    danger: {
-      default: "#BD413F",
-      light: "#F73D42",
-      lighter: "#F58F87",
-      lightest: "#EAD1CE",
-    },
-    warning: {
-      default: "#876E36",
-      light: "#AF8721",
-      lighter: "#D6A83E",
-      lightest: "#E9D5AC",
-    },
-    info: {
-      default: "#3A7A95",
-      light: "#269BC5",
-      lighter: "#45BEEE",
-      lightest: "#C1DCE9",
-    },
-    accent: {
-      ruby: {
-        default: "#BA3F60",
-        light: "#F83172",
-        lighter: "#F58BA0",
-        lightest: "#EAD0D4",
-      },
-      orange: {
-        default: "#9D6135",
-        light: "#D07121",
-        lighter: "#F4944D",
-        lightest: "#EAD2C3",
-      },
-      amber: {
-        default: "#876E36",
-        light: "#AF8721",
-        lighter: "#D6A83E",
-        lightest: "#E9D5AC",
-      },
-      lime: {
-        default: "#6B7A36",
-        light: "#839922",
-        lighter: "#A4BD3F",
-        lightest: "#CFE19B",
-      },
-      jade: {
-        default: "#3C8169",
-        light: "#27A580",
-        lighter: "#46CAA0",
-        lightest: "#A3E9CD",
-      },
-      teal: {
-        default: "#3C7F79",
-        light: "#27A299",
-        lighter: "#46C6BD",
-        lightest: "#A3E7E0",
-      },
-      cyan: {
-        default: "#3B7D84",
-        light: "#279FAB",
-        lighter: "#46C3D0",
-        lightest: "#ACE3E9",
-      },
-      sky: {
-        default: "#3A7A95",
-        light: "#269BC5",
-        lighter: "#45BEEE",
-        lightest: "#C1DCE9",
-      },
-      violet: {
-        default: "#6959D8",
-        light: "#8379F6",
-        lighter: "#A7A6F3",
-        lightest: "#D5D6E9",
-      },
-      purple: {
-        default: "#8746D8",
-        light: "#A367F6",
-        lighter: "#BC9CF4",
-        lightest: "#DAD3E9",
-      },
-      fuchsia: {
-        default: "#9E41B8",
-        light: "#CF36F6",
-        lighter: "#DB8AF4",
-        lightest: "#E3CFE9",
-      },
-      pink: {
-        default: "#AE3F94",
-        light: "#E82AC3",
-        lighter: "#F57FD6",
-        lightest: "#EACEE1",
-      },
-    },
+    surface: "#EDECE6",
+    secondary: "#A6A49B",
+    primary: "#F2EFE3",
+    success: "#7FE0A8",
+    danger: "#FF7A76",
+    warning: "#FFC93D",
+    info: "#7FB7FF",
+    inverse: "#111014",
+    disabled: "#55545C",
   },
+  border: {
+    surface: "#26262F",
+    "surface-strong": "#3A3A46",
+    primary: "#F2EFE3",
+    success: "#2E7D50",
+    danger: "#8A3038",
+    warning: "#8A6A22",
+    info: "#2C5588",
+    inverse: "#111014",
+    focus: "#FFC93D",
+    disabled: "#1B1B22",
+  },
+  /**
+   * Mirrors `text` one-for-one. Kept separate because Figma models it as its own
+   * group, and an icon colour drifting from its label colour is a real change we
+   * want to be able to express.
+   *
+   * Note the name: Figma calls the collection `icons/*`, the design system's CSS
+   * calls the custom properties `--sem-icon-*`. Both spellings are load-bearing
+   * in their own place; neither was worth renaming.
+   */
   icons: {
-    surface: {
-      default: "#717178",
-      light: "#8D8D94",
-      lighter: "#AFAFB4",
-      lightest: "#D7D7DB",
+    surface: "#EDECE6",
+    secondary: "#A6A49B",
+    primary: "#F2EFE3",
+    success: "#7FE0A8",
+    danger: "#FF7A76",
+    warning: "#FFC93D",
+    info: "#7FB7FF",
+    inverse: "#111014",
+    disabled: "#55545C",
+  },
+  /**
+   * The nine pad colours, keyed by telephone-keypad position (1 = top-left,
+   * 9 = bottom-right). The number identifies a *cell on the machine's grid*, not
+   * a position in the sequence, so a pattern that hits the same cell twice shows
+   * the same colour and number twice.
+   *
+   * These live in the token system now. They used to be raw fills on the grounds
+   * that game colours are not semantic UI colours — true, which is why Figma
+   * keeps them in their own `Game` collection rather than folding them into
+   * Semantic, and why they are here rather than under `bg`.
+   *
+   * `fill` is the live pad, `dim` the inert/locked one, `ink` the numeral on top
+   * (dark on every pad but 2 and 9), `glow` the halo behind it.
+   */
+  game: {
+    1: { fill: "#F23FB8", dim: "#4A2140", ink: "#0B0B0F", glow: "rgba(242, 63, 184, 0.45)" },
+    2: { fill: "#3D6BFF", dim: "#1E2A55", ink: "#FFFFFF", glow: "rgba(61, 107, 255, 0.45)" },
+    3: { fill: "#FF6B2C", dim: "#4A2717", ink: "#0B0B0F", glow: "rgba(255, 107, 44, 0.45)" },
+    4: { fill: "#B8E92C", dim: "#3B4517", ink: "#0B0B0F", glow: "rgba(184, 233, 44, 0.45)" },
+    5: { fill: "#17C964", dim: "#123B26", ink: "#0B0B0F", glow: "rgba(23, 201, 100, 0.45)" },
+    6: { fill: "#22D7EE", dim: "#14404A", ink: "#0B0B0F", glow: "rgba(34, 215, 238, 0.45)" },
+    7: { fill: "#C9CDD6", dim: "#3A3C44", ink: "#0B0B0F", glow: "rgba(201, 205, 214, 0.4)" },
+    8: { fill: "#FF9EB8", dim: "#4A3038", ink: "#0B0B0F", glow: "rgba(255, 158, 184, 0.45)" },
+    9: { fill: "#8D4BFF", dim: "#2C1D4A", ink: "#FFFFFF", glow: "rgba(141, 75, 255, 0.45)" },
+  },
+  /** 4px base. `05` is the half-step. */
+  spacing: {
+    "05": 2,
+    1: 4,
+    2: 8,
+    3: 12,
+    4: 16,
+    5: 20,
+    6: 24,
+    8: 32,
+    10: 40,
+    12: 48,
+    16: 64,
+  },
+  radius: { sm: 10, md: 16, lg: 22, xl: 28, pill: 999 },
+  /** `hit-min` is the 44px minimum touch target; nothing tappable goes under it. */
+  size: { "hit-min": 44, control: 52, pad: 96, slot: 40, "column-max": 400 },
+  elevation: {
+    0: "none",
+    1: "0 2px 8px rgba(0, 0, 0, 0.5)",
+    2: "0 6px 20px rgba(0, 0, 0, 0.55)",
+    3: "0 16px 40px rgba(0, 0, 0, 0.65)",
+    "glow-primary": "0 0 20px rgba(242, 239, 227, 0.25)",
+    "glow-focus": "0 0 0 3px rgba(255, 201, 61, 0.35)",
+  },
+  /**
+   * Durations in ms. Every one has a `-reduced` twin for
+   * `prefers-reduced-motion`; note `pulse-reduced` is 0, which switches the
+   * breathe off entirely rather than merely shortening it.
+   */
+  motion: {
+    duration: {
+      tap: 90,
+      "tap-reduced": 60,
+      pop: 180,
+      "pop-reduced": 120,
+      land: 280,
+      "land-reduced": 140,
+      unlock: 420,
+      "unlock-reduced": 200,
+      sheet: 320,
+      "sheet-reduced": 160,
+      expand: 260,
+      "expand-reduced": 140,
+      pulse: 1200,
+      "pulse-reduced": 0,
     },
-    primary: {
-      default: "#326AD8",
-      light: "#5089F6",
-      lighter: "#8AB0F3",
-      lightest: "#CED8E9",
-    },
-    success: {
-      default: "#3B8440",
-      light: "#27A93A",
-      lighter: "#46CF55",
-      lightest: "#A9EBAB",
-    },
-    danger: {
-      default: "#BD413F",
-      light: "#F73D42",
-      lighter: "#F58F87",
-      lightest: "#EAD1CE",
-    },
-    warning: {
-      default: "#876E36",
-      light: "#AF8721",
-      lighter: "#D6A83E",
-      lightest: "#E9D5AC",
-    },
-    info: {
-      default: "#3A7A95",
-      light: "#269BC5",
-      lighter: "#45BEEE",
-      lightest: "#C1DCE9",
-    },
-    accent: {
-      ruby: {
-        default: "#BA3F60",
-        light: "#F83172",
-        lighter: "#F58BA0",
-        lightest: "#EAD0D4",
-      },
-      orange: {
-        default: "#9D6135",
-        light: "#D07121",
-        lighter: "#F4944D",
-        lightest: "#EAD2C3",
-      },
-      amber: {
-        default: "#876E36",
-        light: "#AF8721",
-        lighter: "#D6A83E",
-        lightest: "#E9D5AC",
-      },
-      lime: {
-        default: "#6B7A36",
-        light: "#839922",
-        lighter: "#A4BD3F",
-        lightest: "#CFE19B",
-      },
-      jade: {
-        default: "#3C8169",
-        light: "#27A580",
-        lighter: "#46CAA0",
-        lightest: "#A3E9CD",
-      },
-      teal: {
-        default: "#3C7F79",
-        light: "#27A299",
-        lighter: "#46C6BD",
-        lightest: "#A3E7E0",
-      },
-      cyan: {
-        default: "#3B7D84",
-        light: "#279FAB",
-        lighter: "#46C3D0",
-        lightest: "#ACE3E9",
-      },
-      sky: {
-        default: "#3A7A95",
-        light: "#269BC5",
-        lighter: "#45BEEE",
-        lightest: "#C1DCE9",
-      },
-      violet: {
-        default: "#6959D8",
-        light: "#8379F6",
-        lighter: "#A7A6F3",
-        lightest: "#D5D6E9",
-      },
-      purple: {
-        default: "#8746D8",
-        light: "#A367F6",
-        lighter: "#BC9CF4",
-        lightest: "#DAD3E9",
-      },
-      fuchsia: {
-        default: "#9E41B8",
-        light: "#CF36F6",
-        lighter: "#DB8AF4",
-        lightest: "#E3CFE9",
-      },
-      pink: {
-        default: "#AE3F94",
-        light: "#E82AC3",
-        lighter: "#F57FD6",
-        lightest: "#EACEE1",
-      },
+    easing: {
+      spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      bounce: "cubic-bezier(0.18, 1.85, 0.4, 1)",
+      out: "cubic-bezier(0.22, 1, 0.36, 1)",
+      "in-out": "cubic-bezier(0.65, 0, 0.35, 1)",
+      reduced: "cubic-bezier(0.25, 0, 0.25, 1)",
     },
   },
 } as const;
+
+/** Pad positions, 1–9 in telephone-keypad order. */
+export type GameColor = keyof typeof tokens.game;

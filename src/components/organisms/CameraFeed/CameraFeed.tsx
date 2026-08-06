@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { useTheme } from "@mui/material/styles";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import styles from "./CameraFeed.module.css";
 
 /** Mirrors the `state` axis on the Figma CameraFeed component set (node 47:69). */
@@ -76,15 +76,15 @@ export default function CameraFeed({
   // warning is usually recoverable by retrying.
   const titleColor =
     status === "denied"
-      ? theme.tokens.text.danger.light
+      ? theme.tokens.text.danger
       : status === "error"
-        ? theme.tokens.text.warning.lighter
-        : theme.tokens.text.surface.lightest;
+        ? theme.tokens.text.warning
+        : theme.tokens.text.surface;
 
   return (
     <div
       className={styles.feed}
-      style={{ backgroundColor: theme.tokens.bg.surface["fill-light"] }}
+      style={{ backgroundColor: theme.tokens.bg["surface-raised"] }}
     >
       {status === "on" ? (
         <>
@@ -102,14 +102,14 @@ export default function CameraFeed({
       ) : (
         <div className={styles.messages}>
           <p
-            className={`${styles.title} ${antonSC.className}`}
+            className={`${styles.title} ${bungee.className}`}
             style={{ color: titleColor }}
           >
             {MESSAGES[status].title}
           </p>
           <p
             className={styles.body}
-            style={{ color: theme.tokens.text.surface.light }}
+            style={{ color: theme.tokens.text.secondary }}
           >
             {MESSAGES[status].body}
           </p>
