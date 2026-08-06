@@ -1,0 +1,71 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--column-max);
+  min-height: 100dvh;
+  margin-inline: auto;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* min-height:0 so a long history can actually shrink this below its content
+   height and scroll, rather than stretching the shell. */
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--size-hit-min);
+  padding: 0 var(--space-3);
+}
+
+.settingLabel {
+  font: var(--type-h3);
+  color: var(--sem-text-surface);
+}
+
+.settingBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+}
+
+.settingCaption {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+}
+
+.dangerZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--sem-border-surface);
+}
+
+.dangerNote {
+  font: var(--type-caption);
+  color: var(--sem-text-secondary);
+  text-align: center;
+}
