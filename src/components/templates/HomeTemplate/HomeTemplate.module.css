@@ -8,7 +8,10 @@
   padding: var(--space-3) var(--space-4) var(--space-4);
 }
 
-/* Left-aligned, and its own row. Not a tenth pad, and not under the grid. */
+/* Its own full-width row. Not a tenth pad, and not under the grid — the
+   mistake it fixes is a mis-aimed thumb, so the fix must not sit where the miss
+   happened. Full width rather than the design's hugging button: it is pressed
+   in a hurry, mid-round, by someone looking at a TV. */
 .undoRow {
   display: flex;
 }

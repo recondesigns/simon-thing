@@ -6,17 +6,25 @@ import { persist } from "zustand/middleware";
  * gap *between* dots (the digits themselves aren't slowed), tuned from the
  * drawer since the right pace is a feel thing.
  */
-export type Cadence = "normal" | "relaxed" | "slow";
+export type Cadence = "fast" | "normal" | "relaxed" | "slow";
 
-/** Silence between read-back numbers, in ms, per cadence. */
+/**
+ * Silence between read-back numbers, in ms, per cadence. Even 300ms steps, so
+ * each setting is a noticeably different pace rather than a nudge.
+ *
+ * Adding a value needs no migration — a stored `cadence` stays valid, and
+ * anyone who never touches the setting keeps the `relaxed` default.
+ */
 export const CADENCE_GAP_MS: Record<Cadence, number> = {
+  fast: 200,
   normal: 500,
   relaxed: 800,
   slow: 1100,
 };
 
-/** Ordered for the drawer's selector. */
+/** Ordered fastest to slowest for the settings control. */
 export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
+  { value: "fast", label: "Fast" },
   { value: "normal", label: "Normal" },
   { value: "relaxed", label: "Relaxed" },
   { value: "slow", label: "Slow" },

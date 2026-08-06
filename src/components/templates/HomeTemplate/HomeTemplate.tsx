@@ -81,6 +81,7 @@ export default function HomeTemplate({
         <Button
           variant="secondary"
           icon="undo"
+          fullWidth
           disabled={undoDisabled || lastDotLabel === null}
           onClick={onUndo}
         >

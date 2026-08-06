@@ -14,6 +14,7 @@ import {
 } from "@/lib/store/gameStore";
 import styles from "./AppShell.module.css";
 
+const BOARD_PATH = "/";
 const TIMES_PATH = "/time-results";
 
 /**
@@ -83,18 +84,21 @@ export default function AppShell({ children }: { children: ReactNode }) {
         onClose={close}
         onOpen={() => setMenuOpen(true)}
         items={[
-          // Hidden on the Times screen itself — the wordmark is the way back,
-          // so a row pointing at the page you're on would be dead weight.
-          ...(onTimes
-            ? []
-            : [
-                {
-                  icon: "chevron-right" as const,
-                  label: "Times & history",
-                  meta: `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`,
-                  onSelect: run(() => router.push(TIMES_PATH)),
-                },
-              ]),
+          // Whichever surface you aren't on. The wordmark also returns to the
+          // board, but that's a small target in the corner and easy to miss —
+          // if the menu is already open, the way out should be in it.
+          onTimes
+            ? {
+                icon: "chevron-right" as const,
+                label: "Board",
+                onSelect: run(() => router.push(BOARD_PATH)),
+              }
+            : {
+                icon: "chevron-right" as const,
+                label: "Times & history",
+                meta: `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`,
+                onSelect: run(() => router.push(TIMES_PATH)),
+              },
           {
             icon: "plus" as const,
             label: "New session",
