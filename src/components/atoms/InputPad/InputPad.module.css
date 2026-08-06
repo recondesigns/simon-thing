@@ -34,9 +34,19 @@
   box-shadow: none;
 }
 
+/*
+ * The lock is a slower, calmer move than a press: 180ms easing out, per the
+ * motion spec, against the 90ms spring above. Restated here rather than on
+ * `.pad` because one `transition` can't give the same property two durations,
+ * and a press that took 180ms would feel unresponsive.
+ */
 .locked {
   transform: scale(0.96);
   cursor: wait;
+  transition:
+    transform var(--dur-pop) var(--ease-out),
+    background-color var(--dur-pop) var(--ease-out),
+    box-shadow var(--dur-pop) var(--ease-out);
 }
 
 .live {
@@ -57,9 +67,14 @@
 
 /* Bounce plus an expanding halo. Both run for --dur-unlock so they finish
    together; the halo is the part that carries at arm's length. */
+/*
+ * `--ease-spring`, following the motion spec. The reference implementation used
+ * `--ease-bounce` here; the spec is the authority on motion and the softer
+ * overshoot reads better on nine pads firing at once.
+ */
 .justUnlocked {
   animation:
-    dots-unlock var(--dur-unlock) var(--ease-bounce),
+    dots-unlock var(--dur-unlock) var(--ease-spring),
     dots-ring var(--dur-unlock) var(--ease-out);
 }
 

@@ -84,8 +84,33 @@
   padding: 0 0 var(--space-2) var(--space-6);
 }
 
+/*
+ * Content fades and settles rather than the container animating its height.
+ * The spec asks for height 0->auto, which needs the body measured or kept
+ * mounted while collapsed; a history of ten sessions would hold thousands of
+ * nodes for an animation nobody is watching. This is the spec's own
+ * reduced-motion treatment promoted to the default.
+ */
 .body {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  animation: expand-in var(--dur-expand) var(--ease-out);
+}
+
+@keyframes expand-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body {
+    animation: dots-land-reduced var(--dur-expand-reduced) var(--ease-reduced);
+  }
 }

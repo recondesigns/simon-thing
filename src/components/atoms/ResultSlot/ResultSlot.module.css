@@ -29,10 +29,34 @@
   animation: dots-land var(--dur-land) var(--ease-bounce);
 }
 
+/*
+ * Exits never transform. An entrance can overshoot because it's announcing
+ * something; a departure that springs draws the eye to content that is already
+ * gone. Opacity only, and quicker than the arrival.
+ */
+.exiting {
+  animation: dots-leave var(--dur-pop) var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes dots-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* Fade only. Exits and entrances stop transforming, but the dot still has to
      announce itself, so the opacity step stays. */
   .arriving {
     animation: dots-land-reduced var(--dur-land-reduced) var(--ease-reduced);
+  }
+
+  /* Already opacity-only — just quicker. */
+  .exiting {
+    animation: dots-leave var(--dur-pop-reduced) var(--ease-reduced) forwards;
   }
 }

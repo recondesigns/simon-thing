@@ -11,11 +11,13 @@
   transition: border-color var(--dur-pop) var(--ease-out);
 }
 
+/* 180ms, not the 280ms a landing dot gets: the counter is acknowledging a tap
+   that already registered, so it should settle before the dot it counts. */
 .count {
   display: inline-block;
   font: var(--type-numeral-md);
   color: var(--sem-text-surface);
-  animation: dots-land var(--dur-land) var(--ease-spring);
+  animation: dots-land var(--dur-pop) var(--ease-spring);
 }
 
 .total {

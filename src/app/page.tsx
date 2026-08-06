@@ -20,6 +20,8 @@ const POST_AUDIO_MS = 500;
 const SILENT_LOCK_MS = 600;
 // How long the unlock cue plays. Matches --dur-unlock.
 const UNLOCK_CUE_MS = 420;
+// How long a banked round's dots take to fade out. Matches --dur-pop.
+const ROUND_EXIT_MS = 180;
 
 const padNumber = (index: number) =>
   Number(CELL_NUMBERS[CELL_POSITIONS[index]]) as GameColor;
@@ -39,6 +41,10 @@ export default function Home() {
   const [spoken, setSpoken] = useState<number | undefined>(undefined);
   // True for one cue's length after the board reopens.
   const [justUnlocked, setJustUnlocked] = useState(false);
+  // The round that just ended, kept for the length of its fade.
+  const [exitingDots, setExitingDots] = useState<GameColor[] | undefined>(
+    undefined,
+  );
 
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
@@ -69,6 +75,21 @@ export default function Home() {
     setSpoken(undefined);
     undoDot();
   }, [undoDot]);
+
+  // Ending a round banks it and rolls straight into the next with the clock
+  // already going, so there's nothing to wait for — the outgoing dots are held
+  // for their fade while the board underneath is already the new round.
+  const handlePrimary = useCallback(() => {
+    if (!started) {
+      start();
+      return;
+    }
+    const banked = dots;
+    logRound();
+    setExitingDots(banked);
+    setSpoken(undefined);
+    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+  }, [started, start, logRound, dots]);
 
   // Releasing the lock also fires the unlock cue, which is the single most
   // important piece of feedback here — it's what someone watching the TV rather
@@ -160,11 +181,12 @@ export default function Home() {
       padState={padState}
       justUnlocked={justUnlocked}
       arriving={locked}
+      exitingDots={exitingDots}
       spoken={locked ? spoken : undefined}
       started={started}
       full={full}
       onTap={handleTap}
-      onPrimary={started ? logRound : start}
+      onPrimary={handlePrimary}
       lastDotLabel={
         taps.length > 0 ? String(padNumber(taps[taps.length - 1])) : null
       }
