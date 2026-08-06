@@ -6,7 +6,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # simon-thing
 
-A mobile web app for recording a Simon-style memory game played on a TV screen. Built from a Figma mockup (file `JCMU3TRWddWmJ0prqGNxFI`, node `1:202`).
+A mobile web app for recording a Simon-style memory game played on a TV screen.
+
+The design lives in Figma file **`eOTvsRFGbnUcvxzXeuOr0M`** — section *Dots — App Screens* holds the ten screen frames, *Dots — Components* the four component sets. Frame `10` is a working scrolling prototype and is the spec for the Times screen's overflow behaviour. The motion spec and the change log against the original functionality inventory live in the Claude Design project that produced them (`1212577e-4907-4c13-9381-527c80e15d13`, file `Dots App Screens.dc.html`).
 
 ## Commands
 
@@ -18,7 +20,9 @@ pnpm test       # vitest — runs every story's play assertions in a real browse
 pnpm storybook  # storybook on :6006
 ```
 
-A green build only proves it compiled. For anything visual, verify what actually ships: grep the emitted rule out of `.next/static/chunks/*.css`, or `curl` the dev server for SSR output.
+A green build only proves it compiled. For anything visual, verify what actually ships: grep the emitted rule out of `.next/static/chunks/*.css`, `curl` the dev server for SSR output, or drive it in a real browser and read computed values. The redesign shipped four invisible-text bugs that all passed `pnpm build` — every one was caught by measuring, none by compiling.
+
+**Stories are paused**, and this overrides the `atomic-design` skill's rule that every component gets one. `pnpm test` runs each story's play assertions, but no new stories are being written while the design is validated in the real world, and `pnpm test` isn't part of the loop. Several surviving stories still assert the pre-redesign palette, so expect failures if you turn it back on. When a component is deleted or replaced, delete its story in the same commit.
 
 ## Stack
 
@@ -42,15 +46,30 @@ There are two emitted forms of the same source, and they aren't interchangeable:
 - **Fonts:** three faces, each declared exactly once in `src/lib/fonts.ts` and exposed as a CSS variable — `bungee` / `--font-display` (arcade signage: short copy, loud), `spaceGrotesk` / `--font-body`, `spaceMono` / `--font-numeral` (monospaced, so a ticking time doesn't jitter as digits change). Never call a `next/font` loader in a component: it emits a `@font-face` block per call site, so a second call duplicates CSS and lets the options drift apart silently.
 - Figma also holds a 115-token **Component tier** (`button/primary/bg-default`, …). It is **deliberately not emitted to code** — every entry resolves to a Semantic or Game value, so shipping it would add a lookup and buy nothing. It exists to tell a designer which token to reach for.
 
+## Motion
+
+Durations and easings are tokens; the seven `dots-*` keyframes live in `src/app/tokens.css` beside them. Two rules that aren't obvious:
+
+- **Reduced motion is CSS media queries**, never a `matchMedia` value read once at module load — that can't react to a change and mismatches on SSR. Every animation has a `prefers-reduced-motion` branch. `--dur-pulse-reduced` is `0ms` on purpose: the breathe switches off rather than speeding up.
+- **The unlock cue is de-transformed under reduced motion, never removed.** It's the one thing a player watching the TV is waiting for, so the brightness step and the halo still fire.
+
+Exits never transform — an entrance can overshoot because it's announcing something, a departure that springs pulls the eye back to content already gone.
+
 ## Layout
 
-Mobile only. 400px max-width centered column, **no breakpoints**. The shell lives in `app/layout.tsx`; spacing *between* sections lives in `app/page.module.css` (the mockup's gaps vary per section), not inside components.
+Mobile only. 400px max-width centered column, **no breakpoints** — where something must adapt, use intrinsic sizing rather than a media query.
+
+`organisms/AppShell` is the shell, wrapped around every route by `app/layout.tsx`. Spacing *between* sections lives in each template's module CSS, not inside components. Pads (96px) and result slots (40px) are **fixed** sizes on purpose: a pad is a touch target, and letting it stretch would change the size of the thing being aimed at between phones.
 
 ## Components
 
-See the `atomic-design` skill for tiers, colocation, and story rules, and `figma-to-component` for building from a Figma node.
+See the `atomic-design` skill for tiers and colocation, and `figma-to-component` for building from a Figma node.
 
-The short version: one component per directory with its `.tsx`, `.module.css`, and `.stories.tsx` colocated. Every component's story asserts a **computed** value (`getComputedStyle`), not just that it rendered — a render-only test once hid a missing ThemeProvider that made `theme.tokens` undefined everywhere while all tests passed.
+One component per directory with its `.tsx` and `.module.css` colocated. Prefer the CSS custom properties over `theme.tokens` in modules; keep the TS tokens for the MUI theme.
+
+**Interaction lives in CSS, not React state.** `:active` and `:focus-visible` are cheaper than a `useState` per pointer event and can't desynchronise from the element. Use `:focus-visible`, not `:focus` — a mouse press shouldn't leave a ring behind. Guard `:hover` behind `@media (hover: hover)`: touch devices fire it on tap and never clear it.
+
+**MUI stays for behaviour, not looks.** The theme carries `tokens`, and `SwipeableDrawer` gives the sheet its focus trap, scroll lock and escape handling. Don't style *through* MUI — the design is a pill-and-glow system that looks nothing like it, and every rule becomes an Emotion cascade fight.
 
 ## Git
 
@@ -63,23 +82,43 @@ The short version: one component per directory with its `.tsx`, `.module.css`, a
 
 ## Current state
 
-**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. Two routes, both driven by the Zustand store:
+**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. The whole visual layer was then rebuilt on a new design system across six phases; the game logic underneath is unchanged.
 
-- `/` — the nine input pads, an Undo control, and the twenty-slot results readout.
+Two routes, both driven by the Zustand store:
+
+- `/` — the twenty-slot readout and dot count, a status strip, Undo, the nine pads, and the round control.
 - `/time-results` — sessions, each holding rounds, each holding per-dot times.
 
-`organisms/Header` lives in `app/layout.tsx`, so it persists across both. It owns Start / End round and the read-back toggle; `organisms/HeaderMenu` is the drawer beside it (navigation, New session, Discard round, the settings, Reset app).
+`organisms/AppShell` wraps both from `app/layout.tsx`. It owns the sticky `AppBar` — wordmark (home from anywhere), sound toggle, menu — and `MenuSheet`, a bottom sheet rather than a side drawer because everything in it is reached one-handed while standing at a machine. The sheet holds navigation to the other surface, New session, Scrap round, the settings, and Reset app quarantined behind a rule.
 
-`templates/HomeTemplate` and `TimeResultsTemplate` take every value as a prop, so routes supply data and stories drive any state.
+The board's vertical order is deliberate and worth not rearranging:
+
+- **Undo sits above the pads**, full width. The mistake it fixes is a mis-aimed thumb, so the fix must not sit where the miss happened.
+- **The status strip is a fixed 44px slot** between the results and the pads — a hint at rest, the read-back indicator mid-lock, flipping to a green "Go!" at unlock. Its height never changes, because anything that reflowed there would shift the pad grid under a thumb already on its way down.
+- **The round control is pinned to the bottom** by a flexible spacer, not by positioning.
+
+`templates/HomeTemplate` and `TimeResultsTemplate` take every value as a prop, so routes supply the store.
+
+Two places knowingly differ from the Figma frames, both commented where they happen: Undo is full width (the frames hug it left), and the status strip packs right (the frames centre it). A third is behavioural — see Known gaps.
 
 ### Game state
 
 `lib/store/gameStore.ts` is the whole model. Vocabulary, smallest to largest: a **dot** is one tapped circle, a **round** is a cumulative sequence of up to twenty dots, a **session** is a visit's worth of rounds.
 
 - Sessions and the two preferences persist to localStorage; the in-progress round and its clock do not, so a reload keeps history and drops you back to Start. Rehydration is deferred (`skipHydration`) and run after mount by `StoreHydrator` so the first client render matches the server's.
-- Action names state the outcome: **`logRound`** banks the round and rolls into the next (the header's End round button), **`discardRound`** throws it away (the drawer's Discard round). They were once `newRound`/`endRound`, which read as the opposite of the labels.
+- Action names state the outcome: **`logRound`** banks the round and rolls into the next (the board's End round control), **`discardRound`** throws it away (the sheet's Scrap round — renamed in the UI only). They were once `newRound`/`endRound`, which read as the opposite of the labels.
+- Read-back speed has four settings, evenly 300ms apart: Fast 200, Normal 500, Relaxed 800, Slow 1100. Adding a value needs no migration, since a stored `cadence` stays valid.
 - **`undoDot` keeps the dot's time.** A mis-tap is a wrong pad, not a wrong moment, so the freed duration is parked in `pendingDurations` and the replacing tap inherits it. `lastTapAt` deliberately does not move either, so the dot *after* a correction is still measured from when the mis-tapped one landed. The queue is a list, not a slot — walking back several dots must hand the times back in order, and a single slot would transpose them invisibly.
 - The board holds a **one-tap-per-dot lock** while the read-back plays. Nothing in the store times the unlock; the route does, because it knows how long the audio runs.
+
+### Known gaps
+
+Real, measured, and deliberately left. Don't "fix" any of them unprompted — each was raised and declined.
+
+- **The board overflows below ~812px tall, and the round control is what falls off.** 375×667 overflows by 153px; 390×844 (the design target) and up are fine. Widths are fine everywhere — pads hold 96px down to 320. The fix needs no breakpoints: sticky round control, and a pad grid of `repeat(3, 1fr)` capped at 96px with `aspect-ratio: 1`.
+- **Banked rounds have no pad colours.** `Session.rounds` stores durations alone, so the per-dot colour chip only appears on the round in progress. Recording pad identity means a v1→v2 migration, and existing history can't be recovered either way — the information was never written.
+- **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
+- **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.
 
 ### Dormant: camera and pattern detection
 
