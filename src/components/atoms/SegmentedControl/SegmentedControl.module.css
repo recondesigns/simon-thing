@@ -1,0 +1,72 @@
+.group {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--sem-border-surface);
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-bg-surface-raised);
+}
+
+.group:focus-within {
+  box-shadow: var(--elev-glow-focus);
+}
+
+/*
+ * Derived, not measured. The containing block for an absolutely positioned
+ * child is the parent's padding box, so `100%` here already includes the 4px
+ * padding on each side — hence the 8px, plus the gaps between segments.
+ *
+ * The translate percentage resolves against the indicator's own width, so
+ * `100% + 2px` is exactly one segment plus one gap.
+ */
+.indicator {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px - (var(--segments) - 1) * 2px) / var(--segments));
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-bg-primary);
+  transform: translateX(calc(var(--selected) * (100% + 2px)));
+  transition: transform var(--dur-land) var(--ease-spring);
+  pointer-events: none;
+}
+
+.segment {
+  position: relative;
+  /* Above the indicator, which is a sibling painted first. */
+  z-index: 1;
+  flex: 1;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  font: 700 14px/1 var(--font-body);
+  color: var(--sem-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--dur-pop) var(--ease-out);
+}
+
+/* Inverse ink, because the pill underneath is the light key colour. */
+.selected {
+  color: var(--sem-text-inverse);
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.disabled .segment {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition: transform var(--dur-tap-reduced) var(--ease-reduced);
+  }
+}

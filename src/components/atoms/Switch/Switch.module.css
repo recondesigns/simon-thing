@@ -1,0 +1,83 @@
+.track {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid var(--sem-border-surface-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-bg-surface-pressed);
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--dur-pop) var(--ease-out),
+    border-color var(--dur-pop) var(--ease-out);
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-text-secondary);
+  /* Origin follows the direction of travel, so the squash on press stretches
+     away from the edge the thumb is resting against rather than through it. */
+  transform-origin: left;
+  transition:
+    transform var(--dur-land) var(--ease-spring),
+    background-color var(--dur-pop) var(--ease-out);
+}
+
+.track:focus-visible {
+  box-shadow: var(--elev-glow-focus);
+}
+
+.track:active:not(:disabled) .thumb {
+  transform: scaleX(1.25);
+}
+
+.on {
+  background-color: var(--sem-bg-primary);
+  border-color: var(--sem-border-primary);
+}
+
+/* Dark thumb on the light "on" track. The two states genuinely need two
+   colours — a single thumb token would be invisible against one of them. */
+.on .thumb {
+  background-color: var(--sem-bg-surface);
+  transform: translateX(20px);
+  transform-origin: right;
+}
+
+.on:active:not(:disabled) .thumb {
+  transform: translateX(20px) scaleX(1.25);
+}
+
+.track:disabled {
+  background-color: var(--sem-bg-surface-disabled);
+  border-color: var(--sem-border-disabled);
+  cursor: not-allowed;
+}
+
+.track:disabled .thumb {
+  background-color: var(--sem-text-disabled);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition:
+      transform var(--dur-tap-reduced) var(--ease-reduced),
+      background-color var(--dur-tap-reduced) var(--ease-reduced);
+  }
+
+  .track:active:not(:disabled) .thumb {
+    transform: none;
+  }
+
+  .on:active:not(:disabled) .thumb {
+    transform: translateX(20px);
+  }
+}

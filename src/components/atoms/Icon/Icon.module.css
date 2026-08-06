@@ -1,0 +1,6 @@
+/* Never let an icon be squeezed by a flex parent — a 20px glyph compressed to
+   14px reads as a different weight, not a smaller icon. */
+.icon {
+  display: block;
+  flex-shrink: 0;
+}

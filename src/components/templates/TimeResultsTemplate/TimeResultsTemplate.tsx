@@ -59,7 +59,7 @@ export default function TimeResultsTemplate({
         ))
       )}
       <div className={styles.actions}>
-        <Button color="danger" variant="outlined" onClick={onClear}>
+        <Button variant="danger" icon="trash" onClick={onClear}>
           Clear history
         </Button>
       </div>

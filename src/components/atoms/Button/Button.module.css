@@ -1,0 +1,142 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--size-hit-min);
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font: 700 15px/1 var(--font-body);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur-pop) var(--ease-spring),
+    background-color var(--dur-tap) var(--ease-out),
+    border-color var(--dur-tap) var(--ease-out),
+    color var(--dur-tap) var(--ease-out);
+}
+
+.lg {
+  height: var(--size-control);
+  padding: 0 26px;
+  font-size: 17px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* :focus-visible, not :focus — a mouse press shouldn't leave a ring behind.
+   The reference implementation tracked focus in JS and showed it on every
+   click; this is the same cue, only when it's actually useful. */
+.button:focus-visible {
+  box-shadow: var(--elev-glow-focus);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Hover is guarded throughout: touch devices fire :hover on tap and never
+   clear it, so an unguarded rule leaves the state stuck until you tap
+   elsewhere. :active is deliberately unguarded — it should fire on tap. */
+
+.primary {
+  background-color: var(--sem-bg-primary);
+  color: var(--sem-text-inverse);
+}
+
+@media (hover: hover) {
+  .primary:hover:not(:disabled) {
+    background-color: var(--sem-bg-primary-hover);
+  }
+}
+
+.primary:active:not(:disabled) {
+  background-color: var(--sem-bg-primary-pressed);
+}
+
+.secondary {
+  background-color: var(--sem-bg-surface-raised);
+  color: var(--sem-text-surface);
+  border-color: var(--sem-border-surface-strong);
+}
+
+@media (hover: hover) {
+  .secondary:hover:not(:disabled) {
+    background-color: var(--sem-bg-surface-hover);
+  }
+}
+
+.secondary:active:not(:disabled) {
+  background-color: var(--sem-bg-surface-pressed);
+}
+
+.danger {
+  background-color: var(--sem-bg-danger);
+  color: var(--sem-text-danger);
+  border-color: var(--sem-border-danger);
+}
+
+@media (hover: hover) {
+  .danger:hover:not(:disabled) {
+    background-color: var(--sem-bg-danger-hover);
+  }
+}
+
+.danger:active:not(:disabled) {
+  background-color: var(--sem-bg-danger-pressed);
+}
+
+/* Colour-independent on purpose: an unavailable control shouldn't still
+   announce which action it would have performed. Two classes deep, so it beats
+   the variant rules above without !important. */
+.button:disabled {
+  background-color: var(--sem-bg-primary-disabled);
+  color: var(--sem-text-disabled);
+  border-color: var(--sem-border-disabled);
+  cursor: not-allowed;
+}
+
+.loading {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.loadingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-round);
+  background-color: currentColor;
+  animation: dots-breathe 900ms var(--ease-in-out) infinite;
+}
+
+.loadingDot:nth-child(2) {
+  animation-delay: 140ms;
+}
+
+.loadingDot:nth-child(3) {
+  animation-delay: 280ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: background-color var(--dur-tap-reduced) var(--ease-reduced);
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
+
+  /* The dots stop moving but stay visible — the button still has to read as
+     busy, so the cue is dimmed rather than removed. */
+  .loadingDot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
