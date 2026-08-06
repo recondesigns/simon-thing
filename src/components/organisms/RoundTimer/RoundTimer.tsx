@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import { formatDuration } from "@/lib/time";
 import styles from "./RoundTimer.module.css";
 
@@ -42,17 +42,17 @@ export default function RoundTimer({ round, roundStartAt }: RoundTimerProps) {
   return (
     <section
       className={styles.timer}
-      style={{ backgroundColor: tokens.bg.surface["fill-light"] }}
+      style={{ backgroundColor: tokens.bg["surface-raised"] }}
     >
       <span
         className={styles.label}
-        style={{ color: tokens.text.surface.light }}
+        style={{ color: tokens.text.secondary }}
       >
         Round {round}
       </span>
       <span
-        className={`${styles.value} ${antonSC.className}`}
-        style={{ color: tokens.text.surface.lightest }}
+        className={`${styles.value} ${bungee.className}`}
+        style={{ color: tokens.text.surface }}
       >
         {formatDuration(elapsed)}
       </span>

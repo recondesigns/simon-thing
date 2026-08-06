@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@mui/material/styles";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import styles from "./Chip.module.css";
 
 export interface ChipProps {
@@ -21,19 +21,19 @@ export default function Chip({ count, total, divider = true }: ChipProps) {
 
   return (
     <div
-      className={`${styles.chip} ${antonSC.className}`}
+      className={`${styles.chip} ${bungee.className}`}
       style={{
-        backgroundColor: theme.tokens.bg.surface["fill-lighter"],
-        borderColor: theme.tokens.border.inverse.default,
+        backgroundColor: theme.tokens.bg["surface-pressed"],
+        borderColor: theme.tokens.border["surface-strong"],
       }}
     >
-      <span style={{ color: theme.tokens.text.surface.lightest }}>
+      <span style={{ color: theme.tokens.text.surface }}>
         {count}
       </span>
       {divider && (
-        <span style={{ color: theme.tokens.text.surface.default }}>/</span>
+        <span style={{ color: theme.tokens.text.disabled }}>/</span>
       )}
-      <span style={{ color: theme.tokens.text.surface.default }}>
+      <span style={{ color: theme.tokens.text.disabled }}>
         {total}
       </span>
     </div>

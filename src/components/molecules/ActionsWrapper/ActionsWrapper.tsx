@@ -26,12 +26,14 @@ export default function ActionsWrapper({
 }: ActionsWrapperProps) {
   return (
     <div className={styles.wrapper}>
-      <Button color="success" variant="contained" onClick={onStart}>
+      {/* Migrated to the redesigned Button API, which has no `success` fill and
+          allows one primary per view. Nothing renders this component — it is
+          camera-era — so the mapping is by intent, not by eye. */}
+      <Button variant="primary" onClick={onStart}>
         Start
       </Button>
       <Button
-        color="primary"
-        variant="contained"
+        variant="secondary"
         onClick={onRecord}
         // Disabled rather than hidden: a control that appears once calibration
         // finishes gives no hint it was ever coming, and the row would reflow
@@ -40,7 +42,7 @@ export default function ActionsWrapper({
       >
         {recording ? "Recording" : "Record"}
       </Button>
-      <Button color="danger" variant="outlined" onClick={onStop}>
+      <Button variant="danger" onClick={onStop}>
         Stop
       </Button>
     </div>

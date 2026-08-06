@@ -1,0 +1,100 @@
+.pad {
+  width: var(--size-pad);
+  height: var(--size-pad);
+  border: none;
+  border-radius: var(--radius-round);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: var(--type-pad-numeral);
+  background-color: var(--pad-fill);
+  color: var(--pad-ink);
+  box-shadow: 0 0 14px var(--ring-color);
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: default;
+  transition:
+    transform var(--dur-tap) var(--ease-spring),
+    background-color var(--dur-pop) var(--ease-out),
+    box-shadow var(--dur-pop) var(--ease-out),
+    filter var(--dur-tap) var(--ease-out);
+}
+
+/* Inert and locked look alike — both are "not now" — but they differ in why,
+   so the shrink below separates them. */
+.inert,
+.locked {
+  background-color: var(--pad-dim);
+  /* No token for a muted numeral on a dim pad, and inventing one for a single
+     use would bloat the scale. Derived from the text colour so it still tracks
+     the palette. */
+  color: color-mix(in srgb, var(--sem-text-surface) 35%, transparent);
+  box-shadow: none;
+}
+
+/*
+ * The lock is a slower, calmer move than a press: 180ms easing out, per the
+ * motion spec, against the 90ms spring above. Restated here rather than on
+ * `.pad` because one `transition` can't give the same property two durations,
+ * and a press that took 180ms would feel unresponsive.
+ */
+.locked {
+  transform: scale(0.96);
+  cursor: wait;
+  transition:
+    transform var(--dur-pop) var(--ease-out),
+    background-color var(--dur-pop) var(--ease-out),
+    box-shadow var(--dur-pop) var(--ease-out);
+}
+
+.live {
+  cursor: pointer;
+}
+
+.live:focus-visible {
+  box-shadow:
+    var(--elev-glow-focus),
+    0 0 14px var(--ring-color);
+}
+
+.live:active {
+  transform: scale(0.9);
+  filter: brightness(1.25);
+  box-shadow: 0 0 26px var(--ring-color);
+}
+
+/* Bounce plus an expanding halo. Both run for --dur-unlock so they finish
+   together; the halo is the part that carries at arm's length. */
+/*
+ * `--ease-spring`, following the motion spec. The reference implementation used
+ * `--ease-bounce` here; the spec is the authority on motion and the softer
+ * overshoot reads better on nine pads firing at once.
+ */
+.justUnlocked {
+  animation:
+    dots-unlock var(--dur-unlock) var(--ease-spring),
+    dots-ring var(--dur-unlock) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pad {
+    transition:
+      background-color var(--dur-tap-reduced) var(--ease-reduced),
+      filter var(--dur-tap-reduced) var(--ease-reduced);
+  }
+
+  .locked,
+  .live:active {
+    transform: none;
+  }
+
+  /* The cue is never removed, only de-transformed — it's the one thing the
+     player is waiting for. Brightness steps and the halo still fire. */
+  .justUnlocked {
+    animation:
+      dots-unlock-reduced var(--dur-unlock-reduced) var(--ease-reduced),
+      dots-ring var(--dur-unlock-reduced) var(--ease-reduced);
+  }
+}

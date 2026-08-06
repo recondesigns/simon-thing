@@ -3,7 +3,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import type { Point } from "@/lib/detection/homography";
 import { toElementPoint, toIntrinsicPoint, type Size } from "@/lib/detection/viewport";
 import styles from "./CalibrationOverlay.module.css";
@@ -65,12 +65,12 @@ export default function CalibrationOverlay({
   // just admitted are wrong.
   const markColor =
     tone === "danger"
-      ? theme.tokens.border.danger.default
-      : theme.tokens.border.success.default;
+      ? theme.tokens.border.danger
+      : theme.tokens.border.success;
   const promptColor =
     tone === "danger"
-      ? theme.tokens.text.danger.light
-      : theme.tokens.text.surface.lightest;
+      ? theme.tokens.text.danger
+      : theme.tokens.text.surface;
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState<Size | null>(null);
 
@@ -140,8 +140,8 @@ export default function CalibrationOverlay({
               }}
             >
               <span
-                className={`${styles.markLabel} ${antonSC.className}`}
-                style={{ color: theme.tokens.text.surface.lightest }}
+                className={`${styles.markLabel} ${bungee.className}`}
+                style={{ color: theme.tokens.text.surface }}
               >
                 {i + 1}
               </span>

@@ -18,6 +18,23 @@ export function formatDuration(ms: number): string {
 }
 
 /**
+ * A round's total as seconds to one decimal — "7.0s". Rounds are short enough
+ * that `m:ss` would read as `0:07` and throw away the tenths that distinguish
+ * one attempt from the next.
+ */
+export function formatRoundTotal(ms: number): string {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+/**
+ * A single dot's duration, to two decimals. Finer than a round total because
+ * these are the numbers being compared against each other.
+ */
+export function formatDotSeconds(ms: number): string {
+  return (ms / 1000).toFixed(2);
+}
+
+/**
  * A session's start time as a short, local label like "Jul 20, 3:14 PM" — enough
  * to tell one visit from another. Only ever called client-side (the store
  * rehydrates after mount), so the viewer's locale and timezone are correct and
