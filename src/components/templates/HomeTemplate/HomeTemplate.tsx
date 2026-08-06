@@ -48,7 +48,8 @@ export default function HomeTemplate({
       </div>
       <div className={styles.undoSection}>
         <Button
-          variant="outlined"
+          variant="secondary"
+          icon="undo"
           fullWidth
           disabled={lastDotLabel === null}
           onClick={onUndo}

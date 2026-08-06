@@ -1,0 +1,38 @@
+.slot {
+  width: var(--size-slot);
+  height: var(--size-slot);
+  border-radius: var(--radius-round);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* Bungee at 16 rather than a --type-* composite: the numeral has to sit in a
+     40px circle, which no step on the scale is cut for. */
+  font: 400 16px/1 var(--font-display);
+}
+
+.filled {
+  background-color: var(--slot-fill);
+  color: var(--slot-ink);
+  border: none;
+}
+
+/* Dashed, not a faint fill — an empty slot should read as a socket waiting for
+   something, not as a dot that happens to be dim. */
+.empty {
+  background-color: transparent;
+  border: 2px dashed var(--sem-border-surface-strong);
+  color: var(--sem-text-disabled);
+}
+
+.arriving {
+  animation: dots-land var(--dur-land) var(--ease-bounce);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Fade only. Exits and entrances stop transforming, but the dot still has to
+     announce itself, so the opacity step stays. */
+  .arriving {
+    animation: dots-land-reduced var(--dur-land-reduced) var(--ease-reduced);
+  }
+}
