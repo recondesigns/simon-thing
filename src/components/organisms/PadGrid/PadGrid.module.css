@@ -1,0 +1,9 @@
+/* Fixed 96px columns rather than fractions: a pad is a fixed touch target, and
+   letting it stretch with the column would change the size of the thing being
+   aimed at between devices. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--size-pad));
+  gap: 14px;
+  justify-content: center;
+}

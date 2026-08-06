@@ -1,67 +1,126 @@
 "use client";
 
-import { useTheme } from "@mui/material/styles";
-import SessionTimes from "@/components/organisms/SessionTimes/SessionTimes";
 import Button from "@/components/atoms/Button/Button";
+import CollapsibleRow from "@/components/organisms/CollapsibleRow/CollapsibleRow";
+import DataRow from "@/components/organisms/DataRow/DataRow";
+import EmptyState from "@/components/organisms/EmptyState/EmptyState";
+import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./TimeResultsTemplate.module.css";
 
-/** One visit as the Time Results page needs it, already labelled and ordered. */
-export interface SessionView {
-  /** Stable key for the list. */
+export interface DotView {
+  label: string;
+  /** Seconds, already formatted — the unit is rendered separately. */
+  value: string;
+  /**
+   * Which pad. Only known for the round being played right now: banked rounds
+   * store durations alone, so their dots have no colour to show.
+   */
+  color?: GameColor;
+}
+
+export interface RoundView {
   key: string;
-  /** Heading, e.g. "Session 2 · Jul 20, 3:14 PM" or "Earlier". */
+  label: string;
+  /** Formatted total, e.g. "7.0s". */
+  total: string;
+  dots: DotView[];
+  /** The round being played right now. */
+  live?: boolean;
+}
+
+export interface SessionView {
+  key: string;
   title: string;
-  /** The visit's rounds, each its dot durations in ms (oldest first). */
-  rounds: number[][];
-  /** Index of a round still in progress within `rounds`, or -1. */
-  liveRoundIndex: number;
-  /** The open/active visit — it starts expanded. */
+  /** When the visit started. Absent for the legacy "Earlier" bucket. */
+  when?: string;
+  /** Formatted summary, e.g. "6 rounds · 0:55". */
+  meta: string;
+  rounds: RoundView[];
   isActive: boolean;
 }
 
 export interface TimeResultsTemplateProps {
-  /** Visits to show, already ordered newest first. */
+  /** Newest first. */
   sessions: SessionView[];
-  /** Wipes every session and the current round. */
   onClear?: () => void;
 }
 
 /**
- * Layout skeleton for the Time Results route: a card per session (each holding
- * its collapsible rounds) and a Clear history action. The header is supplied by
- * the root layout. Placement only — the route supplies the sessions.
+ * The history. Sessions hold rounds hold dots, collapsible down two levels.
+ *
+ * Clear history rides the end of the list rather than the bottom of the
+ * viewport: `margin-top: auto` pins it while the history is short and lets it
+ * scroll away once there's more than a screenful. A destructive control
+ * shouldn't sit permanently under a thumb on a surface you scroll.
  */
 export default function TimeResultsTemplate({
   sessions,
   onClear,
 }: TimeResultsTemplateProps) {
-  const { tokens } = useTheme();
+  if (sessions.length === 0) {
+    return (
+      <div className={styles.pageEmpty}>
+        <EmptyState />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.page}>
-      {sessions.length === 0 ? (
-        <p
-          className={styles.empty}
-          style={{ color: tokens.text.secondary }}
+      {sessions.map((session) => (
+        <CollapsibleRow
+          key={session.key}
+          defaultOpen={session.isActive}
+          meta={session.meta}
+          title={
+            <span className={styles.sessionTitle}>
+              <span className={styles.sessionName}>{session.title}</span>
+              {session.when && (
+                <span className={styles.sessionWhen}>{session.when}</span>
+              )}
+            </span>
+          }
         >
-          No sessions yet. Start a round to begin one.
-        </p>
-      ) : (
-        sessions.map((session) => (
-          <div key={session.key} className={styles.section}>
-            <SessionTimes
-              title={session.title}
-              rounds={session.rounds}
-              liveRoundIndex={session.liveRoundIndex}
-              defaultOpen={session.isActive}
-            />
-          </div>
-        ))
-      )}
-      <div className={styles.actions}>
+          {session.rounds.map((round) => (
+            <CollapsibleRow
+              key={round.key}
+              level={1}
+              defaultOpen={round.live}
+              meta={round.total}
+              metaTone={round.live ? "success" : "default"}
+              title={
+                round.live ? (
+                  <span className={styles.liveTitle}>
+                    <span className={styles.pulse} aria-hidden="true" />
+                    {round.label}
+                    <span className={styles.inProgress}>In progress</span>
+                  </span>
+                ) : (
+                  round.label
+                )
+              }
+            >
+              {round.dots.map((dot, i) => (
+                <DataRow
+                  key={i}
+                  label={dot.label}
+                  value={dot.value}
+                  unit="s"
+                  dot={dot.color}
+                />
+              ))}
+            </CollapsibleRow>
+          ))}
+        </CollapsibleRow>
+      ))}
+
+      <div className={styles.footer}>
         <Button variant="danger" icon="trash" onClick={onClear}>
           Clear history
         </Button>
+        <span className={styles.footerNote}>
+          Wipes sessions. Keeps your preferences.
+        </span>
       </div>
     </div>
   );

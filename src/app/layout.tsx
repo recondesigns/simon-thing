@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import ThemeRegistry from "@/providers/ThemeRegistry";
 import StoreHydrator from "@/providers/StoreHydrator";
-import Header from "@/components/organisms/Header/Header";
+import AppShell from "@/components/organisms/AppShell/AppShell";
 import { fontVariables } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
-import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,10 +29,7 @@ export default function RootLayout({
       <body>
         <ThemeRegistry>
           <StoreHydrator />
-          <div className={styles.shell}>
-            <Header />
-            {children}
-          </div>
+          <AppShell>{children}</AppShell>
         </ThemeRegistry>
       </body>
     </html>
