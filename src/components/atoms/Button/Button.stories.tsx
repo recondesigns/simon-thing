@@ -33,7 +33,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    // primary fill is theme.tokens.bg.primary.fill (#5089F6) — verifies the
+    // primary fill is theme.tokens.bg.primary (#F2EFE3) — verifies the
     // Figma token maps through, not MUI's default palette.primary.main.
     const button = canvasElement.querySelector("button");
     await expect(getComputedStyle(button!).backgroundColor).toBe(
@@ -122,7 +122,7 @@ export const Outlined: Story = {
     variant: "outlined",
   },
   play: async ({ canvasElement }) => {
-    // border/primary/default (#5089F6) — outlined text color stays fixed at
+    // border/primary/default (#F2EFE3) — outlined text color stays fixed at
     // text/primary/default and only the border shifts across states.
     const button = canvasElement.querySelector("button");
     await expect(getComputedStyle(button!).borderColor).toBe(

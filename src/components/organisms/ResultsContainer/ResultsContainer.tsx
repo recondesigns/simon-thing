@@ -5,7 +5,7 @@ import Chip from "@/components/atoms/Chip/Chip";
 import GridCircle, {
   type GridCircleColor,
 } from "@/components/atoms/GridCircle/GridCircle";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import styles from "./ResultsContainer.module.css";
 
 /** Four to a row. */
@@ -49,12 +49,12 @@ export default function ResultsContainer({ dots }: ResultsContainerProps) {
   return (
     <section
       className={styles.container}
-      style={{ backgroundColor: tokens.bg.surface["fill-light"] }}
+      style={{ backgroundColor: tokens.bg["surface-raised"] }}
     >
       <div className={styles.heading}>
         <h2
-          className={`${styles.title} ${antonSC.className}`}
-          style={{ color: tokens.text.surface.lightest }}
+          className={`${styles.title} ${bungee.className}`}
+          style={{ color: tokens.text.surface }}
         >
           Results
         </h2>

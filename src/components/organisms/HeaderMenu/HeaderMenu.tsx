@@ -63,7 +63,7 @@ export default function HeaderMenu() {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        style={{ color: theme.tokens.text.surface.light }}
+        style={{ color: theme.tokens.text.secondary }}
       >
         <MenuIcon fontSize="small" />
       </button>
@@ -77,8 +77,8 @@ export default function HeaderMenu() {
             sx: {
               width: 260,
               maxWidth: "80vw",
-              backgroundColor: theme.tokens.bg.surface["fill-light"],
-              color: theme.tokens.text.surface.lightest,
+              backgroundColor: theme.tokens.bg["surface-raised"],
+              color: theme.tokens.text.surface,
               backgroundImage: "none",
             },
           },
@@ -92,7 +92,7 @@ export default function HeaderMenu() {
               className={styles.iconButton}
               onClick={close}
               aria-label="Close menu"
-              style={{ color: theme.tokens.text.surface.light }}
+              style={{ color: theme.tokens.text.secondary }}
             >
               <CloseIcon fontSize="small" />
             </button>
@@ -101,7 +101,7 @@ export default function HeaderMenu() {
           <nav className={styles.section}>
             <p
               className={styles.sectionLabel}
-              style={{ color: theme.tokens.text.surface.default }}
+              style={{ color: theme.tokens.text.disabled }}
             >
               Navigation
             </p>
@@ -109,7 +109,7 @@ export default function HeaderMenu() {
               href="/"
               className={styles.item}
               onClick={close}
-              style={{ color: theme.tokens.text.surface.lightest }}
+              style={{ color: theme.tokens.text.surface }}
             >
               Home
             </Link>
@@ -117,7 +117,7 @@ export default function HeaderMenu() {
               href="/time-results"
               className={styles.item}
               onClick={close}
-              style={{ color: theme.tokens.text.surface.lightest }}
+              style={{ color: theme.tokens.text.surface }}
             >
               Times
             </Link>
@@ -126,7 +126,7 @@ export default function HeaderMenu() {
           <div className={styles.section}>
             <p
               className={styles.sectionLabel}
-              style={{ color: theme.tokens.text.surface.default }}
+              style={{ color: theme.tokens.text.disabled }}
             >
               Tools
             </p>
@@ -134,7 +134,7 @@ export default function HeaderMenu() {
               type="button"
               className={styles.item}
               onClick={handleNewSession}
-              style={{ color: theme.tokens.text.surface.lightest }}
+              style={{ color: theme.tokens.text.surface }}
             >
               New session
             </button>
@@ -143,7 +143,7 @@ export default function HeaderMenu() {
               className={styles.item}
               onClick={handleDiscard}
               disabled={!started}
-              style={{ color: theme.tokens.text.danger.light }}
+              style={{ color: theme.tokens.text.danger }}
             >
               Discard round
             </button>
@@ -152,12 +152,12 @@ export default function HeaderMenu() {
           <div className={styles.section}>
             <p
               className={styles.sectionLabel}
-              style={{ color: theme.tokens.text.surface.default }}
+              style={{ color: theme.tokens.text.disabled }}
             >
               Settings
             </p>
             <div className={styles.settingRow}>
-              <span style={{ color: theme.tokens.text.surface.lightest }}>
+              <span style={{ color: theme.tokens.text.surface }}>
                 Sound
               </span>
               <Switch
@@ -166,10 +166,10 @@ export default function HeaderMenu() {
                 slotProps={{ input: { "aria-label": "Toggle sound" } }}
                 sx={{
                   "& .MuiSwitch-switchBase.Mui-checked": {
-                    color: theme.tokens.bg.primary.fill,
+                    color: theme.tokens.bg.primary,
                   },
                   "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                    backgroundColor: theme.tokens.bg.primary.fill,
+                    backgroundColor: theme.tokens.bg.primary,
                   },
                 }}
               />
@@ -177,7 +177,7 @@ export default function HeaderMenu() {
             <div className={styles.settingColumn}>
               <span
                 className={styles.settingName}
-                style={{ color: theme.tokens.text.surface.lightest }}
+                style={{ color: theme.tokens.text.surface }}
               >
                 Read-back speed
               </span>
@@ -185,7 +185,7 @@ export default function HeaderMenu() {
                 className={styles.segment}
                 role="group"
                 aria-label="Read-back speed"
-                style={{ borderColor: theme.tokens.border.surface.default }}
+                style={{ borderColor: theme.tokens.border.surface }}
               >
                 {CADENCE_OPTIONS.map((option) => {
                   const active = cadence === option.value;
@@ -198,11 +198,14 @@ export default function HeaderMenu() {
                       aria-pressed={active}
                       style={{
                         backgroundColor: active
-                          ? theme.tokens.bg.primary.fill
+                          ? theme.tokens.bg.primary
                           : "transparent",
+                        // Same reason as the Header's primary button: the
+                        // selected segment sits on the cream key colour, so its
+                        // label takes `text.inverse`. White would vanish.
                         color: active
-                          ? "#ffffff"
-                          : theme.tokens.text.surface.light,
+                          ? theme.tokens.text.inverse
+                          : theme.tokens.text.secondary,
                       }}
                     >
                       {option.label}
@@ -218,7 +221,7 @@ export default function HeaderMenu() {
               type="button"
               className={styles.item}
               onClick={handleResetApp}
-              style={{ color: theme.tokens.text.danger.light }}
+              style={{ color: theme.tokens.text.danger }}
             >
               Reset app
             </button>

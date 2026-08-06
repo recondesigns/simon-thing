@@ -42,7 +42,7 @@ export default function TimeResultsTemplate({
       {sessions.length === 0 ? (
         <p
           className={styles.empty}
-          style={{ color: tokens.text.surface.light }}
+          style={{ color: tokens.text.secondary }}
         >
           No sessions yet. Start a round to begin one.
         </p>

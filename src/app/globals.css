@@ -1,3 +1,7 @@
+/* Design tokens first — every CSS module reads these custom properties, and
+   @import has to precede all other rules. */
+@import "./tokens.css";
+
 /* Base resets only — colors, background, and typography come from the MUI
    theme via CssBaseline, so nothing here should set them. */
 

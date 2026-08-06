@@ -74,10 +74,10 @@ export const Live: Story = {
     const section = canvasElement.querySelector("section")!;
     const sectionStyle = getComputedStyle(section);
     await expect(sectionStyle.getPropertyValue("--meta-success").trim()).toBe(
-      tokens.text.success.lighter, // #46CF55 green
+      tokens.text.success, // #7FE0A8 green
     );
     await expect(sectionStyle.getPropertyValue("--meta-danger").trim()).toBe(
-      tokens.text.danger.light, // #F73D42 red
+      tokens.text.danger, // #FF7A76 red
     );
     await expect(getComputedStyle(values[0]).transitionProperty).toContain(
       "color",

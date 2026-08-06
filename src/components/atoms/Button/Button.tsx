@@ -25,12 +25,70 @@ export interface ButtonProps
   variant?: ButtonVariant;
 }
 
+/**
+ * Per-colour values, spelled out rather than indexed.
+ *
+ * The old code looked these up dynamically (`tokens.bg[color].fill`), which
+ * worked while every colour had an identical `fill / hover / pressed` shape.
+ * The redesigned palette doesn't: only `primary` is a bright fill, while
+ * `danger` and `success` are deep tinted *surfaces* meant to sit under bright
+ * text, and they have no hover/pressed steps of their own.
+ *
+ * That difference is why `contained` no longer hardcodes white text. On the new
+ * cream `bg.primary`, white-on-primary is invisible.
+ *
+ * This is a stopgap to keep the existing screens legible on the new tokens.
+ * Phase 2 replaces this component with the redesign's pill Button
+ * (primary / secondary / danger × md / lg).
+ */
+const COLORS: Record<
+  ButtonColor,
+  {
+    bg: string;
+    bgHover: string;
+    bgPressed: string;
+    /** Label colour *on the filled background*. */
+    on: string;
+    /** Label colour against the page — outlined, where there is no fill. */
+    fg: string;
+    border: string;
+  }
+> = {
+  // `on` and `fg` differ for primary and only for primary: its fill is a light
+  // cream, so a contained label must go dark while an outlined one must stay
+  // light. Collapsing them into one value puts near-black text on the dark page.
+  primary: {
+    bg: tokens.bg.primary,
+    bgHover: tokens.bg["primary-hover"],
+    bgPressed: tokens.bg["primary-pressed"],
+    on: tokens.text.inverse,
+    fg: tokens.text.primary,
+    border: tokens.border.primary,
+  },
+  // danger and success fill with a deep tinted surface rather than a bright
+  // colour, so the same bright foreground reads on both.
+  danger: {
+    bg: tokens.bg.danger,
+    bgHover: tokens.bg["danger-hover"],
+    bgPressed: tokens.bg["danger-pressed"],
+    on: tokens.text.danger,
+    fg: tokens.text.danger,
+    border: tokens.border.danger,
+  },
+  success: {
+    bg: tokens.bg.success,
+    bgHover: tokens.bg.success,
+    bgPressed: tokens.bg.success,
+    on: tokens.text.success,
+    fg: tokens.text.success,
+    border: tokens.border.success,
+  },
+};
+
 const StyledButton = styled(MuiButton, {
   shouldForwardProp: (prop) => prop !== "tokenColor",
 })<{ tokenColor: ButtonColor }>(({ tokenColor }) => {
-  const bg = tokens.bg[tokenColor];
-  const border = tokens.border[tokenColor];
-  const text = tokens.text[tokenColor];
+  const c = COLORS[tokenColor];
 
   return {
     // No fontFamily here on purpose — it comes from theme.typography.button,
@@ -45,13 +103,13 @@ const StyledButton = styled(MuiButton, {
     // its own hover rules the same way; overriding them opts back out.
     // :active is deliberately unguarded — it should fire on tap.
     "&.MuiButton-contained": {
-      backgroundColor: bg.fill,
-      color: "#FFFFFF",
+      backgroundColor: c.bg,
+      color: c.on,
       padding: "12px 16px",
       "@media (hover: hover)": {
-        "&:hover": { backgroundColor: bg["fill-hover"] },
+        "&:hover": { backgroundColor: c.bgHover },
       },
-      "&:active": { backgroundColor: bg["fill-pressed"] },
+      "&:active": { backgroundColor: c.bgPressed },
       // Declared here, not left to MUI. MUI does style `Mui-disabled`, but the
       // backgroundColor above is unconditional and beat it — a disabled button
       // shipped as full primary blue with a white label at opacity 1: visually
@@ -61,24 +119,24 @@ const StyledButton = styled(MuiButton, {
       // Colour-independent, per the Figma set (node 32:87): an unavailable
       // control should not still announce which action it would have performed.
       "&.Mui-disabled": {
-        backgroundColor: tokens.bg.surface["fill-light"],
-        color: tokens.text.surface.light,
+        backgroundColor: tokens.bg["primary-disabled"],
+        color: tokens.text.disabled,
       },
     },
     "&.MuiButton-outlined": {
-      borderColor: border.default,
-      color: text.default,
+      borderColor: c.border,
+      color: c.fg,
       padding: "13px 17px",
       "@media (hover: hover)": {
         "&:hover": {
-          borderColor: border.hover,
-          backgroundColor: "transparent",
+          borderColor: c.border,
+          backgroundColor: tokens.bg["surface-hover"],
         },
       },
-      "&:active": { borderColor: border.pressed },
+      "&:active": { backgroundColor: tokens.bg["surface-pressed"] },
       "&.Mui-disabled": {
-        borderColor: tokens.border.surface.strong,
-        color: tokens.text.surface.light,
+        borderColor: tokens.border.disabled,
+        color: tokens.text.disabled,
       },
     },
   };
