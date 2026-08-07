@@ -58,7 +58,7 @@ export default function ResultSlot({
           : undefined
       }
     >
-      {filled ? color : ""}
+      {filled && <span className={styles.numeral}>{color}</span>}
     </span>
   );
 }

@@ -71,7 +71,10 @@ export default function InputPad({
         } as CSSProperties
       }
     >
-      {color}
+      {/* The numeral is a child so it can size itself against the pad as a
+          container — the pad shrinks on short screens, and a fixed 34px would
+          crowd it. */}
+      <span className={styles.numeral}>{color}</span>
     </button>
   );
 }

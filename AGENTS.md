@@ -59,7 +59,12 @@ Exits never transform — an entrance can overshoot because it's announcing some
 
 Mobile only. 400px max-width centered column, **no breakpoints** — where something must adapt, use intrinsic sizing rather than a media query.
 
-`organisms/AppShell` is the shell, wrapped around every route by `app/layout.tsx`. Spacing *between* sections lives in each template's module CSS, not inside components. Pads (96px) and result slots (40px) are **fixed** sizes on purpose: a pad is a touch target, and letting it stretch would change the size of the thing being aimed at between phones.
+`organisms/AppShell` is the shell, wrapped around every route by `app/layout.tsx`. Spacing *between* sections lives in each template's module CSS, not inside components.
+
+**The shell is `height: 100dvh` with `overflow: hidden`, so each route owns its own overflow.** The board must fit; the history scrolls inside itself, which is what keeps the app bar fixed without `position: sticky`. Two consequences worth knowing:
+
+- **The board's two grids shrink, nothing else does.** Pads and slots hold 96px and 40px wherever there's room — every phone at the design's 844 gets full size — and give way together below that, since iOS Chrome's bars can take 140px off the usable height. Pads floor at the 44px touch minimum, slots at 20px, and the board scrolls only if both floors bind. Numerals are sized in `cqh` against their own circle, so they scale with it.
+- **Anything in a scrolling flex column needs `flex-shrink: 0`.** Flex children default to shrinking, so a list will silently compress to fit instead of overflowing — nine sessions squashed into one screen with `scrollHeight === clientHeight`, which looks fine to every measurement and wrong to every eye.
 
 ## Components
 
@@ -115,7 +120,6 @@ Two places knowingly differ from the Figma frames, both commented where they hap
 
 Real, measured, and deliberately left. Don't "fix" any of them unprompted — each was raised and declined.
 
-- **The board overflows below ~812px tall, and the round control is what falls off.** 375×667 overflows by 153px; 390×844 (the design target) and up are fine. Widths are fine everywhere — pads hold 96px down to 320. The fix needs no breakpoints: sticky round control, and a pad grid of `repeat(3, 1fr)` capped at 96px with `aspect-ratio: 1`.
 - **Banked rounds have no pad colours.** `Session.rounds` stores durations alone, so the per-dot colour chip only appears on the round in progress. Recording pad identity means a v1→v2 migration, and existing history can't be recovered either way — the information was never written.
 - **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
 - **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.

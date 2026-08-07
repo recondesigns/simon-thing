@@ -7,7 +7,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font: var(--type-pad-numeral);
+  /* Size containment only — no paint containment, so the glow still escapes. */
+  container-type: size;
   background-color: var(--pad-fill);
   color: var(--pad-ink);
   box-shadow: 0 0 14px var(--ring-color);
@@ -20,6 +21,12 @@
     background-color var(--dur-pop) var(--ease-out),
     box-shadow var(--dur-pop) var(--ease-out),
     filter var(--dur-tap) var(--ease-out);
+}
+
+/* 36% of the pad's height reproduces the type scale's 34px at the full 96px
+   pad, and keeps the same proportion once the pad gives way on a short screen. */
+.numeral {
+  font: 400 36cqh/1 var(--font-display);
 }
 
 /* Inert and locked look alike — both are "not now" — but they differ in why,

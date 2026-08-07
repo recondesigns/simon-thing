@@ -1,9 +1,30 @@
-/* Fixed 96px columns rather than fractions: a pad is a fixed touch target, and
-   letting it stretch with the column would change the size of the thing being
-   aimed at between devices. */
+/*
+ * 96px when the screen allows it, smaller when it doesn't.
+ *
+ * These were a fixed size, on the reasoning that a touch target shouldn't
+ * change between devices. That holds right up until the screen is too short, at
+ * which point the bottom row lands under the fold and the target is zero. Rows
+ * are `minmax(0, 96px)` so the grid gives way only when it has to — every phone
+ * at or above the design's 844 still gets full-size pads.
+ */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, var(--size-pad));
+  grid-template-columns: repeat(3, auto);
+  /* Floored at the 44px minimum touch target. Below that the pad stops being
+     tappable, which is worse than the board scrolling — and it only binds on
+     viewports under ~600px. */
+  grid-template-rows: repeat(3, minmax(var(--size-hit-min), var(--size-pad)));
   gap: 14px;
   justify-content: center;
+  align-content: center;
+  min-height: 0;
+}
+
+/* Height from the row, width from the aspect ratio, so a shrunken pad is still
+   a circle. Typed as `> button` so it outranks InputPad's own fixed sizing
+   regardless of which module's CSS lands first. */
+.grid > button {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
 }
