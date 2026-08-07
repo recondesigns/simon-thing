@@ -6,9 +6,14 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  /* Bungee at 16 rather than a --type-* composite: the numeral has to sit in a
-     40px circle, which no step on the scale is cut for. */
-  font: 400 16px/1 var(--font-display);
+  container-type: size;
+}
+
+/* 40% of the slot's height — 16px at the full 40px slot, and the same
+   proportion once the readout gives way on a short screen. No `--type-*` step
+   is cut for a 40px circle, let alone a 24px one. */
+.numeral {
+  font: 400 40cqh/1 var(--font-display);
 }
 
 .filled {

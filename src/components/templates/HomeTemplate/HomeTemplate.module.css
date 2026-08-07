@@ -1,11 +1,23 @@
-/* Fills whatever the shell gives it below the app bar, so the round control
-   can sit on the bottom edge without being fixed there. */
+/*
+ * Fills exactly what the shell gives it below the app bar, and never more —
+ * the shell is bounded to the viewport, so this has to fit rather than scroll.
+ *
+ * When the screen is short, the two grids are what give way (see their own
+ * modules); everything else holds its size. The order matters: losing a bit of
+ * pad diameter is survivable, losing the round control off the bottom edge is
+ * not.
+ */
 .page {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: 10px;
   padding: var(--space-3) var(--space-4) var(--space-4);
+  min-height: 0;
+  /* Last resort only. The grids shrink first, and this never engages above
+     roughly 600px of viewport — but if both hit their floors, scrolling beats
+     clipping content off inside a bounded shell. */
+  overflow-y: auto;
 }
 
 /* Its own full-width row. Not a tenth pad, and not under the grid — the
@@ -14,11 +26,16 @@
    in a hurry, mid-round, by someone looking at a TV. */
 .undoRow {
   display: flex;
+  flex-shrink: 0;
+}
+
+/* The round control never shrinks and never scrolls out of reach. */
+.cta {
+  flex-shrink: 0;
 }
 
 .spacer {
   flex: 1;
-  /* Never the reason the board overflows — on a short viewport this collapses
-     and the sections keep their own heights. */
+  /* Collapses first on a short screen, before anything visible gives way. */
   min-height: 0;
 }

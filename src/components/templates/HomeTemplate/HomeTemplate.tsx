@@ -95,7 +95,13 @@ export default function HomeTemplate({
           edge at any viewport height, without being positioned there. */}
       <div className={styles.spacer} />
 
-      <Button variant="primary" size="lg" fullWidth onClick={onPrimary}>
+      <Button
+        variant="primary"
+        size="lg"
+        fullWidth
+        className={styles.cta}
+        onClick={onPrimary}
+      >
         {started ? "End round" : "Start round"}
       </Button>
     </div>

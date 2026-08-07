@@ -6,7 +6,8 @@ import styles from "./ResultsBoard.module.css";
 /** The cap. A round is twenty dots, and the board shows all twenty from the start. */
 export const RESULT_SLOTS = 20;
 
-const SLOTS_PER_ROW = 5;
+// How those twenty are arranged is now purely a layout concern — the grid is
+// five columns in the stylesheet, so there is no count to keep in step here.
 
 export interface ResultsBoardProps {
   /** Dots recorded so far, in tap order. Shorter than the cap; the rest read empty. */
@@ -37,8 +38,6 @@ export default function ResultsBoard({
   label = "This round",
   className,
 }: ResultsBoardProps) {
-  const rows = Math.ceil(RESULT_SLOTS / SLOTS_PER_ROW);
-
   return (
     <div className={[styles.board, className].filter(Boolean).join(" ")}>
       <div className={styles.header}>
@@ -46,25 +45,23 @@ export default function ResultsBoard({
         <ChipCounter count={dots.length} total={RESULT_SLOTS} />
       </div>
 
+      {/* One flat grid rather than four row wrappers: the rows have to be able
+          to shrink together on a short screen, which needs real grid tracks. */}
       <div className={styles.grid}>
-        {Array.from({ length: rows }, (_, row) => (
-          <div key={row} className={styles.row}>
-            {Array.from({ length: SLOTS_PER_ROW }, (_, column) => {
-              const position = row * SLOTS_PER_ROW + column;
-              const current = dots[position];
-              const leaving = current === undefined ? exitingDots?.[position] : undefined;
-              return (
-                <ResultSlot
-                  key={position}
-                  color={current ?? leaving}
-                  index={position + 1}
-                  arriving={arriving && position === dots.length - 1}
-                  exiting={leaving !== undefined}
-                />
-              );
-            })}
-          </div>
-        ))}
+        {Array.from({ length: RESULT_SLOTS }, (_, position) => {
+          const current = dots[position];
+          const leaving =
+            current === undefined ? exitingDots?.[position] : undefined;
+          return (
+            <ResultSlot
+              key={position}
+              color={current ?? leaving}
+              index={position + 1}
+              arriving={arriving && position === dots.length - 1}
+              exiting={leaving !== undefined}
+            />
+          );
+        })}
       </div>
     </div>
   );
