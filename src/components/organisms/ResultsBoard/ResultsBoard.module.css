@@ -1,0 +1,47 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* Holds its height when the board is squeezed — only the slot grid below gives
+   way, so the label and counter never compress into each other. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.label {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+}
+
+/*
+ * Rows are `minmax(0, 40px)`, so they hold 40 when there's room and give way
+ * together when there isn't. `justify-content: space-between` distributes the
+ * horizontal remainder, keeping the readout flush to both edges at any width.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  /* Floored at 20px — below that the numeral is gone whatever it scales to,
+     and an unreadable readout is worse than a scroll. */
+  grid-template-rows: repeat(4, minmax(20px, var(--size-slot)));
+  justify-content: space-between;
+  row-gap: var(--space-2);
+  min-height: 0;
+}
+
+/* Each slot takes its row's height and derives its width, so it stays circular
+   whatever the row shrinks to. Typed as `> span` to beat ResultSlot's own
+   fixed sizing regardless of which module's CSS lands first. */
+.grid > span {
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
+}

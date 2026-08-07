@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import ThemeRegistry from "@/providers/ThemeRegistry";
 import StoreHydrator from "@/providers/StoreHydrator";
-import Header from "@/components/organisms/Header/Header";
+import AppShell from "@/components/organisms/AppShell/AppShell";
+import { fontVariables } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
-import styles from "./layout.module.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   // Matches the page background so mobile browser chrome doesn't render a
   // white bar above a dark app.
-  themeColor: tokens.bg.surface.fill,
+  themeColor: tokens.bg.surface,
 };
 
 export default function RootLayout({
@@ -23,14 +23,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The three font custom properties land on <html> so `var(--font-body)` is
+    // resolvable everywhere, including inside portalled MUI overlays.
+    <html lang="en" className={fontVariables}>
       <body>
         <ThemeRegistry>
           <StoreHydrator />
-          <div className={styles.shell}>
-            <Header />
-            {children}
-          </div>
+          <AppShell>{children}</AppShell>
         </ThemeRegistry>
       </body>
     </html>

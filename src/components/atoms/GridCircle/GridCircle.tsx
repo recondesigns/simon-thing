@@ -1,4 +1,4 @@
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import { tokens } from "@/lib/theme/tokens";
 import styles from "./GridCircle.module.css";
 
@@ -63,7 +63,7 @@ export default function GridCircle({
     return (
       <div
         className={`${styles.circle} ${styles.empty}${extra}`}
-        style={{ borderColor: tokens.border.surface.default }}
+        style={{ borderColor: tokens.border.surface }}
         data-testid="grid-circle-empty"
       />
     );
@@ -71,7 +71,7 @@ export default function GridCircle({
 
   return (
     <div
-      className={`${styles.circle} ${antonSC.className}${extra}`}
+      className={`${styles.circle} ${bungee.className}${extra}`}
       style={{ backgroundColor: GRID_CIRCLE_COLORS[color] }}
     >
       {label}

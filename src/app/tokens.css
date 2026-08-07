@@ -1,0 +1,278 @@
+/**
+ * Design tokens as CSS custom properties. Generated from the Figma file
+ * `eOTvsRFGbnUcvxzXeuOr0M` — do not hand-edit, regenerate from Figma.
+ *
+ * Names deliberately match the design system's own stylesheet character for
+ * character, so a rule can be lifted from the reference implementation and
+ * dropped into a CSS module without translation. That includes `--sem-icon-*`
+ * being singular while the Figma collection is `icons/*`.
+ *
+ * The three `--font-*` families are absent on purpose: next/font generates them
+ * at build time, so `src/lib/fonts.ts` declares them and `app/layout.tsx` puts
+ * the classes on <html>. Defining them here would hardcode a name next/font is
+ * free to change.
+ *
+ * The TypeScript twin of this file is `src/lib/theme/tokens.ts`; prefer these
+ * custom properties in CSS modules and keep that file for the MUI theme.
+ */
+
+:root {
+  /* ---- Semantic · bg ---- */
+  --sem-bg-surface: #0b0b0f;
+  --sem-bg-surface-raised: #15151c;
+  --sem-bg-surface-sunken: #060609;
+  --sem-bg-surface-hover: #1b1b24;
+  --sem-bg-surface-pressed: #22222d;
+  --sem-bg-surface-disabled: #101015;
+  --sem-bg-primary: #f2efe3;
+  --sem-bg-primary-hover: #fffdf2;
+  --sem-bg-primary-pressed: #dad6c3;
+  --sem-bg-primary-disabled: #2b2b33;
+  --sem-bg-success: #10331f;
+  --sem-bg-danger: #3a1216;
+  --sem-bg-danger-hover: #4a171c;
+  --sem-bg-danger-pressed: #5c1d23;
+  --sem-bg-warning: #3a2a10;
+  --sem-bg-info: #10233a;
+  --sem-bg-inverse: #edece6;
+  --sem-bg-scrim: rgba(6, 6, 10, 0.72);
+  --sem-bg-scrim-heavy: rgba(6, 6, 10, 0.88);
+
+  /* ---- Semantic · text ---- */
+  --sem-text-surface: #edece6;
+  --sem-text-secondary: #a6a49b;
+  --sem-text-primary: #f2efe3;
+  --sem-text-success: #7fe0a8;
+  --sem-text-danger: #ff7a76;
+  --sem-text-warning: #ffc93d;
+  --sem-text-info: #7fb7ff;
+  --sem-text-inverse: #111014;
+  --sem-text-disabled: #55545c;
+
+  /* ---- Semantic · border ---- */
+  --sem-border-surface: #26262f;
+  --sem-border-surface-strong: #3a3a46;
+  --sem-border-primary: #f2efe3;
+  --sem-border-success: #2e7d50;
+  --sem-border-danger: #8a3038;
+  --sem-border-warning: #8a6a22;
+  --sem-border-info: #2c5588;
+  --sem-border-inverse: #111014;
+  --sem-border-focus: #ffc93d;
+  --sem-border-disabled: #1b1b22;
+
+  /* ---- Semantic · icon (singular, matching the design system) ---- */
+  --sem-icon-surface: #edece6;
+  --sem-icon-secondary: #a6a49b;
+  --sem-icon-primary: #f2efe3;
+  --sem-icon-success: #7fe0a8;
+  --sem-icon-danger: #ff7a76;
+  --sem-icon-warning: #ffc93d;
+  --sem-icon-info: #7fb7ff;
+  --sem-icon-inverse: #111014;
+  --sem-icon-disabled: #55545c;
+
+  /* ---- Game · nine pads, keypad order ---- */
+  --game-1: #f23fb8;
+  --game-1-dim: #4a2140;
+  --game-1-ink: #0b0b0f;
+  --game-1-glow: rgba(242, 63, 184, 0.45);
+  --game-2: #3d6bff;
+  --game-2-dim: #1e2a55;
+  --game-2-ink: #ffffff;
+  --game-2-glow: rgba(61, 107, 255, 0.45);
+  --game-3: #ff6b2c;
+  --game-3-dim: #4a2717;
+  --game-3-ink: #0b0b0f;
+  --game-3-glow: rgba(255, 107, 44, 0.45);
+  --game-4: #b8e92c;
+  --game-4-dim: #3b4517;
+  --game-4-ink: #0b0b0f;
+  --game-4-glow: rgba(184, 233, 44, 0.45);
+  --game-5: #17c964;
+  --game-5-dim: #123b26;
+  --game-5-ink: #0b0b0f;
+  --game-5-glow: rgba(23, 201, 100, 0.45);
+  --game-6: #22d7ee;
+  --game-6-dim: #14404a;
+  --game-6-ink: #0b0b0f;
+  --game-6-glow: rgba(34, 215, 238, 0.45);
+  --game-7: #c9cdd6;
+  --game-7-dim: #3a3c44;
+  --game-7-ink: #0b0b0f;
+  --game-7-glow: rgba(201, 205, 214, 0.4);
+  --game-8: #ff9eb8;
+  --game-8-dim: #4a3038;
+  --game-8-ink: #0b0b0f;
+  --game-8-glow: rgba(255, 158, 184, 0.45);
+  --game-9: #8d4bff;
+  --game-9-dim: #2c1d4a;
+  --game-9-ink: #ffffff;
+  --game-9-glow: rgba(141, 75, 255, 0.45);
+
+  /* ---- Spacing (4px base) ---- */
+  --space-05: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* ---- Size ---- */
+  --size-hit-min: 44px;
+  --size-control: 52px;
+  --size-pad: 96px;
+  --size-slot: 40px;
+  --column-max: 400px;
+
+  /* ---- Elevation ---- */
+  --elev-0: none;
+  --elev-1: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --elev-2: 0 6px 20px rgba(0, 0, 0, 0.55);
+  --elev-3: 0 16px 40px rgba(0, 0, 0, 0.65);
+  --elev-glow-primary: 0 0 20px rgba(242, 239, 227, 0.25);
+  --elev-glow-focus: 0 0 0 3px rgba(255, 201, 61, 0.35);
+
+  /* ---- Typography composites ----
+     Space Mono for numerals is deliberate: fixed-width figures, so a running
+     time doesn't jitter as digits change. */
+  --type-display-xl: 400 44px/1.05 var(--font-display);
+  --type-display: 400 30px/1.1 var(--font-display);
+  --type-h1: 700 24px/1.2 var(--font-body);
+  --type-h2: 700 19px/1.25 var(--font-body);
+  --type-h3: 500 16px/1.3 var(--font-body);
+  --type-body: 400 16px/1.5 var(--font-body);
+  --type-body-sm: 400 14px/1.45 var(--font-body);
+  --type-caption: 500 12px/1.35 var(--font-body);
+  --type-numeral-xl: 400 40px/1.05 var(--font-numeral);
+  --type-numeral-lg: 700 26px/1.1 var(--font-numeral);
+  --type-numeral-md: 700 18px/1.2 var(--font-numeral);
+  --type-numeral-sm: 400 14px/1.3 var(--font-numeral);
+  --type-pad-numeral: 400 34px/1 var(--font-display);
+  --tracking-caption: 0.06em;
+  --tracking-display: 0.01em;
+
+  /* ---- Motion ----
+     Springs overshoot on entry; exits never do. Every duration has a `-reduced`
+     twin, and `--dur-pulse-reduced` is 0 on purpose — reduced motion switches
+     the breathe off rather than speeding it up. */
+  --dur-tap: 90ms;
+  --dur-tap-reduced: 60ms;
+  --dur-pop: 180ms;
+  --dur-pop-reduced: 120ms;
+  --dur-land: 280ms;
+  --dur-land-reduced: 140ms;
+  --dur-unlock: 420ms;
+  --dur-unlock-reduced: 200ms;
+  --dur-sheet: 320ms;
+  --dur-sheet-reduced: 160ms;
+  --dur-expand: 260ms;
+  --dur-expand-reduced: 140ms;
+  --dur-pulse: 1200ms;
+  --dur-pulse-reduced: 0ms;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-bounce: cubic-bezier(0.18, 1.85, 0.4, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-reduced: cubic-bezier(0.25, 0, 0.25, 1);
+}
+
+/* ---- Keyframes ----
+   Referenced by name from the motion spec. `dots-ring` reads `--ring-color`,
+   which the pad sets per-instance from its own `--game-N-glow`; without that the
+   ring falls back to cream and every pad's unlock cue looks subtly wrong. */
+
+@keyframes dots-unlock {
+  0% {
+    transform: scale(0.96);
+    filter: brightness(0.8);
+  }
+  55% {
+    transform: scale(1.1);
+    filter: brightness(1.35);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes dots-unlock-reduced {
+  0% {
+    filter: brightness(0.8);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes dots-land {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes dots-land-reduced {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes dots-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--ring-color, rgba(242, 239, 227, 0.5));
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes dots-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes dots-wobble {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}

@@ -6,7 +6,7 @@ import Chip from "@/components/atoms/Chip/Chip";
 import GridCircle, {
   type GridCircleColor,
 } from "@/components/atoms/GridCircle/GridCircle";
-import { antonSC } from "@/lib/fonts";
+import { bungee } from "@/lib/fonts";
 import {
   GREEN_HOLD_MS,
   META_FIELDS,
@@ -68,12 +68,12 @@ export default function GridContainer({ steps }: GridContainerProps) {
   return (
     <section
       className={styles.container}
-      style={{ backgroundColor: theme.tokens.bg.surface["fill-light"] }}
+      style={{ backgroundColor: theme.tokens.bg["surface-raised"] }}
     >
       <div className={styles.heading}>
         <h2
-          className={`${styles.title} ${antonSC.className}`}
-          style={{ color: theme.tokens.text.surface.lightest }}
+          className={`${styles.title} ${bungee.className}`}
+          style={{ color: theme.tokens.text.surface }}
         >
           Grid
         </h2>
@@ -185,19 +185,19 @@ export function MetaGridContainer({ steps }: GridContainerProps) {
       className={styles.container}
       style={
         {
-          backgroundColor: tokens.bg.surface["fill-light"],
+          backgroundColor: tokens.bg["surface-raised"],
           // Value colours are CSS vars so the success→normal fade is a plain CSS
           // transition, while the colours themselves stay theme tokens.
-          "--meta-normal": tokens.text.surface.lightest,
-          "--meta-success": tokens.text.success.lighter,
-          "--meta-danger": tokens.text.danger.light,
+          "--meta-normal": tokens.text.surface,
+          "--meta-success": tokens.text.success,
+          "--meta-danger": tokens.text.danger,
         } as CSSProperties
       }
     >
       <div className={styles.heading}>
         <h2
-          className={`${styles.title} ${antonSC.className}`}
-          style={{ color: tokens.text.surface.lightest }}
+          className={`${styles.title} ${bungee.className}`}
+          style={{ color: tokens.text.surface }}
         >
           Animation points
         </h2>
@@ -209,7 +209,7 @@ export function MetaGridContainer({ steps }: GridContainerProps) {
             <span
               key={i}
               className={styles.countDot}
-              style={{ backgroundColor: tokens.text.surface.lightest }}
+              style={{ backgroundColor: tokens.text.surface }}
               data-testid="count-dot"
             />
           ))}
@@ -224,7 +224,7 @@ export function MetaGridContainer({ steps }: GridContainerProps) {
                   <div key={field.label} className={styles.trackingLine}>
                     <span
                       className={styles.trackingLabel}
-                      style={{ color: tokens.text.surface.light }}
+                      style={{ color: tokens.text.secondary }}
                     >
                       {field.label}
                     </span>

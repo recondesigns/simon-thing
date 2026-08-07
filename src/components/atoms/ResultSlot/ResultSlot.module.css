@@ -1,0 +1,67 @@
+.slot {
+  width: var(--size-slot);
+  height: var(--size-slot);
+  border-radius: var(--radius-round);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  container-type: size;
+}
+
+/* 40% of the slot's height — 16px at the full 40px slot, and the same
+   proportion once the readout gives way on a short screen. No `--type-*` step
+   is cut for a 40px circle, let alone a 24px one. */
+.numeral {
+  font: 400 40cqh/1 var(--font-display);
+}
+
+.filled {
+  background-color: var(--slot-fill);
+  color: var(--slot-ink);
+  border: none;
+}
+
+/* Dashed, not a faint fill — an empty slot should read as a socket waiting for
+   something, not as a dot that happens to be dim. */
+.empty {
+  background-color: transparent;
+  border: 2px dashed var(--sem-border-surface-strong);
+  color: var(--sem-text-disabled);
+}
+
+.arriving {
+  animation: dots-land var(--dur-land) var(--ease-bounce);
+}
+
+/*
+ * Exits never transform. An entrance can overshoot because it's announcing
+ * something; a departure that springs draws the eye to content that is already
+ * gone. Opacity only, and quicker than the arrival.
+ */
+.exiting {
+  animation: dots-leave var(--dur-pop) var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+@keyframes dots-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Fade only. Exits and entrances stop transforming, but the dot still has to
+     announce itself, so the opacity step stays. */
+  .arriving {
+    animation: dots-land-reduced var(--dur-land-reduced) var(--ease-reduced);
+  }
+
+  /* Already opacity-only — just quicker. */
+  .exiting {
+    animation: dots-leave var(--dur-pop-reduced) var(--ease-reduced) forwards;
+  }
+}

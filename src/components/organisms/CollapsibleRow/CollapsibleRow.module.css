@@ -1,0 +1,116 @@
+.row {
+  overflow: hidden;
+}
+
+.session {
+  border: 1px solid var(--sem-border-surface);
+  border-radius: var(--radius-md);
+  background-color: var(--sem-bg-surface-raised);
+}
+
+/* A round sits inside a session card, so it takes no surface of its own —
+   two nested raised panels read as a box in a box rather than a hierarchy. */
+.round {
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 var(--space-3);
+  border: none;
+  background-color: transparent;
+  color: var(--sem-text-surface);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-tap) var(--ease-out);
+}
+
+.session > .header {
+  min-height: 56px;
+}
+
+.round > .header {
+  min-height: var(--size-hit-min);
+}
+
+@media (hover: hover) {
+  .header:hover {
+    background-color: var(--sem-bg-surface-hover);
+  }
+}
+
+.header:focus-visible {
+  box-shadow: inset var(--elev-glow-focus);
+}
+
+.chevron {
+  display: inline-flex;
+  color: var(--sem-icon-secondary);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font: var(--type-h3);
+}
+
+.round .title {
+  font: var(--type-body-sm);
+}
+
+.meta {
+  font: var(--type-numeral-sm);
+  color: var(--sem-text-secondary);
+  white-space: nowrap;
+}
+
+.metaSuccess {
+  color: var(--sem-text-success);
+}
+
+/* Indented past the chevron so the nesting reads down the left edge. */
+.session > .body {
+  padding: 0 var(--space-3) var(--space-3) var(--space-8);
+}
+
+.round > .body {
+  padding: 0 0 var(--space-2) var(--space-6);
+}
+
+/*
+ * Content fades and settles rather than the container animating its height.
+ * The spec asks for height 0->auto, which needs the body measured or kept
+ * mounted while collapsed; a history of ten sessions would hold thousands of
+ * nodes for an animation nobody is watching. This is the spec's own
+ * reduced-motion treatment promoted to the default.
+ */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: expand-in var(--dur-expand) var(--ease-out);
+}
+
+@keyframes expand-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .body {
+    animation: dots-land-reduced var(--dur-expand-reduced) var(--ease-reduced);
+  }
+}

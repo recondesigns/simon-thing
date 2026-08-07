@@ -53,6 +53,12 @@ export function primeSpeech(): void {
 export interface SpeakSequenceOptions {
   /** Silence to leave between one number finishing and the next starting, in ms. */
   gapMs?: number;
+  /**
+   * Fired as each word finishes, with how many have now been spoken. Drives the
+   * read-back progress indicator off the real audio rather than a predicted
+   * schedule — the two drift, and a progress dot that lies is worse than none.
+   */
+  onSpoke?: (count: number) => void;
   /** Fired when the last word actually finishes speaking (its `onend`). */
   onDone?: () => void;
 }
@@ -78,7 +84,7 @@ export function speakSequence(
   const synth = window.speechSynthesis;
   if (!synth) return;
 
-  const { gapMs = 700, onDone } = options;
+  const { gapMs = 700, onSpoke, onDone } = options;
 
   cancelSpeech();
   const thisGeneration = generation;
@@ -104,6 +110,7 @@ export function speakSequence(
       if (advanced || generation !== thisGeneration) return;
       advanced = true;
       index += 1;
+      onSpoke?.(index);
       if (index < words.length) {
         const timer = setTimeout(speakNext, gapMs);
         timers.push(timer);
