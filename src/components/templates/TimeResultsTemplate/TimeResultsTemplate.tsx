@@ -21,7 +21,7 @@ export interface DotView {
 export interface RoundView {
   key: string;
   label: string;
-  /** Formatted total, e.g. "7.0s". */
+  /** Formatted total, e.g. "0:07.0". */
   total: string;
   dots: DotView[];
   /** The round being played right now. */
