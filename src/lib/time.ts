@@ -18,12 +18,29 @@ export function formatDuration(ms: number): string {
 }
 
 /**
- * A round's total as seconds to one decimal — "7.0s". Rounds are short enough
- * that `m:ss` would read as `0:07` and throw away the tenths that distinguish
- * one attempt from the next.
+ * A round's total as `m:ss.t` — "0:07.0", "1:34.3".
+ *
+ * Minutes and seconds, because a long round read as raw seconds ("94.3s") takes
+ * a beat to turn into "a minute and a half", and gets worse the longer it runs.
+ * The tenth stays because rounds are short and it's often the only thing
+ * separating one attempt from the next — plain `m:ss` would collapse a whole
+ * spread of attempts onto the same `0:07`.
+ *
+ * Minutes are unpadded and unbounded: a round left running reads `75:03.2`
+ * rather than rolling over to hours, since a round that long is an anomaly worth
+ * seeing as one. Same leading-unit convention as {@link formatDuration}.
+ *
+ * Rounds to the nearest tenth via a single total, not per-component — rounding
+ * the tenth on its own overflows (7.96s would render "0:07.10").
  */
 export function formatRoundTotal(ms: number): string {
-  return `${(ms / 1000).toFixed(1)}s`;
+  const totalTenths = Math.round(Math.max(0, ms) / 100);
+  const tenths = totalTenths % 10;
+  const totalSeconds = Math.floor(totalTenths / 10);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}.${tenths}`;
 }
 
 /**

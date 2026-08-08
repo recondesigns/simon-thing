@@ -22,7 +22,12 @@ pnpm storybook  # storybook on :6006
 
 A green build only proves it compiled. For anything visual, verify what actually ships: grep the emitted rule out of `.next/static/chunks/*.css`, `curl` the dev server for SSR output, or drive it in a real browser and read computed values. The redesign shipped four invisible-text bugs that all passed `pnpm build` — every one was caught by measuring, none by compiling.
 
-**Stories are paused**, and this overrides the `atomic-design` skill's rule that every component gets one. `pnpm test` runs each story's play assertions, but no new stories are being written while the design is validated in the real world, and `pnpm test` isn't part of the loop. Several surviving stories still assert the pre-redesign palette, so expect failures if you turn it back on. When a component is deleted or replaced, delete its story in the same commit.
+**Stories are back on.** Every component has one, `pnpm test` is green, and it belongs in the loop again alongside `lint` and `build` — the pause that ran through the redesign is over. The `atomic-design` skill's rule applies as written: one colocated story per component, at least one asserting a *computed* value. When a component is deleted or replaced, delete its story in the same commit.
+
+Two things about the harness are load-bearing and easy to undo by accident:
+
+- **`.storybook/preview.tsx` imports `app/globals.css`.** Without it every custom property is undefined inside a story, so anything painting through `--game-*` or `--sem-*` renders unstyled while still mounting cleanly — smoke tests pass and only a computed-value assertion notices.
+- **The font variables go on `<html>`, not on a wrapper.** `tokens.css` declares the `--type-*` composites on `:root`, and a custom property's own `var()` references resolve against the element that declares it — so a font variable set lower down is invisible to `:root`, and the `font` shorthand is silently dropped as invalid.
 
 ## Stack
 
@@ -87,7 +92,7 @@ One component per directory with its `.tsx` and `.module.css` colocated. Prefer 
 
 ## Current state
 
-**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. The whole visual layer was then rebuilt on a new design system across six phases; the game logic underneath is unchanged.
+**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. The whole visual layer was then rebuilt on a new design system across six phases; the game logic underneath is unchanged. The camera and pattern-detection code sat unreachable in the tree until it was removed outright — don't go looking for it, and check the history rather than rebuilding from scratch if that direction ever returns.
 
 Two routes, both driven by the Zustand store:
 
@@ -112,6 +117,7 @@ Two places knowingly differ from the Figma frames, both commented where they hap
 
 - Sessions and the two preferences persist to localStorage; the in-progress round and its clock do not, so a reload keeps history and drops you back to Start. Rehydration is deferred (`skipHydration`) and run after mount by `StoreHydrator` so the first client render matches the server's.
 - Action names state the outcome: **`logRound`** banks the round and rolls into the next (the board's End round control), **`discardRound`** throws it away (the sheet's Scrap round — renamed in the UI only). They were once `newRound`/`endRound`, which read as the opposite of the labels.
+- **A banked `Round` is `{ durations, pads }`** — two arrays of equal length and order, so dot N's time is `durations[N]` and its pad is `pads[N]`. One object rather than two parallel lists on `Session`, because anything editing a round has to keep them in step and lockstep arrays desynchronise the first time something touches one and forgets the other. Both `logRound` and `newSession` bank, so a change to what a round records has to land in both.
 - Read-back speed has four settings, evenly 300ms apart: Fast 200, Normal 500, Relaxed 800, Slow 1100. Adding a value needs no migration, since a stored `cadence` stays valid.
 - **`undoDot` keeps the dot's time.** A mis-tap is a wrong pad, not a wrong moment, so the freed duration is parked in `pendingDurations` and the replacing tap inherits it. `lastTapAt` deliberately does not move either, so the dot *after* a correction is still measured from when the mis-tapped one landed. The queue is a list, not a slot — walking back several dots must hand the times back in order, and a single slot would transpose them invisibly.
 - The board holds a **one-tap-per-dot lock** while the read-back plays. Nothing in the store times the unlock; the route does, because it knows how long the audio runs.
@@ -120,35 +126,11 @@ Two places knowingly differ from the Figma frames, both commented where they hap
 
 Real, measured, and deliberately left. Don't "fix" any of them unprompted — each was raised and declined.
 
-- **Banked rounds have no pad colours.** `Session.rounds` stores durations alone, so the per-dot colour chip only appears on the round in progress. Recording pad identity means a v1→v2 migration, and existing history can't be recovered either way — the information was never written.
+- **Rounds banked before store v2 have no pad colours.** They were written when a round was durations alone, so their dots render without a chip and always will — the information was never recorded, so no migration or backfill can invent it. New rounds carry their pads; treat an empty `Round.pads` as "unknown", not "no pads".
 - **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
 - **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.
+- **A banked round can't be edited, and won't be.** Undo reaches the round in progress and nothing further; once `logRound` banks it, the board can't touch it. This was considered and dropped — there's no reason to go back and correct a round already played, so the surface that would allow it isn't worth building or maintaining.
 
-### Dormant: camera and pattern detection
+### Not yet built
 
-`useCamera`, `useGridDetection`, `CameraFeed`, `CalibrationOverlay`, `GridContainer` and `RoundTimer` are **still in the tree but rendered nowhere**. The detection logic is real and tested; nothing feeds it pixels. Keep this in mind before "fixing" an unused component — and before deleting one, since the direction may come back.
-
-The plan and measured thresholds are in Notion (Dashboard → Projects → Simon); **read that before touching it**. The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
-
-`src/lib/detection/` is pure and framework-free — RGB in, events out, no camera or DOM:
-
-- `detector.ts` — baseline, fire, debounce, ordered output. Gating is the **caller's** job: a user's tap and a pattern pulse are the same fade to white, and nothing in the pixels separates them.
-- `homography.ts` — four corner *circles* (not screen corners — that would assume where the grid sits inside the screen) map to the nine centres. Rejects non-convex quads up front; the solver happily returns a degenerate transform otherwise.
-- `sampler.ts` — mean RGB per patch. Radius scales with cell spacing; never sample the whole frame (a background TV and handheld shake dominate any frame diff).
-- `fixtures/reference-clip.json` — the reference video reduced to what the detector consumes. **The video itself is local-only and not in git**, so tests depend on this instead. It is the known-answer test: `[bottom-right, bottom-middle]`.
-
-The loop below was wired end to end before the pivot — Start the camera, tap the four corner circles, press Record, and detected cells render into the grid. It is intact but unreachable from the UI.
-
-- `hooks/useGridDetection` owns the frame loop and canvas; the detection stays pure in `lib/detection`. Frames are downscaled to 640px before `getImageData` — a 1080p read is 8MB, and at 15fps that is 100MB/s of copying to sample nine small patches.
-- `hooks/useCamera` owns `getUserMedia` and returns `{ status, stream, start, stop }`. `organisms/CameraFeed` stays presentational — it takes the stream rather than requesting it, so its five states (`off`, `requesting`, `denied`, `error`, `on`) are storyable without mocking.
-- No dev/prod branching: `getUserMedia` needs a **secure context**, which is a property of the URL, not the build. localhost and HTTPS qualify; a plain-HTTP LAN address does not, so an undefined `mediaDevices` means `error`, not `denied` — the user was never asked.
-- `lib/detection/viewport.ts` converts taps to camera-frame pixels. **The feed is `object-fit: cover`, so element coords are not frame coords** — for a portrait frame in the 400x292 box the element's top-left is ~566px down the frame. Getting this wrong does not throw; it samples the wrong places forever and reads as a threshold problem.
-- `organisms/CalibrationOverlay` collects the taps. It renders **only while the feed is `on`** — `CameraFeed` puts it inside that branch, so there is nothing to tap with the camera off.
-- Gating is a manual **Record** button. Nothing in the pixels separates a user's tap from a pattern pulse, so the phase gate cannot come from the detector.
-
-Not yet built:
-
-- **Diagnostics export.** The app cannot report what it saw, so testing at the machine yields anecdote rather than data. Deferred until the drift video comes back — see Notion.
-- **Editing banked history.** Undo only reaches the round in progress; once `logRound` banks it, the board can't reach it. Correcting an earlier round would mean editing session history.
-
-**Camera drift is untested by anything, and cannot be tested from the fixture** — its window was chosen for being steady. If the camera direction comes back, it is the risk most likely to break it. The next step there is a propped-phone video, not code; the protocol is on the Notion page.
+- **Getting data off the phone.** Sessions live in localStorage on a single device, so nothing recorded at the machine can be compared across visits or read anywhere else.

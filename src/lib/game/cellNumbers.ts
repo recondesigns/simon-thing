@@ -1,4 +1,4 @@
-import type { CellPosition } from "@/lib/detection/detector";
+import type { CellPosition } from "./cellPositions";
 
 /**
  * The number shown on a pad: where the cell sits on the machine's 3x3 grid,
@@ -15,10 +15,10 @@ import type { CellPosition } from "@/lib/detection/detector";
  *
  * Written out rather than derived from `CELL_POSITIONS.indexOf(p) + 1`, which
  * would give the same nine numbers today. That array's order is load-bearing for
- * something else entirely — it is the order `observe` expects its samples in —
- * so deriving from it would quietly renumber every pad on screen the day someone
- * reorders sampling. Two different concerns that happen to agree; the test below
- * is what keeps them agreeing.
+ * something else — it is the order the board lays its pads out in, and the order
+ * a pad's store index is counted in — so deriving from it would quietly renumber
+ * every pad on screen the day someone rearranges the grid. Two different
+ * concerns that happen to agree; the test below is what keeps them agreeing.
  */
 export const CELL_NUMBERS: Record<CellPosition, string> = {
   "top-left": "1",
