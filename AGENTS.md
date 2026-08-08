@@ -124,8 +124,8 @@ Real, measured, and deliberately left. Don't "fix" any of them unprompted — ea
 - **Rounds banked before store v2 have no pad colours.** They were written when a round was durations alone, so their dots render without a chip and always will — the information was never recorded, so no migration or backfill can invent it. New rounds carry their pads; treat an empty `Round.pads` as "unknown", not "no pads".
 - **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
 - **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.
+- **A banked round can't be edited, and won't be.** Undo reaches the round in progress and nothing further; once `logRound` banks it, the board can't touch it. This was considered and dropped — there's no reason to go back and correct a round already played, so the surface that would allow it isn't worth building or maintaining.
 
 ### Not yet built
 
-- **Editing banked history.** Undo only reaches the round in progress; once `logRound` banks it, the board can't reach it. Correcting an earlier round would mean editing session history.
 - **Getting data off the phone.** Sessions live in localStorage on a single device, so nothing recorded at the machine can be compared across visits or read anywhere else.
