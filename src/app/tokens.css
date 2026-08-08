@@ -75,7 +75,7 @@
   /* ---- Game · nine pads, keypad order ---- */
   --game-1: #ce00fd;
   --game-1-dim: #3c1b43;
-  --game-1-ink: #0b0b0f;
+  --game-1-ink: #ffffff;
   --game-1-glow: rgba(206, 0, 253, 0.45);
   --game-2: #0803d7;
   --game-2-dim: #1c1b43;
@@ -87,15 +87,15 @@
   --game-3-glow: rgba(185, 0, 0, 0.45);
   --game-4: #c2c900;
   --game-4-dim: #42431b;
-  --game-4-ink: #0b0b0f;
+  --game-4-ink: #ffffff;
   --game-4-glow: rgba(194, 201, 0, 0.45);
   --game-5: #00f100;
   --game-5-dim: #1b431b;
-  --game-5-ink: #0b0b0f;
+  --game-5-ink: #ffffff;
   --game-5-glow: rgba(0, 241, 0, 0.45);
   --game-6: #00c9ce;
   --game-6-dim: #1b4243;
-  --game-6-ink: #0b0b0f;
+  --game-6-ink: #ffffff;
   --game-6-glow: rgba(0, 201, 206, 0.45);
   --game-7: #6e7580;
   --game-7-dim: #2c2e33;
@@ -103,7 +103,7 @@
   --game-7-glow: rgba(110, 117, 128, 0.45);
   --game-8: #ec0082;
   --game-8-dim: #431b31;
-  --game-8-ink: #0b0b0f;
+  --game-8-ink: #ffffff;
   --game-8-glow: rgba(236, 0, 130, 0.45);
   --game-9: #a50024;
   --game-9-dim: #431b24;
