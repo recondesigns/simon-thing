@@ -129,11 +129,15 @@ export const ReadBackIsAToast: Story = {
 };
 
 /**
- * **The toast does not gate the pads.** It is presentational and owns no
- * timers; the route decides when the read-back is over and unlocks on its own
- * schedule, which lands *before* the toast has finished fading. So a toast
- * still on screen beside live pads is the correct state, not a glitch — and if
- * the two ever become coupled, this is the story that fails.
+ * **The toast does not gate the pads.** This is the state it spends most of its
+ * life in, not an edge case: the board reopens on the same tick the indicator
+ * flips to "Go!", and the indicator then stays up for most of a second so the
+ * cue can actually be read. Measured, the pads are live for every millisecond
+ * of that.
+ *
+ * The two are separate signals on purpose. If they ever become coupled — a
+ * toast that holds the lock while it fades, or a lock that hides the cue that
+ * announces it — this is the story that fails.
  */
 export const ToastDoesNotLockThePads: Story = {
   args: {

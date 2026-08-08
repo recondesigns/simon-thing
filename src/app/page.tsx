@@ -18,6 +18,10 @@ const READBACK_PAUSE_MS = 1500;
 const SILENT_LOCK_MS = 600;
 // How long the unlock cue plays. Matches --dur-unlock.
 const UNLOCK_CUE_MS = 420;
+// How long the "Go!" stays up *after* the board has already reopened, so it can
+// actually be read. Plus the toast's own 180ms fade, that is a little under a
+// second on screen. It gates nothing — the pads are live for all of it.
+const GO_LINGER_MS = 800;
 // How long a banked round's dots take to fade out. Matches --dur-pop.
 const ROUND_EXIT_MS = 180;
 
@@ -92,11 +96,22 @@ export default function Home() {
   // Releasing the lock also fires the unlock cue, which is the single most
   // important piece of feedback here — it's what someone watching the TV rather
   // than the phone is waiting for.
+  // Deliberately does not clear `spoken`. The indicator outlives the unlock by
+  // GO_LINGER_MS so the "Go!" is readable, which only works because the two are
+  // separate signals: the lock is already gone by the time this returns.
   const release = useCallback(() => {
     unlock();
-    setSpoken(undefined);
     setJustUnlocked(true);
   }, [unlock]);
+
+  // Retire the indicator once the board has been open long enough to read it.
+  // Keyed off `locked` rather than off a timer started at release, so anything
+  // that reopens the board — the fallback, a remount — retires it too.
+  useEffect(() => {
+    if (locked || spoken === undefined) return;
+    const timer = setTimeout(() => setSpoken(undefined), GO_LINGER_MS);
+    return () => clearTimeout(timer);
+  }, [locked, spoken]);
 
   // Clear the cue flag once it has played, so it fires again next time rather
   // than staying latched on.
@@ -133,7 +148,13 @@ export default function Home() {
 
     // A new tap. With speech off, just a short debounce before unlocking.
     if (!useGameStore.getState().speechEnabled) {
-      const timer = setTimeout(release, SILENT_LOCK_MS);
+      const timer = setTimeout(() => {
+        // Cleared here rather than left to the linger above: nothing was read
+        // back, so there is no cue to hold — holding one would announce a
+        // read-back that never happened.
+        setSpoken(undefined);
+        release();
+      }, SILENT_LOCK_MS);
       return () => clearTimeout(timer);
     }
 
@@ -185,7 +206,7 @@ export default function Home() {
       justUnlocked={justUnlocked}
       arriving={locked}
       exitingDots={exitingDots}
-      spoken={locked ? spoken : undefined}
+      spoken={spoken}
       started={started}
       full={full}
       onTap={handleTap}
