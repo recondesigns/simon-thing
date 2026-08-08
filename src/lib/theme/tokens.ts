@@ -94,19 +94,30 @@ export const tokens = {
    * keeps them in their own `Game` collection rather than folding them into
    * Semantic, and why they are here rather than under `bg`.
    *
-   * `fill` is the live pad, `dim` the inert/locked one, `ink` the numeral on top
-   * (dark on every pad but 2 and 9), `glow` the halo behind it.
+   * `fill` is the live pad, `dim` the inert/locked one, `ink` the numeral on top,
+   * `glow` the halo behind it.
+   *
+   * These are the pre-redesign fills, restored deliberately, and `ink` is white
+   * on all nine exactly as that palette had it. Uniform on purpose — a numeral
+   * that changes colour with its pad reads as nine decisions rather than one.
+   *
+   * The cost is known and accepted. The numeral is 34px display type, so the bar
+   * is the 3:1 large-text threshold rather than 4.5:1, and white clears it on six
+   * pads but not on olive (1.80:1), green (1.55:1) or cyan (2.05:1). Those three
+   * are legitimately hard to read at a glance. If that ever needs fixing, fix it
+   * on those three alone — the other six are fine and changing them would buy
+   * nothing.
    */
   game: {
-    1: { fill: "#F23FB8", dim: "#4A2140", ink: "#0B0B0F", glow: "rgba(242, 63, 184, 0.45)" },
-    2: { fill: "#3D6BFF", dim: "#1E2A55", ink: "#FFFFFF", glow: "rgba(61, 107, 255, 0.45)" },
-    3: { fill: "#FF6B2C", dim: "#4A2717", ink: "#0B0B0F", glow: "rgba(255, 107, 44, 0.45)" },
-    4: { fill: "#B8E92C", dim: "#3B4517", ink: "#0B0B0F", glow: "rgba(184, 233, 44, 0.45)" },
-    5: { fill: "#17C964", dim: "#123B26", ink: "#0B0B0F", glow: "rgba(23, 201, 100, 0.45)" },
-    6: { fill: "#22D7EE", dim: "#14404A", ink: "#0B0B0F", glow: "rgba(34, 215, 238, 0.45)" },
-    7: { fill: "#C9CDD6", dim: "#3A3C44", ink: "#0B0B0F", glow: "rgba(201, 205, 214, 0.4)" },
-    8: { fill: "#FF9EB8", dim: "#4A3038", ink: "#0B0B0F", glow: "rgba(255, 158, 184, 0.45)" },
-    9: { fill: "#8D4BFF", dim: "#2C1D4A", ink: "#FFFFFF", glow: "rgba(141, 75, 255, 0.45)" },
+    1: { fill: "#CE00FD", dim: "#3C1B43", ink: "#FFFFFF", glow: "rgba(206, 0, 253, 0.45)" },
+    2: { fill: "#0803D7", dim: "#1C1B43", ink: "#FFFFFF", glow: "rgba(8, 3, 215, 0.45)" },
+    3: { fill: "#B90000", dim: "#431B1B", ink: "#FFFFFF", glow: "rgba(185, 0, 0, 0.45)" },
+    4: { fill: "#C2C900", dim: "#42431B", ink: "#FFFFFF", glow: "rgba(194, 201, 0, 0.45)" },
+    5: { fill: "#00F100", dim: "#1B431B", ink: "#FFFFFF", glow: "rgba(0, 241, 0, 0.45)" },
+    6: { fill: "#00C9CE", dim: "#1B4243", ink: "#FFFFFF", glow: "rgba(0, 201, 206, 0.45)" },
+    7: { fill: "#6E7580", dim: "#2C2E33", ink: "#FFFFFF", glow: "rgba(110, 117, 128, 0.45)" },
+    8: { fill: "#EC0082", dim: "#431B31", ink: "#FFFFFF", glow: "rgba(236, 0, 130, 0.45)" },
+    9: { fill: "#A50024", dim: "#431B24", ink: "#FFFFFF", glow: "rgba(165, 0, 36, 0.45)" },
   },
   /** 4px base. `05` is the half-step. */
   spacing: {
