@@ -22,7 +22,12 @@ pnpm storybook  # storybook on :6006
 
 A green build only proves it compiled. For anything visual, verify what actually ships: grep the emitted rule out of `.next/static/chunks/*.css`, `curl` the dev server for SSR output, or drive it in a real browser and read computed values. The redesign shipped four invisible-text bugs that all passed `pnpm build` — every one was caught by measuring, none by compiling.
 
-**Stories are paused**, and this overrides the `atomic-design` skill's rule that every component gets one. `pnpm test` runs each story's play assertions, but no new stories are being written while the design is validated in the real world, and `pnpm test` isn't part of the loop. Several surviving stories still assert the pre-redesign palette, so expect failures if you turn it back on. When a component is deleted or replaced, delete its story in the same commit.
+**Stories are back on.** Every component has one, `pnpm test` is green, and it belongs in the loop again alongside `lint` and `build` — the pause that ran through the redesign is over. The `atomic-design` skill's rule applies as written: one colocated story per component, at least one asserting a *computed* value. When a component is deleted or replaced, delete its story in the same commit.
+
+Two things about the harness are load-bearing and easy to undo by accident:
+
+- **`.storybook/preview.tsx` imports `app/globals.css`.** Without it every custom property is undefined inside a story, so anything painting through `--game-*` or `--sem-*` renders unstyled while still mounting cleanly — smoke tests pass and only a computed-value assertion notices.
+- **The font variables go on `<html>`, not on a wrapper.** `tokens.css` declares the `--type-*` composites on `:root`, and a custom property's own `var()` references resolve against the element that declares it — so a font variable set lower down is invisible to `:root`, and the `font` shorthand is silently dropped as invalid.
 
 ## Stack
 
