@@ -1,9 +1,6 @@
 /* Design tokens first — every CSS module reads these custom properties, and
    @import has to precede all other rules. */
 @import "./tokens.css";
-/* Restores the pre-redesign pad palette over the generated Game tokens. Remove
-   this line and the file to go back to the shipped colours. */
-@import "./legacy-pads.css";
 
 /* Base resets only — colors, background, and typography come from the MUI
    theme via CssBaseline, so nothing here should set them. */
