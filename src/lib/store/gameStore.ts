@@ -9,14 +9,23 @@ import { persist } from "zustand/middleware";
 export type Cadence = "fast" | "normal" | "relaxed" | "slow";
 
 /**
- * Silence between read-back numbers, in ms, per cadence. Even 300ms steps, so
- * each setting is a noticeably different pace rather than a nudge.
+ * Silence between read-back numbers, in ms, per cadence.
  *
- * Adding a value needs no migration — a stored `cadence` stays valid, and
- * anyone who never touches the setting keeps the `relaxed` default.
+ * The slower three are even 300ms steps, so each is a noticeably different pace
+ * rather than a nudge. **Fast is deliberately off that scale.** At the 200ms it
+ * started on it ran too quick to follow at the machine, so it sits halfway to
+ * Normal instead — 150ms from its neighbour rather than 300.
+ *
+ * That makes Fast and Normal closer together than any other pair, which is the
+ * point: the useful range turned out to be narrower at the quick end than an
+ * even scale assumed. Don't "restore" the 300 for symmetry.
+ *
+ * Changing these numbers needs no migration. What persists is the `cadence`
+ * key, never the milliseconds, so a stored `"fast"` picks up whatever Fast
+ * currently means — and anyone who never touches the setting keeps `relaxed`.
  */
 export const CADENCE_GAP_MS: Record<Cadence, number> = {
-  fast: 200,
+  fast: 350,
   normal: 500,
   relaxed: 800,
   slow: 1100,
