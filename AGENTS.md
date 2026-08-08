@@ -112,6 +112,7 @@ Two places knowingly differ from the Figma frames, both commented where they hap
 
 - Sessions and the two preferences persist to localStorage; the in-progress round and its clock do not, so a reload keeps history and drops you back to Start. Rehydration is deferred (`skipHydration`) and run after mount by `StoreHydrator` so the first client render matches the server's.
 - Action names state the outcome: **`logRound`** banks the round and rolls into the next (the board's End round control), **`discardRound`** throws it away (the sheet's Scrap round — renamed in the UI only). They were once `newRound`/`endRound`, which read as the opposite of the labels.
+- **A banked `Round` is `{ durations, pads }`** — two arrays of equal length and order, so dot N's time is `durations[N]` and its pad is `pads[N]`. One object rather than two parallel lists on `Session`, because anything editing a round has to keep them in step and lockstep arrays desynchronise the first time something touches one and forgets the other. Both `logRound` and `newSession` bank, so a change to what a round records has to land in both.
 - Read-back speed has four settings, evenly 300ms apart: Fast 200, Normal 500, Relaxed 800, Slow 1100. Adding a value needs no migration, since a stored `cadence` stays valid.
 - **`undoDot` keeps the dot's time.** A mis-tap is a wrong pad, not a wrong moment, so the freed duration is parked in `pendingDurations` and the replacing tap inherits it. `lastTapAt` deliberately does not move either, so the dot *after* a correction is still measured from when the mis-tapped one landed. The queue is a list, not a slot — walking back several dots must hand the times back in order, and a single slot would transpose them invisibly.
 - The board holds a **one-tap-per-dot lock** while the read-back plays. Nothing in the store times the unlock; the route does, because it knows how long the audio runs.
@@ -120,11 +121,11 @@ Two places knowingly differ from the Figma frames, both commented where they hap
 
 Real, measured, and deliberately left. Don't "fix" any of them unprompted — each was raised and declined.
 
-- **Banked rounds have no pad colours.** `Session.rounds` stores durations alone, so the per-dot colour chip only appears on the round in progress. Recording pad identity means a v1→v2 migration, and existing history can't be recovered either way — the information was never written.
+- **Rounds banked before store v2 have no pad colours.** They were written when a round was durations alone, so their dots render without a chip and always will — the information was never recorded, so no migration or backfill can invent it. New rounds carry their pads; treat an empty `Round.pads` as "unknown", not "no pads".
 - **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
 - **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.
+- **A banked round can't be edited, and won't be.** Undo reaches the round in progress and nothing further; once `logRound` banks it, the board can't touch it. This was considered and dropped — there's no reason to go back and correct a round already played, so the surface that would allow it isn't worth building or maintaining.
 
 ### Not yet built
 
-- **Editing banked history.** Undo only reaches the round in progress; once `logRound` banks it, the board can't reach it. Correcting an earlier round would mean editing session history.
 - **Getting data off the phone.** Sessions live in localStorage on a single device, so nothing recorded at the machine can be compared across visits or read anywhere else.
