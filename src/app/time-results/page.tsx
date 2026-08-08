@@ -10,7 +10,7 @@ import {
   formatRoundTotal,
   formatSessionStart,
 } from "@/lib/time";
-import { CELL_POSITIONS } from "@/lib/detection/detector";
+import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
 

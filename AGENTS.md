@@ -87,7 +87,7 @@ One component per directory with its `.tsx` and `.module.css` colocated. Prefer 
 
 ## Current state
 
-**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. The whole visual layer was then rebuilt on a new design system across six phases; the game logic underneath is unchanged.
+**The app records by hand, not by camera.** `164cd31` replaced the camera/detection page with a manual tap-input direction, and that is what ships. The whole visual layer was then rebuilt on a new design system across six phases; the game logic underneath is unchanged. The camera and pattern-detection code sat unreachable in the tree until it was removed outright — don't go looking for it, and check the history rather than rebuilding from scratch if that direction ever returns.
 
 Two routes, both driven by the Zustand store:
 
@@ -124,31 +124,7 @@ Real, measured, and deliberately left. Don't "fix" any of them unprompted — ea
 - **The disabled `Switch` is nearly invisible** — `bg/surface-disabled` against the page surface is about 1.05:1. Faithful to the tokens, but no frame exercises that state and nothing in the app renders one. Swapping the disabled border to `border/surface-strong` fixes it.
 - **Undo stays enabled during read-back**, against the design. Disabling it would mean waiting out a read-back that grows past ten seconds before correcting a mis-tap — which is the entire point of undo. This one is a deliberate contradiction of the frames, not an oversight.
 
-### Dormant: camera and pattern detection
+### Not yet built
 
-`useCamera`, `useGridDetection`, `CameraFeed`, `CalibrationOverlay`, `GridContainer` and `RoundTimer` are **still in the tree but rendered nowhere**. The detection logic is real and tested; nothing feeds it pixels. Keep this in mind before "fixing" an unused component — and before deleting one, since the direction may come back.
-
-The plan and measured thresholds are in Notion (Dashboard → Projects → Simon); **read that before touching it**. The one thing to know up front: the pulse is a *fade to white*, not a size change, and saturation is the wrong metric because the gray circle has none to lose.
-
-`src/lib/detection/` is pure and framework-free — RGB in, events out, no camera or DOM:
-
-- `detector.ts` — baseline, fire, debounce, ordered output. Gating is the **caller's** job: a user's tap and a pattern pulse are the same fade to white, and nothing in the pixels separates them.
-- `homography.ts` — four corner *circles* (not screen corners — that would assume where the grid sits inside the screen) map to the nine centres. Rejects non-convex quads up front; the solver happily returns a degenerate transform otherwise.
-- `sampler.ts` — mean RGB per patch. Radius scales with cell spacing; never sample the whole frame (a background TV and handheld shake dominate any frame diff).
-- `fixtures/reference-clip.json` — the reference video reduced to what the detector consumes. **The video itself is local-only and not in git**, so tests depend on this instead. It is the known-answer test: `[bottom-right, bottom-middle]`.
-
-The loop below was wired end to end before the pivot — Start the camera, tap the four corner circles, press Record, and detected cells render into the grid. It is intact but unreachable from the UI.
-
-- `hooks/useGridDetection` owns the frame loop and canvas; the detection stays pure in `lib/detection`. Frames are downscaled to 640px before `getImageData` — a 1080p read is 8MB, and at 15fps that is 100MB/s of copying to sample nine small patches.
-- `hooks/useCamera` owns `getUserMedia` and returns `{ status, stream, start, stop }`. `organisms/CameraFeed` stays presentational — it takes the stream rather than requesting it, so its five states (`off`, `requesting`, `denied`, `error`, `on`) are storyable without mocking.
-- No dev/prod branching: `getUserMedia` needs a **secure context**, which is a property of the URL, not the build. localhost and HTTPS qualify; a plain-HTTP LAN address does not, so an undefined `mediaDevices` means `error`, not `denied` — the user was never asked.
-- `lib/detection/viewport.ts` converts taps to camera-frame pixels. **The feed is `object-fit: cover`, so element coords are not frame coords** — for a portrait frame in the 400x292 box the element's top-left is ~566px down the frame. Getting this wrong does not throw; it samples the wrong places forever and reads as a threshold problem.
-- `organisms/CalibrationOverlay` collects the taps. It renders **only while the feed is `on`** — `CameraFeed` puts it inside that branch, so there is nothing to tap with the camera off.
-- Gating is a manual **Record** button. Nothing in the pixels separates a user's tap from a pattern pulse, so the phase gate cannot come from the detector.
-
-Not yet built:
-
-- **Diagnostics export.** The app cannot report what it saw, so testing at the machine yields anecdote rather than data. Deferred until the drift video comes back — see Notion.
 - **Editing banked history.** Undo only reaches the round in progress; once `logRound` banks it, the board can't reach it. Correcting an earlier round would mean editing session history.
-
-**Camera drift is untested by anything, and cannot be tested from the fixture** — its window was chosen for being steady. If the camera direction comes back, it is the risk most likely to break it. The next step there is a propped-phone video, not code; the protocol is on the Notion page.
+- **Getting data off the phone.** Sessions live in localStorage on a single device, so nothing recorded at the machine can be compared across visits or read anywhere else.
