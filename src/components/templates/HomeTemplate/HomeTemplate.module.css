@@ -11,9 +11,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  /* Anchors the read-back toast, which floats over the board rather than
-     taking a row in it — there is no spare height to give one. */
-  position: relative;
+  /* The read-back toast hangs off the app bar's bottom border, which is where
+     this column starts. It is `fixed`, so this only names the line — it does
+     not need to be a containing block. */
+  --toast-anchor: var(--app-bar-h);
   gap: 10px;
   padding: var(--space-3) var(--space-4) var(--space-4);
   min-height: 0;

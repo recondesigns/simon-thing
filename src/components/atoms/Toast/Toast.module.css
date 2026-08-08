@@ -3,19 +3,34 @@
  * column with no slack to spare, so anything that claimed layout here would
  * come out of the pads.
  *
+ * `fixed`, not `absolute`. The board column carries `overflow-y: auto` as a
+ * last resort on short screens, which makes it a scroll container — and a
+ * scroll container clips anything above its top edge, with no way to scroll to
+ * it. Positioned absolutely, the half of this that sits above the container was
+ * simply sliced off. Nothing clips a fixed element, and the shell never
+ * scrolls, so there is no drift to pay for it.
+ *
  * `left: 0; right: 0` with a centering flex rather than the usual
  * `left: 50%; translateX(-50%)`: the transform belongs to the entrance
  * animation, and a centering transform sitting on the same property would be
  * overwritten by it mid-flight.
  */
 .toast {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
-  /* Above the pads, clear of the controls pinned to the bottom edge. */
-  bottom: calc(var(--size-control) + var(--space-5));
+  /* Straddles a line the caller nominates with `--toast-anchor` — half above
+     it, half below. The board points it at the app bar's bottom border, so the
+     toast reads as hanging off the chrome rather than sitting in the content.
+
+     Half of the standard control height rather than a measured one: a toast
+     holds a single 44px-tall row, and there is no way to halve an unknown
+     height in CSS without a transform, which the entrance animation owns.
+     Defaults to 0, which straddles the top of the viewport — visible, and
+     obviously unset, rather than silently off-screen. */
+  top: calc(var(--toast-anchor, 0px) - var(--size-hit-min) / 2);
   z-index: 2;
   /* Announces; never intercepts. The pads underneath are locked while this is
      up, but the round control beside it is not. */
@@ -32,10 +47,13 @@
   animation: toast-leave var(--dur-pop) var(--ease-out) forwards;
 }
 
+/* Enters from above, because that is where it lives — a toast that rises into a
+   position at the top of the screen appears to come from the content it is
+   covering rather than from off it. */
 @keyframes toast-enter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
