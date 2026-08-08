@@ -53,11 +53,15 @@ export const Running: Story = {
 };
 
 /**
- * **Undo is full width, and sits above the pads.** Both are deliberate
- * departures from the Figma frames, which hug it left — the mistake it fixes is
- * a mis-aimed thumb, so the fix must not sit where the miss happened.
+ * **Undo and the round control split the bottom edge evenly, 20px apart.**
+ *
+ * The gap is the part worth pinning. Ending a round banks it, and a banked
+ * round can't be edited — so this row puts a recoverable action next to an
+ * irreversible one, and the space between them is what keeps a hurried thumb
+ * from crossing over. A future tidy-up that collapses it to the column's usual
+ * 10px would be a real regression, not a cosmetic one.
  */
-export const UndoSpansTheColumnAboveThePads: Story = {
+export const ControlsSplitTheBottomEdge: Story = {
   args: {
     dots: [5] as GameColor[],
     padState: "live",
@@ -66,19 +70,106 @@ export const UndoSpansTheColumnAboveThePads: Story = {
     onUndo: fn(),
   },
   play: async ({ canvasElement }) => {
-    const undo = [...canvasElement.querySelectorAll("button")].find((b) =>
-      b.textContent?.includes("Undo"),
-    )!;
-    const firstPad = pads(canvasElement)[0];
+    const buttons = [...canvasElement.querySelectorAll("button")];
+    const undo = buttons.find((b) => b.textContent?.includes("Undo"))!;
+    const cta = buttons.find((b) => b.textContent?.includes("End round"))!;
+    const a = undo.getBoundingClientRect();
+    const b = cta.getBoundingClientRect();
 
-    // Above the pads, not beside them.
-    await expect(undo.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-      firstPad.getBoundingClientRect().top,
+    // Side by side, on one line.
+    await expect(a.top).toBe(b.top);
+    // Even halves.
+    await expect(Math.round(a.width)).toBe(Math.round(b.width));
+    // --space-5, and not the column's 10px.
+    await expect(Math.round(b.left - a.right)).toBe(20);
+
+    // Below the pads now, which is what freed the height they grew into.
+    const lastPad = pads(canvasElement).at(-1)!;
+    await expect(a.top).toBeGreaterThanOrEqual(
+      lastPad.getBoundingClientRect().bottom,
     );
-    // And spanning the column rather than hugging an edge.
-    await expect(getComputedStyle(undo).width).toBe(
-      getComputedStyle(undo.parentElement!).width,
-    );
+  },
+};
+
+/**
+ * The read-back is a toast now, not a row in the status strip. The strip still
+ * holds its 44px while it plays — it just holds it empty, because "tap along"
+ * is actively wrong with the pads locked, and the toast is carrying the real
+ * message.
+ */
+export const ReadBackIsAToast: Story = {
+  args: {
+    dots: [5, 1, 9] as GameColor[],
+    padState: "locked",
+    started: true,
+    spoken: 1,
+  },
+  play: async ({ canvasElement }) => {
+    const toast = document.querySelector("[class*='toast']")!;
+    await expect(toast).not.toBeNull();
+    await expect(toast.textContent).toContain("Reading it back…");
+    // Floating over the board rather than taking a row in it, and fixed so the
+    // column's last-resort scrolling can never clip the half above its edge.
+    await expect(getComputedStyle(toast).position).toBe("fixed");
+
+    // Straddling the app bar's bottom border: --toast-anchor is the 60px bar
+    // height, and the toast is offset up by half a control (22px), so 22 sits
+    // above the border and 22 below. Asserted as the computed offset rather
+    // than a measured rect — a fixed element resolves against whatever
+    // containing block it finds, and Storybook's preview gives it a different
+    // one than the app does.
+    await expect(getComputedStyle(toast).top).toBe("38px");
+
+    // The strip is empty but has not collapsed — anything that reflowed here
+    // would shift the pad grid under a thumb already on its way down.
+    const strip = canvasElement.querySelector("[class*='strip']")!;
+    await expect(strip.textContent).toBe("");
+    await expect(strip.getBoundingClientRect().height).toBe(44);
+  },
+};
+
+/**
+ * **The toast does not gate the pads.** This is the state it spends most of its
+ * life in, not an edge case: the board reopens on the same tick the indicator
+ * flips to "Go!", and the indicator then stays up for most of a second so the
+ * cue can actually be read. Measured, the pads are live for every millisecond
+ * of that.
+ *
+ * The two are separate signals on purpose. If they ever become coupled — a
+ * toast that holds the lock while it fades, or a lock that hides the cue that
+ * announces it — this is the story that fails.
+ */
+export const ToastDoesNotLockThePads: Story = {
+  args: {
+    dots: [5, 1, 9] as GameColor[],
+    padState: "live",
+    started: true,
+    spoken: 3,
+    onTap: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    // Both true at once.
+    await expect(document.querySelector("[class*='toast']")).not.toBeNull();
+    for (const p of pads(canvasElement)) await expect(p).not.toBeDisabled();
+
+    // And the pads genuinely still take a tap while it is up.
+    await userEvent.click(pads(canvasElement)[0]);
+    await expect(args.onTap).toHaveBeenCalledWith(0);
+  },
+};
+
+/** Resting, the strip carries the hint and no toast exists at all. */
+export const NoToastWhenNotReading: Story = {
+  args: {
+    dots: [5] as GameColor[],
+    padState: "live",
+    started: true,
+    lastDotLabel: "5",
+  },
+  play: async ({ canvasElement }) => {
+    await expect(document.querySelector("[class*='toast']")).toBeNull();
+    const strip = canvasElement.querySelector("[class*='strip']")!;
+    await expect(strip.textContent).toContain("Tap along");
   },
 };
 

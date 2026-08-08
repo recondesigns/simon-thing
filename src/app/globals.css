@@ -2,6 +2,19 @@
    @import has to precede all other rules. */
 @import "./tokens.css";
 
+/*
+ * The app bar's height. Declared here rather than in `tokens.css` because that
+ * file is generated from Figma and must not be hand-edited — this is a layout
+ * fact of the shell, not a design token.
+ *
+ * Shared because two rules need the same number: the bar sets its own height
+ * from it, and the read-back toast hangs off the bar's bottom border. Two
+ * literals would drift the moment either moved.
+ */
+:root {
+  --app-bar-h: 60px;
+}
+
 /* Base resets only — colors, background, and typography come from the MUI
    theme via CssBaseline, so nothing here should set them. */
 

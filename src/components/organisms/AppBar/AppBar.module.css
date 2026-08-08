@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  height: 60px;
+  height: var(--app-bar-h);
   padding: 0 var(--space-4);
   max-width: var(--column-max);
   margin: 0 auto;
@@ -47,4 +47,47 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+}
+
+/*
+ * A text link rather than an icon: "Times" and "Board" are the two surfaces of
+ * the app, and no icon names either of them unambiguously.
+ *
+ * Sized to the 44px touch minimum despite being type — it sits next to the menu
+ * button and is pressed with a thumb, not a cursor. `flex-shrink: 0` because
+ * the subtitle beside it already truncates; this shouldn't start doing so too.
+ */
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  height: var(--size-hit-min);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--dur-tap) var(--ease-out),
+    background-color var(--dur-tap) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .navLink:hover {
+    color: var(--sem-text-primary);
+    background-color: var(--sem-bg-surface-hover);
+  }
+}
+
+.navLink:active {
+  background-color: var(--sem-bg-surface-pressed);
+}
+
+.navLink:focus-visible {
+  outline: none;
+  box-shadow: var(--elev-glow-focus);
 }

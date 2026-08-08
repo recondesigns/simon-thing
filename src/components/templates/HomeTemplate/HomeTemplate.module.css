@@ -11,6 +11,10 @@
   display: flex;
   flex: 1;
   flex-direction: column;
+  /* The read-back toast hangs off the app bar's bottom border, which is where
+     this column starts. It is `fixed`, so this only names the line — it does
+     not need to be a containing block. */
+  --toast-anchor: var(--app-bar-h);
   gap: 10px;
   padding: var(--space-3) var(--space-4) var(--space-4);
   min-height: 0;
@@ -20,18 +24,26 @@
   overflow-y: auto;
 }
 
-/* Its own full-width row. Not a tenth pad, and not under the grid — the
-   mistake it fixes is a mis-aimed thumb, so the fix must not sit where the miss
-   happened. Full width rather than the design's hugging button: it is pressed
-   in a hurry, mid-round, by someone looking at a TV. */
-.undoRow {
+/*
+ * Undo and the round control, paired on the bottom edge and splitting the width
+ * evenly. Never shrinks and never scrolls out of reach.
+ *
+ * The 20px gap is the one part of this row that isn't cosmetic. Ending a round
+ * banks it, and a banked round can't be edited — so the two controls sitting
+ * side by side put a recoverable action next to an irreversible one, and the
+ * gap is what keeps a hurried thumb from crossing between them.
+ */
+.controls {
   display: flex;
+  gap: var(--space-5);
   flex-shrink: 0;
 }
 
-/* The round control never shrinks and never scrolls out of reach. */
-.cta {
-  flex-shrink: 0;
+/* Even halves. `min-width: 0` because the labels are `nowrap` — without it a
+   long label sets the flex base and the split stops being even. */
+.control {
+  flex: 1;
+  min-width: 0;
 }
 
 .spacer {

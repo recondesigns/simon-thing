@@ -1,6 +1,8 @@
 "use client";
 
+
 import Button from "@/components/atoms/Button/Button";
+import Toast from "@/components/atoms/Toast/Toast";
 import PadGrid from "@/components/organisms/PadGrid/PadGrid";
 import ResultsBoard from "@/components/organisms/ResultsBoard/ResultsBoard";
 import StatusStrip, {
@@ -40,9 +42,14 @@ export interface HomeTemplateProps {
  * the store and this renders in any state.
  *
  * Vertical order is deliberate and fixed: results, then the status strip, then
- * undo, then the pads, then the round control pinned to the bottom. Undo sits
- * *above* the pads because the mistake it fixes is a mis-aimed thumb, and the
- * fix must not sit where the miss just happened.
+ * the pads, then the two controls paired on the bottom edge.
+ *
+ * Undo used to have its own full-width row above the pads, on the reasoning
+ * that the fix shouldn't sit where the mis-aimed thumb just missed. Pairing it
+ * with the round control instead buys back that row's height, and the pads —
+ * the thing actually aimed at — grew into it. The trade is deliberate: Undo is
+ * now adjacent to a control that *banks* the round, and a banked round can't be
+ * edited, so the 20px gap between them is load-bearing rather than decorative.
  */
 export default function HomeTemplate({
   dots,
@@ -66,9 +73,10 @@ export default function HomeTemplate({
       <ResultsBoard dots={dots} arriving={arriving} exitingDots={exitingDots} />
 
       <StatusStrip>
-        {reading ? (
-          <WaitingIndicator sequence={dots} spoken={spoken} />
-        ) : full ? (
+        {/* Deliberately empty while the read-back runs: the toast is carrying
+            that message, and "tap along" would be actively wrong with the pads
+            locked. The strip still holds its 44px, so nothing reflows. */}
+        {reading ? null : full ? (
           <StatusHint tone="success">Round full — end it to log</StatusHint>
         ) : started ? (
           <StatusHint>Tap along — eyes on the TV</StatusHint>
@@ -77,33 +85,47 @@ export default function HomeTemplate({
         )}
       </StatusStrip>
 
-      <div className={styles.undoRow}>
+      <PadGrid state={padState} justUnlocked={justUnlocked} onTap={onTap} />
+
+      {/* Takes up whatever is left so the controls sit on the bottom edge at
+          any viewport height, without being positioned there. */}
+      <div className={styles.spacer} />
+
+      <div className={styles.controls}>
         <Button
           variant="secondary"
+          size="lg"
           icon="undo"
-          fullWidth
+          className={styles.control}
           disabled={undoDisabled || lastDotLabel === null}
           onClick={onUndo}
         >
           {lastDotLabel === null ? "Undo" : `Undo ${lastDotLabel}`}
         </Button>
+
+        <Button
+          variant="primary"
+          size="lg"
+          className={styles.control}
+          onClick={onPrimary}
+        >
+          {started ? "End round" : "Start round"}
+        </Button>
       </div>
 
-      <PadGrid state={padState} justUnlocked={justUnlocked} onTap={onTap} />
-
-      {/* Takes up whatever is left so the round control sits on the bottom
-          edge at any viewport height, without being positioned there. */}
-      <div className={styles.spacer} />
-
-      <Button
-        variant="primary"
-        size="lg"
-        fullWidth
-        className={styles.cta}
-        onClick={onPrimary}
-      >
-        {started ? "End round" : "Start round"}
-      </Button>
+      {/* Floats at the top of the column rather than taking a row anywhere in
+          it — the board has no spare height to lend one. Last in the markup so
+          it is last in the tab and reading order, since it announces rather
+          than being operated; where it *paints* is the stylesheet's business. */}
+      <Toast open={reading}>
+        {/* Falls back to a complete count rather than to `spoken` itself. The
+            route clears `spoken` at the same moment it unlocks, which is the
+            same moment the toast starts leaving — so the live value would drop
+            the indicator back to "Reading it back…" mid-fade, and the player
+            would watch the "Go!" they were waiting for un-happen. A full count
+            is exactly the last frame it was showing. */}
+        <WaitingIndicator sequence={dots} spoken={spoken ?? dots.length} />
+      </Toast>
     </div>
   );
 }
