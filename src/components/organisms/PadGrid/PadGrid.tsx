@@ -1,5 +1,5 @@
 import InputPad, { type PadState } from "@/components/atoms/InputPad/InputPad";
-import { CELL_POSITIONS } from "@/lib/detection/detector";
+import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./PadGrid.module.css";
@@ -20,9 +20,9 @@ export interface PadGridProps {
  * The nine input pads, laid out like a telephone keypad.
  *
  * The number on a pad is read from `CELL_NUMBERS` rather than derived from its
- * position in the loop. `CELL_POSITIONS` order is load-bearing for sampling, so
- * deriving from it would quietly renumber every pad the day someone reorders
- * that array.
+ * position in the loop. `CELL_POSITIONS` order is load-bearing for the layout
+ * itself and for the store index each pad reports, so deriving from it would
+ * quietly renumber every pad the day someone rearranges that array.
  */
 export default function PadGrid({
   state = "live",

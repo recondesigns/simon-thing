@@ -7,7 +7,7 @@ import { RESULT_SLOTS } from "@/components/organisms/ResultsBoard/ResultsBoard";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
 import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
-import { CELL_POSITIONS } from "@/lib/detection/detector";
+import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
 

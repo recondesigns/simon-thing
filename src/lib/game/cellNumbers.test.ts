@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CELL_POSITIONS } from "@/lib/detection/detector";
+import { CELL_POSITIONS } from "./cellPositions";
 import { CELL_NUMBERS } from "./cellNumbers";
 
 describe("CELL_NUMBERS", () => {
@@ -25,11 +25,11 @@ describe("CELL_NUMBERS", () => {
     expect(CELL_NUMBERS["bottom-right"]).toBe("9");
   });
 
-  it("agrees with the sample order it deliberately does not derive from", () => {
+  it("agrees with the layout order it deliberately does not derive from", () => {
     // CELL_POSITIONS is in telephone order today, so numbering could have been
-    // derived from it. This pins the coincidence: if sampling is ever reordered,
-    // this fails and asks the question out loud rather than silently
-    // renumbering every pad on screen.
+    // derived from it. This pins the coincidence: if the grid is ever
+    // rearranged, this fails and asks the question out loud rather than
+    // silently renumbering every pad on screen.
     const derived = CELL_POSITIONS.map((_, i) => String(i + 1));
     const declared = CELL_POSITIONS.map((position) => CELL_NUMBERS[position]);
 
