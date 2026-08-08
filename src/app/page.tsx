@@ -24,9 +24,25 @@ const UNLOCK_CUE_MS = 420;
 const GO_LINGER_MS = 800;
 // How long a banked round's dots take to fade out. Matches --dur-pop.
 const ROUND_EXIT_MS = 180;
+// The shortest sequence that gets read back. Below this the read-back earns
+// nothing — four dots and under sit comfortably inside ordinary memory span, so
+// it is a crutch nobody needs yet — and it costs real time, because the
+// read-back grows with the sequence: staying silent through dot 4 saves
+// 1+2+3+4 = 10 spoken numbers a round. Five is therefore where the first
+// read-back lands, and it reads all five.
+const READBACK_MIN_DOTS = 5;
 
 const padNumber = (index: number) =>
   Number(CELL_NUMBERS[CELL_POSITIONS[index]]) as GameColor;
+
+/**
+ * Whether a sequence of this length gets read back aloud — the preference and
+ * the threshold together. Reads the store fresh at the moment of asking, the
+ * same way every other speech decision here does, so toggling the setting takes
+ * effect on the next tap rather than re-running an effect mid-read.
+ */
+const willReadBack = (length: number) =>
+  useGameStore.getState().speechEnabled && length >= READBACK_MIN_DOTS;
 
 export default function Home() {
   const taps = useGameStore((state) => state.taps);
@@ -60,12 +76,22 @@ export default function Home() {
     (index: number) => {
       // Unlock audio *now*, inside the tap gesture — the read-back itself is
       // deferred ~1.5s and would otherwise be blocked on iOS.
+      //
+      // Deliberately keyed on the preference alone and *not* on the threshold:
+      // priming on the silent taps below it is what unlocks audio before the
+      // first real read-back at dot 5. Gate this and that read-back is the one
+      // that gets swallowed.
       if (useGameStore.getState().speechEnabled) primeSpeech();
       // Zero, not undefined: the indicator should be on screen for the whole
       // lock, including the pause before the first number. Set here rather than
       // in the effect below so the board never shows a hint for 1.5s and then
       // swaps it for the indicator.
-      setSpoken(0);
+      //
+      // Only for a tap that is actually going to be read back, though. The
+      // template opens the toast on `spoken` alone, so setting it on a silent
+      // tap would flash "Reading it back…" for the length of the debounce and
+      // then blink out, announcing a read-back that never happens.
+      if (willReadBack(useGameStore.getState().taps.length + 1)) setSpoken(0);
       tap(index, RESULT_SLOTS);
     },
     [tap],
@@ -146,19 +172,25 @@ export default function Home() {
     // those cases, and the strip only reads `spoken` while it's locked.
     if (count <= previous) return;
 
-    // A new tap. With speech off, just a short debounce before unlocking.
-    if (!useGameStore.getState().speechEnabled) {
+    // A new tap that isn't getting read back — either speech is off, or the
+    // sequence is still short enough not to need it. Both are the same tap from
+    // the player's side: silence, and a short debounce before unlocking. One
+    // branch rather than two, because there is nothing to tell apart here.
+    if (!willReadBack(count)) {
       const timer = setTimeout(() => {
         // Cleared here rather than left to the linger above: nothing was read
         // back, so there is no cue to hold — holding one would announce a
-        // read-back that never happened.
+        // read-back that never happened. Below the threshold `spoken` was never
+        // set in the first place, so this is a no-op on that path.
         setSpoken(undefined);
         release();
       }, SILENT_LOCK_MS);
       return () => clearTimeout(timer);
     }
 
-    // With speech on: pause, then speak each number with the chosen cadence.
+    // Long enough to be worth reading back: pause, then speak each number with
+    // the chosen cadence. Crossing the threshold needs no special case — the
+    // fifth tap reads all five numbers, exactly as any length does.
     // Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
     const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
