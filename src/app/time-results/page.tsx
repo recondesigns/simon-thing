@@ -3,7 +3,7 @@
 import TimeResultsTemplate, {
   type SessionView,
 } from "@/components/templates/TimeResultsTemplate/TimeResultsTemplate";
-import { useGameStore } from "@/lib/store/gameStore";
+import { useGameStore, type Round } from "@/lib/store/gameStore";
 import {
   formatDuration,
   formatDotSeconds,
@@ -32,7 +32,11 @@ export default function TimeResultsPage() {
       .filter((other) => other.startedAt !== null).length;
 
     const live = isActive && dotDurations.length > 0;
-    const allRounds = live ? [...session.rounds, dotDurations] : session.rounds;
+    // The round in progress is shaped like a banked one so everything below can
+    // treat them alike — it already carries its pads in `taps`.
+    const allRounds: Round[] = live
+      ? [...session.rounds, { durations: dotDurations, pads: taps }]
+      : session.rounds;
     const liveIndex = live ? session.rounds.length : -1;
 
     return {
@@ -42,27 +46,28 @@ export default function TimeResultsPage() {
         ? undefined
         : formatSessionStart(session.startedAt as number),
       meta: `${allRounds.length} ${allRounds.length === 1 ? "round" : "rounds"} · ${formatDuration(
-        sum(allRounds.map(sum)),
+        sum(allRounds.map((round) => sum(round.durations))),
       )}`,
       isActive,
       rounds: allRounds
-        .map((durations, roundIndex) => ({
+        .map((round, roundIndex) => ({
           key: String(roundIndex),
           label: `Round ${roundIndex + 1}`,
-          total: formatRoundTotal(sum(durations)),
+          total: formatRoundTotal(sum(round.durations)),
           live: roundIndex === liveIndex,
-          dots: durations.map((ms, dotIndex) => ({
-            label: `Dot ${dotIndex + 1}`,
-            value: formatDotSeconds(ms),
-            // Only the round in progress knows which pads were tapped. A banked
-            // round stores durations alone, so its dots have no colour to show.
-            color:
-              roundIndex === liveIndex && taps[dotIndex] !== undefined
-                ? (Number(
-                    CELL_NUMBERS[CELL_POSITIONS[taps[dotIndex]]],
-                  ) as GameColor)
-                : undefined,
-          })),
+          dots: round.durations.map((ms, dotIndex) => {
+            const pad = round.pads[dotIndex];
+            return {
+              label: `Dot ${dotIndex + 1}`,
+              value: formatDotSeconds(ms),
+              // Rounds banked before store v2 recorded durations alone, so their
+              // dots have no colour to show — see `Round.pads`.
+              color:
+                pad === undefined
+                  ? undefined
+                  : (Number(CELL_NUMBERS[CELL_POSITIONS[pad]]) as GameColor),
+            };
+          }),
         }))
         // Newest round first, matching the sessions above it.
         .reverse(),

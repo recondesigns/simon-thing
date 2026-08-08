@@ -35,13 +35,36 @@ export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
  * rather than by calendar day. It stays open (accepting rounds) until New session
  * closes it and opens the next.
  */
+/**
+ * A banked round: what was tapped, and how long each dot took.
+ *
+ * The two arrays are the same length and the same order — dot N's duration is
+ * `durations[N]` and the pad it landed on is `pads[N]`. They're one object rather
+ * than two parallel arrays on {@link Session} because anything that edits a round
+ * has to keep them in step, and two lists indexed in lockstep desynchronise the
+ * first time something touches one and forgets the other.
+ */
+export interface Round {
+  /** Each dot's duration in ms, oldest first. */
+  durations: number[];
+  /**
+   * Pad indices 0–8 in tap order.
+   *
+   * **Empty for every round banked before v2.** The board threw pad identity away
+   * at `logRound` until then, so that history has durations and nothing else —
+   * and it can't be recovered, because the information was never written. Treat
+   * empty as "unknown", never as "no pads".
+   */
+  pads: number[];
+}
+
 export interface Session {
   /** When the visit began (epoch ms), or null for the legacy "Earlier" bucket. */
   startedAt: number | null;
   /** When the visit was closed (epoch ms); null while it's the open/active one. */
   endedAt: number | null;
-  /** Completed rounds, each its dot durations in ms (oldest first). */
-  rounds: number[][];
+  /** Completed rounds, oldest first. */
+  rounds: Round[];
 }
 
 /**
@@ -154,10 +177,10 @@ function activeSession(sessions: Session[]): Session | null {
  */
 function bankRound(
   sessions: Session[],
-  round: number[],
+  round: Round,
   now: number,
 ): Session[] {
-  if (round.length === 0) return sessions;
+  if (round.durations.length === 0) return sessions;
   const last = sessions[sessions.length - 1];
   if (last && last.endedAt === null) {
     return [
@@ -243,7 +266,13 @@ export const useGameStore = create<GameStore>()(
       logRound: () =>
         set((state) => {
           const now = Date.now();
-          let sessions = bankRound(state.sessions, state.dotDurations, now);
+          // `taps` and `dotDurations` stay the same length through tap and
+          // undoDot, so they pair up dot for dot.
+          let sessions = bankRound(
+            state.sessions,
+            { durations: state.dotDurations, pads: state.taps },
+            now,
+          );
           // Roll straight into the next round — keep (or open) a session for it.
           if (!activeSession(sessions)) {
             sessions = [
@@ -268,7 +297,11 @@ export const useGameStore = create<GameStore>()(
         set((state) => {
           const now = Date.now();
           // Bank any round in progress into the session we're closing.
-          let sessions = bankRound(state.sessions, state.dotDurations, now);
+          let sessions = bankRound(
+            state.sessions,
+            { durations: state.dotDurations, pads: state.taps },
+            now,
+          );
           const last = sessions[sessions.length - 1];
           if (last && last.endedAt === null) {
             sessions = [...sessions.slice(0, -1), { ...last, endedAt: now }];
@@ -299,7 +332,7 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: "simon-thing-game",
-      version: 1,
+      version: 2,
       // Deferred; StoreHydrator calls rehydrate() after mount. See the note above.
       skipHydration: true,
       // Persist sessions and the two preferences only — never the in-progress
@@ -309,26 +342,61 @@ export const useGameStore = create<GameStore>()(
         speechEnabled: state.speechEnabled,
         cadence: state.cadence,
       }),
-      // v0 stored `games` (each game = a round's dot times). Fold them all into a
-      // single closed "Earlier" session — they predate sessions, so they can't be
-      // sorted into visits.
+      /**
+       * Steps run in sequence, oldest first, so each only has to know the shape
+       * immediately before it — a store two versions behind walks through both.
+       *
+       * - **v0 → v1.** v0 stored `games` (each game = a round's dot times). They
+       *   predate sessions and can't be sorted into visits, so they fold into a
+       *   single closed "Earlier" bucket.
+       * - **v1 → v2.** A round widened from `number[]` (durations alone) to
+       *   `{ durations, pads }`. Everything banked before v2 gets an empty
+       *   `pads`: the board discarded pad identity at `logRound`, so it was
+       *   never written down and cannot be reconstructed here. Guessing would be
+       *   worse than admitting the gap.
+       */
       migrate: (persisted, version) => {
-        if (version === 0 && persisted && typeof persisted === "object") {
-          const old = persisted as {
-            games?: number[][];
-            speechEnabled?: boolean;
-          };
-          const sessions: Session[] =
-            old.games && old.games.length > 0
-              ? [{ startedAt: null, endedAt: 0, rounds: old.games }]
-              : [];
-          return {
-            sessions,
-            speechEnabled: old.speechEnabled ?? true,
-            cadence: "relaxed" as Cadence,
+        if (!persisted || typeof persisted !== "object") {
+          return { sessions: [], speechEnabled: true, cadence: "relaxed" };
+        }
+
+        let state = persisted as {
+          games?: number[][];
+          sessions?: unknown[];
+          speechEnabled?: boolean;
+          cadence?: Cadence;
+        };
+
+        if (version < 1) {
+          state = {
+            sessions:
+              state.games && state.games.length > 0
+                ? [{ startedAt: null, endedAt: 0, rounds: state.games }]
+                : [],
+            speechEnabled: state.speechEnabled ?? true,
+            cadence: "relaxed",
           };
         }
-        return persisted as { sessions: Session[] };
+
+        if (version < 2) {
+          type V1Session = {
+            startedAt: number | null;
+            endedAt: number | null;
+            rounds: number[][];
+          };
+          state = {
+            ...state,
+            sessions: ((state.sessions ?? []) as V1Session[]).map((session) => ({
+              ...session,
+              rounds: session.rounds.map((durations) => ({
+                durations,
+                pads: [],
+              })),
+            })),
+          };
+        }
+
+        return state as unknown as { sessions: Session[] };
       },
     },
   ),
