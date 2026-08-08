@@ -26,16 +26,45 @@ const toast = () => document.querySelector<HTMLElement>("[class*='toast']");
  * Floats over its container rather than taking a row in it — the board it sits
  * on is a bounded column with no slack, so anything claiming layout here would
  * come out of the pads.
+ *
+ * **`fixed`, not `absolute`.** The board column carries `overflow-y: auto` as a
+ * short-screen last resort, which makes it a scroll container, and a scroll
+ * container clips anything above its top edge with no way to scroll to it —
+ * positioned absolutely, the half of this that straddles the line above was
+ * silently sliced off. This assertion is the guard against that coming back.
  */
 export const Open: Story = {
   play: async () => {
     const el = toast()!;
     const computed = getComputedStyle(el);
 
-    await expect(computed.position).toBe("absolute");
+    await expect(computed.position).toBe("fixed");
     await expect(el.textContent).toContain("Reading it back…");
     // Announces; never intercepts. The round control sits beside it.
     await expect(computed.pointerEvents).toBe("none");
+  },
+};
+
+/**
+ * Sits half above and half below the line the caller nominates, so it reads as
+ * hanging off the chrome rather than sitting inside the content.
+ */
+export const StraddlesItsAnchor: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ "--toast-anchor": "100px" } as React.CSSProperties}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async () => {
+    // The computed offset, not the measured rect: a fixed element resolves
+    // against whatever containing block it finds, and Storybook's preview gives
+    // it a different one than the app does. The contract is the offset.
+    //
+    // Half of --size-hit-min (22px), so the straddle is exact for a toast
+    // holding the standard 44px row — which is every toast in the app.
+    await expect(getComputedStyle(toast()!).top).toBe("78px");
   },
 };
 

@@ -108,14 +108,49 @@ export const ReadBackIsAToast: Story = {
     const toast = document.querySelector("[class*='toast']")!;
     await expect(toast).not.toBeNull();
     await expect(toast.textContent).toContain("Reading it back…");
-    // Floating over the board rather than taking a row in it.
-    await expect(getComputedStyle(toast).position).toBe("absolute");
+    // Floating over the board rather than taking a row in it, and fixed so the
+    // column's last-resort scrolling can never clip the half above its edge.
+    await expect(getComputedStyle(toast).position).toBe("fixed");
+
+    // Straddling the app bar's bottom border: --toast-anchor is the 60px bar
+    // height, and the toast is offset up by half a control (22px), so 22 sits
+    // above the border and 22 below. Asserted as the computed offset rather
+    // than a measured rect — a fixed element resolves against whatever
+    // containing block it finds, and Storybook's preview gives it a different
+    // one than the app does.
+    await expect(getComputedStyle(toast).top).toBe("38px");
 
     // The strip is empty but has not collapsed — anything that reflowed here
     // would shift the pad grid under a thumb already on its way down.
     const strip = canvasElement.querySelector("[class*='strip']")!;
     await expect(strip.textContent).toBe("");
     await expect(strip.getBoundingClientRect().height).toBe(44);
+  },
+};
+
+/**
+ * **The toast does not gate the pads.** It is presentational and owns no
+ * timers; the route decides when the read-back is over and unlocks on its own
+ * schedule, which lands *before* the toast has finished fading. So a toast
+ * still on screen beside live pads is the correct state, not a glitch — and if
+ * the two ever become coupled, this is the story that fails.
+ */
+export const ToastDoesNotLockThePads: Story = {
+  args: {
+    dots: [5, 1, 9] as GameColor[],
+    padState: "live",
+    started: true,
+    spoken: 3,
+    onTap: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    // Both true at once.
+    await expect(document.querySelector("[class*='toast']")).not.toBeNull();
+    for (const p of pads(canvasElement)) await expect(p).not.toBeDisabled();
+
+    // And the pads genuinely still take a tap while it is up.
+    await userEvent.click(pads(canvasElement)[0]);
+    await expect(args.onTap).toHaveBeenCalledWith(0);
   },
 };
 

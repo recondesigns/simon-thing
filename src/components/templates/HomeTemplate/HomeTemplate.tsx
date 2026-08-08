@@ -113,9 +113,10 @@ export default function HomeTemplate({
         </Button>
       </div>
 
-      {/* Floats over the pads rather than sitting between them and the results.
-          The pads are locked for as long as this is up, so covering them costs
-          nothing, and the board has no spare height to lend a row. */}
+      {/* Floats at the top of the column rather than taking a row anywhere in
+          it — the board has no spare height to lend one. Last in the markup so
+          it is last in the tab and reading order, since it announces rather
+          than being operated; where it *paints* is the stylesheet's business. */}
       <Toast open={reading}>
         {/* Falls back to a complete count rather than to `spoken` itself. The
             route clears `spoken` at the same moment it unlocks, which is the
