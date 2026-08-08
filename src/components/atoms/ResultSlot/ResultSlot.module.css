@@ -9,11 +9,15 @@
   container-type: size;
 }
 
-/* 40% of the slot's height — 16px at the full 40px slot, and the same
+/* 52% of the slot's height — 24px at the full 46px slot, and the same
    proportion once the readout gives way on a short screen. No `--type-*` step
-   is cut for a 40px circle, let alone a 24px one. */
+   is cut for a 46px circle, let alone a 24px one.
+ *
+ * Sized against the circle rather than in px, so raising this costs no layout
+ * at all: the digit grows inside the slot it already occupies. That is most of
+ * the legibility win here — the circle itself only grew 6px. */
 .numeral {
-  font: 400 40cqh/1 var(--font-display);
+  font: 400 52cqh/1 var(--font-display);
 }
 
 .filled {
