@@ -17,6 +17,21 @@ import { fontVariables } from '../src/lib/fonts'
  */
 import '../src/app/globals.css'
 
+/*
+ * The font variables have to sit on <html>, not on a wrapper inside the story.
+ *
+ * `tokens.css` declares the `--type-*` composites on `:root`, and each one ends
+ * in `var(--font-display|body|numeral)`. A custom property's own `var()`
+ * references resolve against the element that *declares* it — so a font
+ * variable set further down the tree is invisible to `:root`, the composite
+ * resolves to a font-family of nothing, the `font` shorthand is dropped as
+ * invalid, and the element quietly inherits the body face instead.
+ *
+ * `app/layout.tsx` puts these on <html> for exactly this reason. Same className,
+ * from the single declaration site in lib/fonts.
+ */
+document.documentElement.classList.add(...fontVariables.split(' '))
+
 const preview: Preview = {
   parameters: {
     options: {
@@ -45,15 +60,7 @@ const preview: Preview = {
     (Story) => (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        {/*
-          `app/layout.tsx` puts these three font variables on <html>; the type
-          composites in tokens.css reference them, so without this every
-          `--type-*` rule resolves to a font-family of nothing and falls back.
-          Same className the app uses, from the single declaration site.
-        */}
-        <div className={fontVariables}>
-          <Story />
-        </div>
+        <Story />
       </ThemeProvider>
     ),
   ],
