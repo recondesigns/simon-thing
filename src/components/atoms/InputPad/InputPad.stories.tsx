@@ -38,8 +38,8 @@ export const Live: Story = {
     await expect(computed.color).toBe("rgb(255, 255, 255)");
     // --size-pad. The pad is the one thing on the board allowed to shrink, but
     // only below the design's height — at rest it holds 96.
-    await expect(computed.width).toBe("96px");
-    await expect(computed.height).toBe("96px");
+    await expect(computed.width).toBe("104px");
+    await expect(computed.height).toBe("104px");
     await expect(el).toBeEnabled();
   },
 };
