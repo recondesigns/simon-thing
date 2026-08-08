@@ -68,7 +68,7 @@ Mobile only. 400px max-width centered column, **no breakpoints** — where somet
 
 **The shell is `height: 100dvh` with `overflow: hidden`, so each route owns its own overflow.** The board must fit; the history scrolls inside itself, which is what keeps the app bar fixed without `position: sticky`. Two consequences worth knowing:
 
-- **The board's two grids shrink, nothing else does.** Pads and slots hold 96px and 40px wherever there's room — every phone at the design's 844 gets full size — and give way together below that, since iOS Chrome's bars can take 140px off the usable height. Pads floor at the 44px touch minimum, slots at 20px, and the board scrolls only if both floors bind. Numerals are sized in `cqh` against their own circle, so they scale with it.
+- **The board's two grids shrink, nothing else does.** Pads and slots hold 104px and 46px wherever there's room — every phone at the design's 844 gets full size — and give way together below that, since iOS Chrome's bars can take 140px off the usable height. Pads floor at the 44px touch minimum, slots at 20px, and the board scrolls only if both floors bind. Numerals are sized in `cqh` against their own circle, so they scale with it.
 - **Anything in a scrolling flex column needs `flex-shrink: 0`.** Flex children default to shrinking, so a list will silently compress to fit instead of overflowing — nine sessions squashed into one screen with `scrollHeight === clientHeight`, which looks fine to every measurement and wrong to every eye.
 
 ## Components
@@ -99,13 +99,15 @@ Two routes, both driven by the Zustand store:
 - `/` — the twenty-slot readout and dot count, a status strip, Undo, the nine pads, and the round control.
 - `/time-results` — sessions, each holding rounds, each holding per-dot times.
 
-`organisms/AppShell` wraps both from `app/layout.tsx`. It owns the sticky `AppBar` — wordmark (home from anywhere), sound toggle, menu — and `MenuSheet`, a bottom sheet rather than a side drawer because everything in it is reached one-handed while standing at a machine. The sheet holds navigation to the other surface, New session, Scrap round, the settings, and Reset app quarantined behind a rule.
+`organisms/AppShell` wraps both from `app/layout.tsx`. It owns the sticky `AppBar` — wordmark (home from anywhere), a text link to the other surface, menu — and `MenuSheet`, a bottom sheet rather than a side drawer because everything in it is reached one-handed while standing at a machine. The sheet holds New session, Scrap round, the settings, and Reset app quarantined behind a rule.
+
+**The bar's link is the app's only one-tap navigation, so it always names the surface you are *not* on** — "Times" on the board, "Board" on Times. It replaced a sound toggle, which moved to the sheet's settings beside the read-back speed it pairs with: sound is set once and rarely changed, so it hadn't earned a permanent slot in a 60px bar, while moving between surfaces is done constantly and used to be a tap deeper than the setting. If the bar ever stops pointing back from Times, the wordmark becomes the sole way home.
 
 The board's vertical order is deliberate and worth not rearranging:
 
-- **Undo sits above the pads**, full width. The mistake it fixes is a mis-aimed thumb, so the fix must not sit where the miss happened.
-- **The status strip is a fixed 44px slot** between the results and the pads — a hint at rest, the read-back indicator mid-lock, flipping to a green "Go!" at unlock. Its height never changes, because anything that reflowed there would shift the pad grid under a thumb already on its way down.
-- **The round control is pinned to the bottom** by a flexible spacer, not by positioning.
+- **Undo and the round control share the bottom edge**, even halves, 20px apart, pinned by a flexible spacer rather than by positioning. **The gap is load-bearing.** Ending a round banks it and a banked round can't be edited, so this row sets a recoverable action beside an irreversible one; collapsing the gap to the column's usual 10px would be a real regression, not a cosmetic one. Undo previously had its own full-width row above the pads, on the reasoning that the fix shouldn't sit where the mis-aimed thumb missed — pairing them bought back 54px of column, which is what the pads grew into.
+- **The status strip is a fixed 44px slot** between the results and the pads — a hint at rest, and deliberately *empty* while the read-back runs, since the toast carries that message and "tap along" is actively wrong with the pads locked. Its height never changes, because anything that reflowed there would shift the pad grid under a thumb already on its way down.
+- **The read-back is a toast** (`atoms/Toast`) floating over the pads, not a row in the column: the board has no spare height to lend one, and the pads it covers are locked for exactly as long as it is up. It stays mounted through its own fade and unmounts after — an invisible toast is still in the accessibility tree, and would announce a read-back that ended minutes ago. Two traps it already survived, both pinned by stories: `animationend` **bubbles**, so the handler that unmounts it must ignore its children (the "Go!" lands and the dots breathe inside it); and the route clears `spoken` at the same moment it unlocks, so the toast is passed a *full* count on the way out rather than the live value — otherwise the cue the player was waiting for visibly un-happens mid-fade.
 
 `templates/HomeTemplate` and `TimeResultsTemplate` take every value as a prop, so routes supply the store.
 

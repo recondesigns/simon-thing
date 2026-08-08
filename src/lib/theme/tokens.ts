@@ -135,7 +135,7 @@ export const tokens = {
   },
   radius: { sm: 10, md: 16, lg: 22, xl: 28, pill: 999 },
   /** `hit-min` is the 44px minimum touch target; nothing tappable goes under it. */
-  size: { "hit-min": 44, control: 52, pad: 96, slot: 46, "column-max": 400 },
+  size: { "hit-min": 44, control: 52, pad: 104, slot: 46, "column-max": 400 },
   elevation: {
     0: "none",
     1: "0 2px 8px rgba(0, 0, 0, 0.5)",
