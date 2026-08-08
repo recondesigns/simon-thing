@@ -56,7 +56,7 @@ export const EmptyAndFilledAreTheSameSize: Story = {
     const b = filled.getBoundingClientRect();
 
     // --size-slot, held by both states.
-    await expect(a.width).toBe(40);
+    await expect(a.width).toBe(46);
     await expect(a.width).toBe(b.width);
     await expect(a.height).toBe(b.height);
   },
