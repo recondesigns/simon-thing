@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import AppBar from "@/components/organisms/AppBar/AppBar";
 import MenuSheet from "@/components/organisms/MenuSheet/MenuSheet";
 import Button from "@/components/atoms/Button/Button";
@@ -29,7 +29,6 @@ const TIMES_PATH = "/time-results";
 export default function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   const sessions = useGameStore((state) => state.sessions);
   const started = useGameStore((state) => state.startedAt !== null);
@@ -69,10 +68,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Sticky rather than fixed: it keeps its place in the flow, so nothing
           below needs a matching offset, and content scrolls behind its fill. */}
       <div className={styles.bar}>
+        {/* Always the surface you are *not* on. This is now the only nav in
+            the chrome — the sheet's copy of it is gone — so on the Times route
+            it has to point back, or the wordmark would be the sole way home. */}
         <AppBar
           subtitle={subtitle}
-          soundEnabled={speechEnabled}
-          onToggleSound={toggleSpeech}
+          navHref={onTimes ? BOARD_PATH : TIMES_PATH}
+          navLabel={onTimes ? "Board" : "Times"}
           onOpenMenu={() => setMenuOpen(true)}
         />
       </div>
@@ -83,22 +85,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
         open={menuOpen}
         onClose={close}
         onOpen={() => setMenuOpen(true)}
+        // Navigation moved out of here and into the app bar, where it is one
+        // tap rather than two. What's left is the three actions, which have no
+        // other home.
         items={[
-          // Whichever surface you aren't on. The wordmark also returns to the
-          // board, but that's a small target in the corner and easy to miss —
-          // if the menu is already open, the way out should be in it.
-          onTimes
-            ? {
-                icon: "chevron-right" as const,
-                label: "Board",
-                onSelect: run(() => router.push(BOARD_PATH)),
-              }
-            : {
-                icon: "chevron-right" as const,
-                label: "Times & history",
-                meta: `${sessions.length} ${sessions.length === 1 ? "session" : "sessions"}`,
-                onSelect: run(() => router.push(TIMES_PATH)),
-              },
           {
             icon: "plus" as const,
             label: "New session",

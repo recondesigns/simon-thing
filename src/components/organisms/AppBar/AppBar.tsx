@@ -7,8 +7,9 @@ import styles from "./AppBar.module.css";
 export interface AppBarProps {
   /** Shown beside the wordmark — the session, the round, or the area name. */
   subtitle?: string;
-  soundEnabled?: boolean;
-  onToggleSound?: (next: boolean) => void;
+  /** Where the nav link goes, and what it says. */
+  navHref?: string;
+  navLabel?: string;
   onOpenMenu?: () => void;
   title?: string;
 }
@@ -16,15 +17,21 @@ export interface AppBarProps {
 /**
  * The persistent bar. It carries the wordmark, which is the way back to the
  * board from anywhere, and the two controls that have to be reachable without
- * opening anything: sound, and the menu.
+ * opening anything: the link to the other surface, and the menu.
+ *
+ * The nav link replaced a sound toggle that sat here. Sound is a preference set
+ * once and rarely changed, so it didn't earn a permanent slot in a 60px bar; it
+ * lives in the sheet's settings, where the read-back speed it pairs with
+ * already was. Moving between the two surfaces is the thing done constantly,
+ * and it was previously buried a tap deeper than the setting.
  *
  * Presentational — every value arrives as a prop. The layout wires it to the
  * store, which keeps this renderable in any state without mocking one.
  */
 export default function AppBar({
   subtitle,
-  soundEnabled = true,
-  onToggleSound,
+  navHref,
+  navLabel,
   onOpenMenu,
   title = "DOTS",
 }: AppBarProps) {
@@ -42,17 +49,11 @@ export default function AppBar({
       </div>
 
       <div className={styles.controls}>
-        <IconButton
-          icon="sound-off"
-          iconToggled="sound-on"
-          pressed={soundEnabled}
-          onToggle={onToggleSound}
-          label={
-            soundEnabled
-              ? "Turn number read-back off"
-              : "Turn number read-back on"
-          }
-        />
+        {navHref && navLabel && (
+          <Link href={navHref} className={styles.navLink}>
+            {navLabel}
+          </Link>
+        )}
         <IconButton icon="menu" label="Open menu" onClick={onOpenMenu} />
       </div>
     </header>
