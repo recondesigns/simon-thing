@@ -13,8 +13,6 @@ import type { GameColor } from "@/lib/theme/tokens";
 
 // The beat after a tap before the read-back starts speaking.
 const READBACK_PAUSE_MS = 1500;
-// Held after the last number actually finishes before the pads reopen.
-const POST_AUDIO_MS = 500;
 // With read-back off there's no audio to wait on, so the lock is just a brief
 // debounce against an accidental double-tap.
 const SILENT_LOCK_MS = 600;
@@ -139,12 +137,10 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
 
-    // With speech on: pause, speak each number with the chosen cadence, then
-    // unlock 500ms after the last number actually finishes (its end event, not a
-    // guessed time). Cadence is read fresh so changing it takes effect next tap.
+    // With speech on: pause, then speak each number with the chosen cadence.
+    // Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
     const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
-    let done: ReturnType<typeof setTimeout> | undefined;
 
     const startSpeaking = setTimeout(() => {
       speakSequence(words, {
@@ -152,9 +148,17 @@ export default function Home() {
         // Drives the progress dots. Each callback lands as a number finishes,
         // so the indicator tracks the audio rather than a predicted schedule.
         onSpoke: (n) => setSpoken(n),
+        // The board reopens on the same tick the indicator flips to "Go!" —
+        // the cue and the thing it is cueing are the same moment. There used to
+        // be a 500ms hold here, which meant the player was told to go and then
+        // found the pads still dead, every single tap of every round.
+        //
+        // Nothing waits on the toast: it fades on its own afterwards, and the
+        // pads' own unlock cue is what actually announces the reopening at
+        // arm's length.
         onDone: () => {
           setSpoken(words.length);
-          done = setTimeout(release, POST_AUDIO_MS);
+          release();
         },
       });
     }, READBACK_PAUSE_MS);
@@ -170,7 +174,6 @@ export default function Home() {
     return () => {
       clearTimeout(startSpeaking);
       clearTimeout(fallback);
-      if (done) clearTimeout(done);
       cancelSpeech();
     };
   }, [taps, unlock, release]);
