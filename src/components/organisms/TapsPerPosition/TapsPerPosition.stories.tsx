@@ -54,9 +54,24 @@ export const Frequencies: Story = {
 export const WithUncountableHistory: Story = {
   args: { totals: totals({ rounds: 6, taps: 47 }) },
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.textContent).toContain("47 taps across 6 rounds");
+    const note = canvasElement.querySelector("[class*='note']")!;
+    // Asserted past the interpolation, not up to it. Stopping at "rounds" is
+    // what let "6 roundsaren't counted" ship: JSX strips the newline between an
+    // expression and the text after it, so the join is where this breaks.
+    await expect(note.textContent).toContain("47 taps across 6 rounds aren");
+
     // The headline total still counts only what it can place.
     await expect(canvasElement.textContent).toContain("260 taps");
+  },
+};
+
+/** The singular reads as a sentence too — the join is per-branch. */
+export const OneUncountableRound: Story = {
+  args: { totals: totals({ rounds: 1, taps: 5 }) },
+  play: async ({ canvasElement }) => {
+    const note = canvasElement.querySelector("[class*='note']")!;
+    await expect(note.textContent).toContain("5 taps across 1 round aren");
+    await expect(note.textContent).not.toContain("roundaren");
   },
 };
 

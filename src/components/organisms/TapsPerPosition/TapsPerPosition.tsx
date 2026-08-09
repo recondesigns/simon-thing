@@ -58,9 +58,13 @@ export default function TapsPerPosition({ totals }: TapsPerPositionProps) {
       */}
       {unattributed.rounds > 0 && (
         <p className={styles.note}>
+          {/* The explicit spaces are load-bearing: JSX strips the newline
+              between an expression and the text after it, so without this the
+              sentence renders as "1 roundaren't counted". */}
           {unattributed.taps} taps across {unattributed.rounds}{" "}
-          {unattributed.rounds === 1 ? "round" : "rounds"} aren&rsquo;t counted
-          here — they were played before the app recorded which pad was hit.
+          {unattributed.rounds === 1 ? "round" : "rounds"}{" "}
+          aren&rsquo;t counted here — they were played before the app recorded
+          which pad was hit.
         </p>
       )}
     </section>
