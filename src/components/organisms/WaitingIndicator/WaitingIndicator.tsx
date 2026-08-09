@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { GameColor } from "@/lib/theme/tokens";
+import { GROUP_SIZE } from "@/lib/speech";
 import styles from "./WaitingIndicator.module.css";
 
 export interface WaitingIndicatorProps {
@@ -44,11 +45,17 @@ export default function WaitingIndicator({
         {sequence.map((color, i) => {
           const isSpoken = i < spoken;
           const isNow = i === spoken && !done;
+          // Opens a new group of three, so it takes the wider gap that stands
+          // for the pause the ear is hearing at the same point. Driven off
+          // speech.ts's own GROUP_SIZE rather than a second 3 here, so the two
+          // can't drift into disagreeing about where the groups fall.
+          const opensGroup = i > 0 && i % GROUP_SIZE === 0;
           return (
             <span
               key={i}
               className={[
                 styles.dot,
+                opensGroup && styles.groupStart,
                 (isSpoken || isNow) && styles.lit,
                 isNow && styles.current,
               ]
