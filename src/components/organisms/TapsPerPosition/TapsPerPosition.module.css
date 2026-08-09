@@ -1,0 +1,49 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+  margin: 0;
+}
+
+.total {
+  font: var(--type-body);
+  color: var(--sem-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Three columns, and narrower than the section so the circles stay circles
+ * rather than filling the full 358 and dwarfing everything else on the page.
+ * The board's own grid is the reference: this should read as the same keypad,
+ * just smaller.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 268px;
+  margin: 0 auto;
+}
+
+.note {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--sem-text-disabled);
+  margin: 0;
+}

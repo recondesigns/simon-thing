@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect } from "storybook/test";
-import ResultsBoard, { RESULT_SLOTS } from "./ResultsBoard";
+import ResultsBoard from "./ResultsBoard";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 import type { GameColor } from "@/lib/theme/tokens";
 
 const meta = {
@@ -28,7 +29,7 @@ const filled = (canvasElement: HTMLElement) =>
  */
 export const Empty: Story = {
   play: async ({ canvasElement }) => {
-    await expect(slots(canvasElement)).toHaveLength(RESULT_SLOTS);
+    await expect(slots(canvasElement)).toHaveLength(ROUND_CAP);
     await expect(filled(canvasElement)).toHaveLength(0);
     // The counter reads against the cap, not against what's on screen.
     await expect(canvasElement.textContent).toContain("0");
@@ -40,7 +41,7 @@ export const PartiallyFilled: Story = {
   args: { dots: [5, 1, 9, 3] as GameColor[] },
   play: async ({ canvasElement }) => {
     // Still twenty — four filled, sixteen waiting.
-    await expect(slots(canvasElement)).toHaveLength(RESULT_SLOTS);
+    await expect(slots(canvasElement)).toHaveLength(ROUND_CAP);
     await expect(filled(canvasElement)).toHaveLength(4);
 
     // Filled in tap order, each carrying its pad's colour.
@@ -62,12 +63,12 @@ export const PartiallyFilled: Story = {
  */
 export const Full: Story = {
   args: {
-    dots: Array.from({ length: RESULT_SLOTS }, (_, i) =>
+    dots: Array.from({ length: ROUND_CAP }, (_, i) =>
       ((i % 9) + 1) as GameColor,
     ),
   },
   play: async ({ canvasElement }) => {
-    await expect(filled(canvasElement)).toHaveLength(RESULT_SLOTS);
+    await expect(filled(canvasElement)).toHaveLength(ROUND_CAP);
     const count = canvasElement.querySelector("span span")!;
     // text/success (#7FE0A8), with no tone passed down.
     await expect(getComputedStyle(count).color).toBe("rgb(127, 224, 168)");

@@ -1,0 +1,51 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+  margin: 0;
+}
+
+.total {
+  font: var(--type-body);
+  color: var(--sem-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Three items now, so the middle one is centred rather than pushed to an edge
+   — space-between with three children puts it where the bar's middle segment
+   roughly sits, which is what makes the legend readable as a key. */
+.legend {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.finished {
+  color: var(--sem-text-success);
+}
+
+.endedEarly {
+  color: var(--sem-text-secondary);
+}
+
+.scrapped {
+  color: var(--sem-text-danger);
+}

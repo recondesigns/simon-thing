@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import AppBar from "@/components/organisms/AppBar/AppBar";
 import MenuSheet from "@/components/organisms/MenuSheet/MenuSheet";
 import Button from "@/components/atoms/Button/Button";
@@ -16,6 +16,7 @@ import styles from "./AppShell.module.css";
 
 const BOARD_PATH = "/";
 const TIMES_PATH = "/time-results";
+const INSIGHTS_PATH = "/insights";
 
 /**
  * The chrome both routes sit inside: the app bar, and the sheet behind its menu
@@ -29,6 +30,7 @@ const TIMES_PATH = "/time-results";
 export default function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   const sessions = useGameStore((state) => state.sessions);
   const started = useGameStore((state) => state.startedAt !== null);
@@ -41,6 +43,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const resetApp = useGameStore((state) => state.resetApp);
 
   const onTimes = pathname === TIMES_PATH;
+  const onInsights = pathname === INSIGHTS_PATH;
 
   // The open visit, and which number it is. Only sessions with a start time are
   // numbered — the legacy "Earlier" bucket predates them.
@@ -51,9 +54,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const sessionNumber = active ? numbered : numbered + 1;
   const roundNumber = (active?.rounds.length ?? 0) + 1;
 
-  const subtitle = onTimes
-    ? "Times"
-    : started
+  const subtitle = onInsights
+    ? "Insights"
+    : onTimes
+      ? "Times"
+      : started
       ? `Round ${roundNumber}`
       : `Session ${sessionNumber}`;
 
@@ -68,13 +73,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Sticky rather than fixed: it keeps its place in the flow, so nothing
           below needs a matching offset, and content scrolls behind its fill. */}
       <div className={styles.bar}>
-        {/* Always the surface you are *not* on. This is now the only nav in
-            the chrome — the sheet's copy of it is gone — so on the Times route
-            it has to point back, or the wordmark would be the sole way home. */}
+        {/* Two surfaces made this "the one you are not on"; three can't be
+            named that way, so the rule is now: the bar always offers the way
+            back to the board, except on the board itself, where it offers
+            Times. Insights is reached from the sheet — it is a place you go
+            occasionally to read, not one you flip to mid-round. */}
         <AppBar
           subtitle={subtitle}
-          navHref={onTimes ? BOARD_PATH : TIMES_PATH}
-          navLabel={onTimes ? "Board" : "Times"}
+          navHref={onTimes || onInsights ? BOARD_PATH : TIMES_PATH}
+          navLabel={onTimes || onInsights ? "Board" : "Times"}
           onOpenMenu={() => setMenuOpen(true)}
         />
       </div>
@@ -85,10 +92,17 @@ export default function AppShell({ children }: { children: ReactNode }) {
         open={menuOpen}
         onClose={close}
         onOpen={() => setMenuOpen(true)}
-        // Navigation moved out of here and into the app bar, where it is one
-        // tap rather than two. What's left is the three actions, which have no
-        // other home.
+        // The bar carries the Board/Times flip, which is the navigation done
+        // constantly. Insights is here instead: it is read between sessions
+        // rather than during one, so it has not earned a permanent slot in a
+        // 60px bar that only fits one link.
         items={[
+          {
+            icon: "chevron-right" as const,
+            label: "Insights",
+            disabled: onInsights,
+            onSelect: run(() => router.push(INSIGHTS_PATH)),
+          },
           {
             icon: "plus" as const,
             label: "New session",

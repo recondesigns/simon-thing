@@ -1,0 +1,84 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.title {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  color: var(--sem-text-secondary);
+  margin: 0;
+}
+
+/* Bottom-aligned, so the bars grow up from a shared baseline and the counts
+   ride on top of each one rather than sitting on a row of their own. */
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.count {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--sem-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A zero still prints, but recedes — it is the absence of rounds, not a
+   reading worth the same weight as the others. */
+.zero {
+  color: var(--sem-text-disabled);
+}
+
+/* Square, as the frame draws them. There is no radius token below 10px, and a
+   10px radius on a 6px bar would erase the bar. */
+.bar {
+  width: 100%;
+  height: var(--bar-height);
+  background-color: var(--sem-text-primary);
+}
+
+/*
+ * The 20 column is the one outcome that isn't a round lost, so it is the one
+ * that reads in the success colour rather than the neutral cream. It marks the
+ * cap, not a high score.
+ */
+.cap .bar {
+  background-color: var(--sem-text-success);
+}
+
+.cap .count {
+  color: var(--sem-text-success);
+}
+
+.labels {
+  display: flex;
+  gap: 6px;
+}
+
+.label {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--sem-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.capLabel {
+  color: var(--sem-text-success);
+}

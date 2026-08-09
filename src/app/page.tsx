@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import { RESULT_SLOTS } from "@/components/organisms/ResultsBoard/ResultsBoard";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
 import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
@@ -72,7 +72,7 @@ export default function Home() {
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
   const started = startedAt !== null;
-  const full = taps.length >= RESULT_SLOTS;
+  const full = taps.length >= ROUND_CAP;
   const canTap = started && !locked && !full;
 
   const padState: PadState = locked ? "locked" : canTap ? "live" : "inert";
@@ -97,7 +97,7 @@ export default function Home() {
       // tap would flash "Reading it back…" for the length of the debounce and
       // then blink out, announcing a read-back that never happens.
       if (willReadBack(useGameStore.getState().taps.length + 1)) setSpoken(0);
-      tap(index, RESULT_SLOTS);
+      tap(index, ROUND_CAP);
     },
     [tap],
   );
