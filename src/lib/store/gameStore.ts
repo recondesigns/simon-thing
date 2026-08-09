@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { DEFAULT_GROUP_SIZE } from "@/lib/speech";
+
 /**
  * How much silence to leave between spoken numbers in the read-back. It's the
  * gap *between* dots (the digits themselves aren't slowed), tuned from the
@@ -37,6 +39,34 @@ export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
   { value: "normal", label: "Normal" },
   { value: "relaxed", label: "Relaxed" },
   { value: "slow", label: "Slow" },
+];
+
+/**
+ * How many numbers the read-back speaks before pausing the full cadence gap.
+ *
+ * A setting rather than a constant because raising it is *strictly* faster —
+ * a longer group is a boundary pause not taken — while being harder to hold,
+ * and no amount of arithmetic can say where that trade turns. It's the same
+ * kind of question as the cadence itself, and it's settled the same way: at the
+ * machine. Only the size is adjustable; `INTRA_GROUP_RATIO` (how tight a group
+ * is, as opposed to how long) stays fixed in `lib/speech.ts`.
+ */
+export type GroupSize = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Ordered shortest to longest.
+ *
+ * `1` is labelled "Off" rather than "1" because that is what it does: a
+ * boundary after every number is exactly the flat read-back grouping replaced.
+ * Keeping it reachable means the setting can turn phrasing off, not just retune
+ * it — worth having when the whole point is finding out whether it helps.
+ */
+export const GROUP_SIZE_OPTIONS: { value: GroupSize; label: string }[] = [
+  { value: 1, label: "Off" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3" },
+  { value: 4, label: "4" },
+  { value: 5, label: "5" },
 ];
 
 /**
@@ -90,7 +120,7 @@ export interface Session {
  * `dotDurations` is the round in progress; finished rounds live in a session's
  * `rounds`; `sessions` is every visit, oldest first, the last one open.
  *
- * Sessions and the two preferences are persisted to localStorage; the in-progress
+ * Sessions and the three preferences are persisted to localStorage; the in-progress
  * round and its running clock are not, so a reload keeps your history and the
  * current visit but drops you back to Start. Rehydration is deferred
  * (`skipHydration`) and run after mount by StoreHydrator, so the first client
@@ -118,6 +148,8 @@ export interface GameStore {
   speechEnabled: boolean;
   /** How much space to leave between read-back numbers. Persisted preference. */
   cadence: Cadence;
+  /** How many numbers to a group in the read-back. Persisted preference. */
+  groupSize: GroupSize;
   /**
    * True from the moment a dot is tapped until its read-back ends — one tap per
    * dot. It gates the pads so a stray or early second tap can't slip in around
@@ -172,6 +204,8 @@ export interface GameStore {
   toggleSpeech: () => void;
   /** Set the read-back cadence. */
   setCadence: (cadence: Cadence) => void;
+  /** Set how many numbers the read-back groups together. */
+  setGroupSize: (groupSize: GroupSize) => void;
 }
 
 /** The active (open) session is the last one, and only if it hasn't ended. */
@@ -221,6 +255,7 @@ export const useGameStore = create<GameStore>()(
       sessions: [],
       speechEnabled: true,
       cadence: "relaxed",
+      groupSize: DEFAULT_GROUP_SIZE,
       locked: false,
 
       start: () =>
@@ -327,6 +362,7 @@ export const useGameStore = create<GameStore>()(
           sessions: [],
           speechEnabled: true,
           cadence: "relaxed",
+          groupSize: DEFAULT_GROUP_SIZE,
           ...freshRound,
         });
         useGameStore.persist.clearStorage();
@@ -338,18 +374,27 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({ speechEnabled: !state.speechEnabled })),
 
       setCadence: (cadence) => set({ cadence }),
+
+      setGroupSize: (groupSize) => set({ groupSize }),
     }),
     {
       name: "simon-thing-game",
       version: 2,
       // Deferred; StoreHydrator calls rehydrate() after mount. See the note above.
       skipHydration: true,
-      // Persist sessions and the two preferences only — never the in-progress
+      // Persist sessions and the three preferences only — never the in-progress
       // round or the running clock.
+      //
+      // `groupSize` was added without bumping the version on purpose. Zustand
+      // merges the persisted object over the initial state, so a store written
+      // before it existed simply keeps the default — which is the same value it
+      // was behaving as anyway. A migration step would have to invent nothing
+      // and change nothing.
       partialize: (state) => ({
         sessions: state.sessions,
         speechEnabled: state.speechEnabled,
         cadence: state.cadence,
+        groupSize: state.groupSize,
       }),
       /**
        * Steps run in sequence, oldest first, so each only has to know the shape

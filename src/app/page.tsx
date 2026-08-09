@@ -62,6 +62,11 @@ export default function Home() {
   // How many numbers the read-back has spoken. Undefined when nothing is being
   // read, which is what tells the template to show a hint instead.
   const [spoken, setSpoken] = useState<number | undefined>(undefined);
+  // The grouping the read-back in flight is actually speaking. See the note
+  // where it's captured — it deliberately lags the setting until the next tap.
+  const [readbackGroupSize, setReadbackGroupSize] = useState(
+    () => useGameStore.getState().groupSize,
+  );
   // True for one cue's length after the board reopens.
   const [justUnlocked, setJustUnlocked] = useState(false);
   // The round that just ended, kept for the length of its fade.
@@ -96,7 +101,19 @@ export default function Home() {
       // template opens the toast on `spoken` alone, so setting it on a silent
       // tap would flash "Reading it back…" for the length of the debounce and
       // then blink out, announcing a read-back that never happens.
-      if (willReadBack(useGameStore.getState().taps.length + 1)) setSpoken(0);
+      if (willReadBack(useGameStore.getState().taps.length + 1)) {
+        setSpoken(0);
+        // Captured with the toast it belongs to, so the dots are phrased the
+        // way this read-back will actually be spoken. The effect below reads
+        // the same store value a moment later; nothing can change it in
+        // between, because that gap is one commit and takes no user input.
+        //
+        // Pinning it here rather than subscribing also means changing the
+        // setting mid-read-back can't regroup dots under audio already speaking
+        // the other rhythm — a picture marking off chunks the ear never hears
+        // is worse than not grouping at all. It takes effect on the next tap.
+        setReadbackGroupSize(useGameStore.getState().groupSize);
+      }
       tap(index, ROUND_CAP);
     },
     [tap],
@@ -199,10 +216,16 @@ export default function Home() {
     // Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
     const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
+    // The dots were pinned to this same value in `handleTap`. Both are read
+    // from the store rather than passed between, and the two reads are one
+    // commit apart, so they cannot disagree — which they must not, since the
+    // grouping is the one thing the picture and the sound have to share.
+    const groupSize = useGameStore.getState().groupSize;
 
     const startSpeaking = setTimeout(() => {
       speakSequence(words, {
         gapMs,
+        groupSize,
         // Drives the progress dots. Each callback lands as a number finishes,
         // so the indicator tracks the audio rather than a predicted schedule.
         onSpoke: (n) => setSpoken(n),
@@ -244,6 +267,7 @@ export default function Home() {
       arriving={locked}
       exitingDots={exitingDots}
       spoken={spoken}
+      groupSize={readbackGroupSize}
       started={started}
       full={full}
       onTap={handleTap}

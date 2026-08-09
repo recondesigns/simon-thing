@@ -10,7 +10,9 @@ import SegmentedControl from "@/components/atoms/SegmentedControl/SegmentedContr
 import {
   useGameStore,
   CADENCE_OPTIONS,
+  GROUP_SIZE_OPTIONS,
   type Cadence,
+  type GroupSize,
 } from "@/lib/store/gameStore";
 import styles from "./AppShell.module.css";
 
@@ -36,8 +38,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const cadence = useGameStore((state) => state.cadence);
+  const groupSize = useGameStore((state) => state.groupSize);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
   const setCadence = useGameStore((state) => state.setCadence);
+  const setGroupSize = useGameStore((state) => state.setGroupSize);
   const newSession = useGameStore((state) => state.newSession);
   const discardRound = useGameStore((state) => state.discardRound);
   const resetApp = useGameStore((state) => state.resetApp);
@@ -138,6 +142,20 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 }))}
                 value={cadence}
                 onChange={setCadence}
+              />
+            </div>
+
+            {/* Sits under the speed because the two are one setting in two
+                parts — how long the pauses are, and where they fall. Changing
+                either alone is a real difference at the machine, which is the
+                only place the right answer exists. */}
+            <div className={styles.settingBlock}>
+              <span className={styles.settingCaption}>Read-back grouping</span>
+              <SegmentedControl<GroupSize>
+                label="Numbers per group in the read-back"
+                options={GROUP_SIZE_OPTIONS}
+                value={groupSize}
+                onChange={setGroupSize}
               />
             </div>
 

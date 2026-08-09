@@ -3,12 +3,16 @@
 import type { CSSProperties } from "react";
 import styles from "./SegmentedControl.module.css";
 
-export interface SegmentedOption<T extends string> {
+// `string | number` rather than `string`: the read-back grouping is a count, and
+// stringifying it at the call site only to parse it back in the change handler
+// would put an unchecked cast on the seam. Values are compared and used as keys,
+// both of which numbers do fine.
+export interface SegmentedOption<T extends string | number> {
   value: T;
   label: string;
 }
 
-export interface SegmentedControlProps<T extends string> {
+export interface SegmentedControlProps<T extends string | number> {
   options: SegmentedOption<T>[];
   value: T;
   onChange?: (next: T) => void;
@@ -28,7 +32,7 @@ export interface SegmentedControlProps<T extends string> {
  * render correctly on the server and lands one frame late on the client. Equal
  * segments make the measurement unnecessary.
  */
-export default function SegmentedControl<T extends string>({
+export default function SegmentedControl<T extends string | number>({
   options,
   value,
   onChange,

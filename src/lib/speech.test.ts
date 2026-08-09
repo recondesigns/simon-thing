@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
-  GROUP_SIZE,
+  DEFAULT_GROUP_SIZE,
   MIN_INTRA_GROUP_MS,
   cancelSpeech,
   speakSequence,
@@ -11,8 +11,8 @@ import {
  * The read-back's rhythm, which nothing else guards.
  *
  * It is phrasing, not timing-for-its-own-sake: the numbers are spoken in groups
- * of three with a tighter gap inside a group than between them, which is what
- * lets the gap be short enough to save real time — around a minute off a
+ * of GROUP_SIZE with a tighter gap inside a group than between them, which is
+ * what lets the gap be short enough to save real time — over a minute off a
  * twenty-dot round at the Relaxed cadence — without the sequence turning into a
  * blur. Flattening it back to one even gap compiles, typechecks, passes every
  * story, and silently hands all of that back.
@@ -71,19 +71,23 @@ afterEach(() => {
 });
 
 /** Run a whole read-back on fake timers and return the gaps between words. */
-async function gapsFor(count: number, gapMs: number): Promise<number[]> {
+async function gapsFor(
+  count: number,
+  gapMs: number,
+  groupSize: number = DEFAULT_GROUP_SIZE,
+): Promise<number[]> {
   const words = Array.from({ length: count }, (_, i) => String((i % 9) + 1));
-  speakSequence(words, { gapMs });
+  speakSequence(words, { gapMs, groupSize });
   // Long enough for any cadence to finish, including the 3s per-word watchdogs
   // that fire harmlessly behind the already-advanced chain.
   await vi.advanceTimersByTimeAsync(120_000);
   return spokenAt.slice(1).map((at, i) => at - spokenAt[i]);
 }
 
-const atBoundary = (gaps: number[]) =>
-  gaps.filter((_, i) => (i + 1) % GROUP_SIZE === 0);
-const insideGroup = (gaps: number[]) =>
-  gaps.filter((_, i) => (i + 1) % GROUP_SIZE !== 0);
+const atBoundary = (gaps: number[], groupSize: number = DEFAULT_GROUP_SIZE) =>
+  gaps.filter((_, i) => (i + 1) % groupSize === 0);
+const insideGroup = (gaps: number[], groupSize: number = DEFAULT_GROUP_SIZE) =>
+  gaps.filter((_, i) => (i + 1) % groupSize !== 0);
 
 describe("speakSequence phrasing", () => {
   it("speaks every word once, in order", async () => {
@@ -95,7 +99,8 @@ describe("speakSequence phrasing", () => {
   it("pauses the full cadence gap only where a group ends", async () => {
     const gaps = await gapsFor(9, 800);
 
-    // Nine words: gaps after 1..8, so boundaries after the 3rd and 6th.
+    // Nine words at the default group of 3: gaps after 1..8, so boundaries
+    // after the 3rd and 6th.
     expect(gaps).toHaveLength(8);
     expect(atBoundary(gaps)).toHaveLength(2);
     for (const gap of atBoundary(gaps)) expect(gap).toBe(800);
@@ -133,6 +138,50 @@ describe("speakSequence phrasing", () => {
   });
 });
 
+describe("speakSequence group size", () => {
+  // The size is a player setting, so the phrasing has to follow it rather than
+  // a module constant. These pin the two ends and the reason the setting exists.
+
+  it("moves the boundaries when the group size changes", async () => {
+    const gaps = await gapsFor(9, 800, 4);
+
+    // Boundaries after the 4th and 8th now, not the 3rd and 6th.
+    expect(gaps).toEqual([267, 267, 267, 800, 267, 267, 267, 800]);
+  });
+
+  it("reads flat at a group of one, which is grouping switched off", async () => {
+    // `1` is the "Off" segment. Every number closes its own group, so every gap
+    // is the full cadence — exactly the behaviour grouping replaced. Worth
+    // pinning because it runs through the same modulo as every other size, and
+    // an off-by-one there would make "Off" the tightest setting instead.
+    const gaps = await gapsFor(6, 800, 1);
+
+    expect(gaps).toEqual([800, 800, 800, 800, 800]);
+  });
+
+  it("takes no boundary at all when the group outlasts the sequence", async () => {
+    const gaps = await gapsFor(4, 800, 5);
+
+    expect(gaps).toEqual([267, 267, 267]);
+  });
+
+  it("is strictly faster the longer the group, which is why it is a setting", async () => {
+    // The whole reason the size is adjustable: a longer group is a boundary
+    // pause not taken. The arithmetic is monotonic — what it cannot say is
+    // whether a longer group is still followable, which only the machine can.
+    const totals = [];
+    for (const size of [1, 2, 3, 4, 5]) {
+      const gaps = await gapsFor(20, 800, size);
+      totals.push(gaps.reduce((a, b) => a + b, 0));
+      spokenAt = [];
+    }
+
+    for (let i = 1; i < totals.length; i++) {
+      expect(totals[i]).toBeLessThan(totals[i - 1]);
+    }
+  });
+});
+
 describe("speakSequence cadences", () => {
   // Spelled out rather than recomputed from the ratio, so a change to any of
   // these has to be made deliberately. Mirrors CADENCE_GAP_MS in the store;
@@ -161,7 +210,13 @@ describe("speakSequence cadences", () => {
     const gaps = await gapsFor(9, 350);
 
     expect(insideGroup(gaps)[0]).toBe(MIN_INTRA_GROUP_MS);
-    expect(insideGroup(gaps)[0]).not.toBe(Math.round(350 / GROUP_SIZE));
+    // 117 is the literal value the ratio alone would give, spelled out rather
+    // than recomputed. It used to read `Math.round(350 / GROUP_SIZE)`, which was
+    // right only because the group size and the reciprocal of the ratio were
+    // both 3 — two unrelated numbers that happened to agree. Off a group size of
+    // 4 that expression is 88, and the assertion would still pass while pinning
+    // nothing.
+    expect(insideGroup(gaps)[0]).not.toBe(117);
   });
 
   it("saves real time against reading the same numbers evenly", async () => {
