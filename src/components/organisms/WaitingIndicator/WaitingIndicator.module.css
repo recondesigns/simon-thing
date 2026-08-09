@@ -10,9 +10,30 @@
   transition: border-color var(--dur-pop) var(--ease-out);
 }
 
+/*
+ * The dots are phrased in threes, matching the audio — the eye sees the same
+ * chunks the ear hears, so a glance lands on "second group, one in" rather than
+ * counting from the start.
+ *
+ * The two gaps are in the same 1:3 ratio the read-back uses between its
+ * in-group and boundary pauses. That is not decoration: it is deliberately the
+ * *same* proportion, so the picture and the sound describe one rhythm.
+ *
+ * Sized so the row is no wider than the single 5px gap it replaced — at the
+ * twenty-dot cap it comes out 2px narrower. The indicator already overruns a
+ * 390px screen at that length, so grouping had to pay for itself rather than
+ * add to a row that is short of room.
+ */
 .progress {
+  --dot-gap: 3px;
+  --group-gap: 9px;
+
   display: inline-flex;
-  gap: 5px;
+  gap: var(--dot-gap);
+}
+
+.groupStart {
+  margin-left: calc(var(--group-gap) - var(--dot-gap));
 }
 
 .dot {
