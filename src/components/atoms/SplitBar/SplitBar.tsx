@@ -4,7 +4,7 @@ import styles from "./SplitBar.module.css";
 export interface SplitBarSegment {
   value: number;
   /** Which semantic colour the segment paints in. */
-  tone: "success" | "danger";
+  tone: "success" | "neutral" | "danger";
   /** For assistive tech, since the bar itself is only a shape. */
   label: string;
 }
@@ -33,7 +33,7 @@ export default function SplitBar({ segments, className }: SplitBarProps) {
     <div className={[styles.bar, className].filter(Boolean).join(" ")}>
       {shown.map((segment) => (
         <span
-          key={segment.tone}
+          key={segment.label}
           className={[styles.segment, styles[segment.tone]].join(" ")}
           // Grow by value: the widths are the ratio, not a rounded percentage.
           style={{ "--segment-value": segment.value } as CSSProperties}

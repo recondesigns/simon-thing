@@ -7,6 +7,7 @@ import {
   tapTotals,
 } from "./insights";
 import type { Session } from "@/lib/store/gameStore";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 
 const round = (pads: number[], length = pads.length) => ({
   durations: Array.from({ length }, () => 1000),
@@ -24,14 +25,60 @@ describe("roundTotals", () => {
     const sessions = [session([round([0]), round([1])]), session([round([2])])];
 
     expect(roundTotals(sessions, 4)).toEqual({
-      completed: 3,
+      finished: 0,
+      endedEarly: 3,
       scrapped: 4,
       total: 7,
     });
   });
 
   it("counts nothing when nothing has been played", () => {
-    expect(roundTotals([], 0)).toEqual({ completed: 0, scrapped: 0, total: 0 });
+    expect(roundTotals([], 0)).toEqual({
+      finished: 0,
+      endedEarly: 0,
+      scrapped: 0,
+      total: 0,
+    });
+  });
+
+  it("separates a round that went the distance from one that ended early", () => {
+    // Nothing records *why* a round ended. Its length is the only evidence,
+    // and it is good evidence: the board forces you to end at the cap, so
+    // reaching 20 is the one ending that isn't a mistake.
+    const sessions = [
+      session([
+        round([], ROUND_CAP),
+        round([], ROUND_CAP),
+        round([], 7),
+        round([], 19),
+      ]),
+    ];
+
+    expect(roundTotals(sessions, 0)).toMatchObject({
+      finished: 2,
+      endedEarly: 2,
+    });
+  });
+
+  it("counts a round one dot short of the cap as ended early", () => {
+    // 19 and 20 are the whole distinction, so the boundary is spelled out.
+    expect(roundTotals([session([round([], 19)])], 0)).toMatchObject({
+      finished: 0,
+      endedEarly: 1,
+    });
+    expect(roundTotals([session([round([], 20)])], 0)).toMatchObject({
+      finished: 1,
+      endedEarly: 0,
+    });
+  });
+
+  it("always adds up", () => {
+    const sessions = [session([round([], 20), round([], 5), round([], 12)])];
+    const totals = roundTotals(sessions, 6);
+
+    expect(totals.finished + totals.endedEarly + totals.scrapped).toBe(
+      totals.total,
+    );
   });
 });
 
@@ -146,7 +193,12 @@ describe("buildInsights", () => {
   it("reports a session's history in one pass", () => {
     const insights = buildInsights([session([round([0, 4, 8])])], 2);
 
-    expect(insights.rounds).toEqual({ completed: 1, scrapped: 2, total: 3 });
+    expect(insights.rounds).toEqual({
+      finished: 0,
+      endedEarly: 1,
+      scrapped: 2,
+      total: 3,
+    });
     expect(insights.taps.total).toBe(3);
     expect(insights.buckets.find((b) => b.label === "4")!.count).toBe(1);
   });

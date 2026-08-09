@@ -42,8 +42,11 @@ export const Populated: Story = {
     await expect(canvasElement.textContent).toContain("Taps per position");
     await expect(canvasElement.textContent).toContain("Where rounds end");
 
-    // 4 banked + 3 scrapped.
+    // 4 banked + 3 scrapped, and the banked ones split by whether they
+    // reached the cap: one 20-dot round finished, three ended early.
     await expect(canvasElement.textContent).toContain("7 total");
+    await expect(canvasElement.textContent).toContain("1 finished");
+    await expect(canvasElement.textContent).toContain("3 ended early");
     // All nine positions, always.
     await expect(canvasElement.querySelectorAll("[class*='bubble']")).toHaveLength(9);
   },

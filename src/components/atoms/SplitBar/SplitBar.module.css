@@ -28,6 +28,15 @@
   background-color: var(--sem-text-success);
 }
 
+/*
+ * The middle of the three, and deliberately the quiet one. A round that ended
+ * early is the ordinary outcome, not a failure worth painting in the danger
+ * colour — that is reserved for the rounds thrown away on purpose.
+ */
+.neutral {
+  background-color: var(--sem-text-primary);
+}
+
 .danger {
   background-color: var(--sem-text-danger);
 }

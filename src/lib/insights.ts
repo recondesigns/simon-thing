@@ -1,4 +1,5 @@
 import type { Session } from "@/lib/store/gameStore";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
@@ -53,10 +54,26 @@ export interface LengthBucket {
 }
 
 export interface RoundTotals {
-  /** Rounds banked into a session. */
-  completed: number;
+  /**
+   * Banked rounds that reached the cap — the pattern was seen all the way
+   * through.
+   */
+  finished: number;
+  /**
+   * Banked rounds that stopped short of the cap.
+   *
+   * Almost always a round lost: the player pressed End round because they had
+   * mis-read the pattern, and it banks exactly like a finished one. Nothing
+   * records *why* a round ended, so its length is the only evidence — and it is
+   * good evidence, because reaching the cap is the one ending the board forces.
+   *
+   * Kept apart from `finished` because lumping them together makes "completed"
+   * mean "banked", which reads as success and is mostly the opposite.
+   */
+  endedEarly: number;
   /** Rounds thrown away with Scrap round. */
   scrapped: number;
+  /** Every round played, however it ended. */
   total: number;
 }
 
@@ -91,8 +108,18 @@ export function roundTotals(
   sessions: Session[],
   scrapped: number,
 ): RoundTotals {
-  const completed = allRounds(sessions).length;
-  return { completed, scrapped, total: completed + scrapped };
+  const rounds = allRounds(sessions);
+  const finished = rounds.filter(
+    (round) => round.durations.length >= ROUND_CAP,
+  ).length;
+  const endedEarly = rounds.length - finished;
+
+  return {
+    finished,
+    endedEarly,
+    scrapped,
+    total: rounds.length + scrapped,
+  };
 }
 
 export function tapTotals(sessions: Session[]): TapTotals {

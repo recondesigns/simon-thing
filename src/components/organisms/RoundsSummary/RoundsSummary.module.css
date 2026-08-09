@@ -26,6 +26,9 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Three items now, so the middle one is centred rather than pushed to an edge
+   — space-between with three children puts it where the bar's middle segment
+   roughly sits, which is what makes the legend readable as a key. */
 .legend {
   display: flex;
   justify-content: space-between;
@@ -35,8 +38,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.completed {
+.finished {
   color: var(--sem-text-success);
+}
+
+.endedEarly {
+  color: var(--sem-text-secondary);
 }
 
 .scrapped {
