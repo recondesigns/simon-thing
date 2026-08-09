@@ -1,0 +1,62 @@
+.tally {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+}
+
+/*
+ * The constant the bubbles are read against. Without it a small bubble reads as
+ * a small pad rather than a quiet one — the ring is what turns a diameter into
+ * a proportion.
+ *
+ * Capped at the frame's 68px but allowed to shrink, so three of them divide a
+ * narrow column instead of forcing it wider.
+ */
+.ring {
+  width: min(68px, 100%);
+  aspect-ratio: 1;
+  /*
+   * An inset shadow rather than a border, matching Figma's INSIDE stroke. A
+   * real border would eat 2px out of the content box under the global
+   * `border-box`, and the bubble's percentage width resolves against *that* —
+   * so every bubble would come out 2px under its designed diameter.
+   */
+  box-shadow: inset 0 0 0 1px var(--sem-border-surface);
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * Sized as a percentage of the ring rather than in px, so the whole thing
+ * scales together if the ring ever has to give way.
+ */
+.bubble {
+  width: var(--bubble-scale);
+  aspect-ratio: 1;
+  border-radius: var(--radius-round);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pad-fill);
+  color: var(--pad-ink);
+}
+
+/*
+ * Monospaced and a fixed size, unlike the board's pads — this numeral labels a
+ * bubble that changes size, so a numeral that changed with it would read as a
+ * second, competing signal.
+ */
+.numeral {
+  font: var(--type-numeral-sm);
+}
+
+.count {
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--sem-text-secondary);
+  font-variant-numeric: tabular-nums;
+}

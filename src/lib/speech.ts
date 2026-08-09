@@ -54,7 +54,7 @@ export interface SpeakSequenceOptions {
   /**
    * Silence between one number finishing and the next starting, in ms. This is
    * the gap at a *group* boundary — inside a group of GROUP_SIZE it is cut to
-   * INTRA_GROUP_RATIO of this.
+   * INTRA_GROUP_RATIO of this, but never below MIN_INTRA_GROUP_MS.
    */
   gapMs?: number;
   /**
@@ -83,7 +83,11 @@ const WORD_WATCHDOG_MS = 3000;
 // sounds faster than it used to. Don't "fix" that by restoring a flat gap — the
 // cadence numbers are still the group-boundary pause, which is the one a
 // listener actually paces against.
-const GROUP_SIZE = 3;
+// Exported because the read-back's phrasing is a fact two other places need:
+// the tests that pin the rhythm, and anything wanting to group the progress
+// indicator to match what the ear is hearing. A second `3` elsewhere would
+// drift from this one the first time either moved.
+export const GROUP_SIZE = 3;
 
 // How much of the group-boundary gap is left *inside* a group. A third, so the
 // three numbers rattle off as one unit rather than as three separate ones with
@@ -95,6 +99,17 @@ const GROUP_SIZE = 3;
 // This is the number to turn if the triplets want tightening further. It is the
 // one thing here that can only be judged at the machine, not on a waveform.
 const INTRA_GROUP_RATIO = 1 / 3;
+
+// Floor under the in-group gap, whatever the ratio works out to.
+//
+// A proportional gap breaks down at the fast end: the ratio put Fast's triplets
+// at 350/3 = 117ms, which ran together at the machine. A floor fixes only the
+// cadence that is actually broken — Normal is already 167ms and the two slower
+// settings are nowhere near it — where raising the ratio would loosen all four
+// and hand back most of what the grouping saves, to solve a problem only Fast
+// has. It costs Fast about 5.6s across a twenty-dot round, which buys nothing
+// if the numbers can't be told apart.
+export const MIN_INTRA_GROUP_MS = 160;
 
 /**
  * Speak each word in turn, starting the next only once the previous has finished
@@ -144,12 +159,17 @@ export function speakSequence(
       if (index < words.length) {
         // `index` is now how many have been spoken, so a multiple of the group
         // size means the one just finished closed a group: pause the full
-        // cadence gap. Inside a group, cut it to INTRA_GROUP_RATIO.
+        // cadence gap. Inside a group, cut it to INTRA_GROUP_RATIO but never
+        // below the floor — and never *above* the boundary gap either, which
+        // would invert the rhythm and undo the phrasing entirely. That clamp is
+        // dead code at today's four cadences and stops being so the moment
+        // anyone adds one faster than 160ms.
         const closesGroup = index % GROUP_SIZE === 0;
-        const timer = setTimeout(
-          speakNext,
-          closesGroup ? gapMs : Math.round(gapMs * INTRA_GROUP_RATIO),
+        const inGroupMs = Math.min(
+          gapMs,
+          Math.max(MIN_INTRA_GROUP_MS, Math.round(gapMs * INTRA_GROUP_RATIO)),
         );
+        const timer = setTimeout(speakNext, closesGroup ? gapMs : inGroupMs);
         timers.push(timer);
       } else {
         onDone?.();

@@ -2,9 +2,9 @@ import ResultSlot from "@/components/atoms/ResultSlot/ResultSlot";
 import ChipCounter from "@/components/atoms/ChipCounter/ChipCounter";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./ResultsBoard.module.css";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 
 /** The cap. A round is twenty dots, and the board shows all twenty from the start. */
-export const RESULT_SLOTS = 20;
 
 // How those twenty are arranged is now purely a layout concern — the grid is
 // five columns in the stylesheet, so there is no count to keep in step here.
@@ -42,13 +42,13 @@ export default function ResultsBoard({
     <div className={[styles.board, className].filter(Boolean).join(" ")}>
       <div className={styles.header}>
         <span className={styles.label}>{label}</span>
-        <ChipCounter count={dots.length} total={RESULT_SLOTS} />
+        <ChipCounter count={dots.length} total={ROUND_CAP} />
       </div>
 
       {/* One flat grid rather than four row wrappers: the rows have to be able
           to shrink together on a short screen, which needs real grid tracks. */}
       <div className={styles.grid}>
-        {Array.from({ length: RESULT_SLOTS }, (_, position) => {
+        {Array.from({ length: ROUND_CAP }, (_, position) => {
           const current = dots[position];
           const leaving =
             current === undefined ? exitingDots?.[position] : undefined;

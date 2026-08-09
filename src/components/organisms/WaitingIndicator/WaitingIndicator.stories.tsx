@@ -82,6 +82,60 @@ export const MidReadback: Story = {
 };
 
 /**
+ * **The dots are phrased in threes, matching the audio.** The eye sees the same
+ * chunks the ear hears, so a glance lands on "second group, one in" instead of
+ * counting from the start.
+ *
+ * The ratio between the two gaps is deliberately the same 1:3 the read-back
+ * uses between its in-group and boundary pauses — the picture and the sound
+ * describe one rhythm, so this fails if either is changed alone.
+ */
+export const DotsAreGroupedInThrees: Story = {
+  args: {
+    sequence: [5, 1, 9, 3, 7, 2, 4] as GameColor[],
+    spoken: 0,
+  },
+  play: async ({ canvasElement }) => {
+    const all = dots(canvasElement);
+    const gaps = all
+      .slice(1)
+      .map((d, i) =>
+        Math.round(
+          d.getBoundingClientRect().left -
+            all[i].getBoundingClientRect().right,
+        ),
+      );
+
+    // Seven dots: gaps after 1..6, so group boundaries after the 3rd and 6th.
+    await expect(gaps).toEqual([3, 3, 9, 3, 3, 9]);
+
+    // Stated as the ratio too, because that is the actual contract with the
+    // audio — a change to one gap alone should have to be made on purpose.
+    await expect(gaps[2] / gaps[0]).toBe(3);
+  },
+};
+
+/**
+ * A full round still measures no wider than it did before the grouping.
+ *
+ * The indicator already overruns a 390px screen at the twenty-dot cap, and the
+ * toast centres itself, so the overflow is clipped off *both* ends — the first
+ * dots included. Grouping had to pay for itself out of the existing gaps rather
+ * than widen a row that is already short of room. This pins that it did.
+ */
+export const GroupingCostsNoWidth: Story = {
+  args: {
+    sequence: Array.from({ length: 20 }, (_, i) => ((i % 9) + 1) as GameColor),
+    spoken: 10,
+  },
+  play: async ({ canvasElement }) => {
+    const progress = canvasElement.querySelector("[class*='progress']")!;
+    // 20 dots at 10px, 13 in-group gaps at 3px and 6 boundaries at 9px.
+    await expect(Math.round(progress.getBoundingClientRect().width)).toBe(293);
+  },
+};
+
+/**
  * Done. The label is keyed so it remounts and replays its landing spring —
  * this is the cue to move, so it has to arrive rather than fade in.
  */

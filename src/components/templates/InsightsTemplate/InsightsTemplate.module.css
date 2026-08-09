@@ -1,0 +1,26 @@
+/*
+ * Scrolls inside itself, like Times and unlike the board.
+ *
+ * The shell is 100dvh with overflow hidden, so each route owns its overflow.
+ * This one has no reason to fit — the sections are a fixed set today, but the
+ * page is the kind that grows — so it scrolls rather than compressing. Every
+ * child sets `flex-shrink: 0` for the reason AGENTS.md gives: flex children
+ * shrink by default, so without it a long page silently squashes to fit and
+ * measures as though it fits.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  overflow-y: auto;
+}
+
+.empty {
+  margin: auto;
+  max-width: 24ch;
+  text-align: center;
+  font: var(--type-body);
+  color: var(--sem-text-secondary);
+}

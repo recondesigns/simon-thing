@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
-import { RESULT_SLOTS } from "@/components/organisms/ResultsBoard/ResultsBoard";
+import { ROUND_CAP } from "@/lib/game/roundCap";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
 import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
@@ -25,12 +25,17 @@ const GO_LINGER_MS = 800;
 // How long a banked round's dots take to fade out. Matches --dur-pop.
 const ROUND_EXIT_MS = 180;
 // The shortest sequence that gets read back. Below this the read-back earns
-// nothing — four dots and under sit comfortably inside ordinary memory span, so
-// it is a crutch nobody needs yet — and it costs real time, because the
-// read-back grows with the sequence: staying silent through dot 4 saves
-// 1+2+3+4 = 10 spoken numbers a round. Five is therefore where the first
-// read-back lands, and it reads all five.
-const READBACK_MIN_DOTS = 5;
+// nothing — three dots and under sit comfortably inside ordinary memory span,
+// so it is a crutch nobody needs yet — and it costs real time, because the
+// read-back grows with the sequence: staying silent through dot 3 saves
+// 1+2+3 = 6 spoken numbers a round.
+//
+// Was 5. Dropping it to 4 adds exactly *one* read-back per round — the one at
+// dot 4 — because every read-back from 5 up happens either way. Measured at
+// roughly 4.5s a round at the Relaxed cadence, against the ~68s the grouping
+// saves on a twenty-dot round, so the trade is not close. Settled at the
+// machine rather than from a memory-span rule of thumb.
+const READBACK_MIN_DOTS = 4;
 
 const padNumber = (index: number) =>
   Number(CELL_NUMBERS[CELL_POSITIONS[index]]) as GameColor;
@@ -67,7 +72,7 @@ export default function Home() {
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
   const started = startedAt !== null;
-  const full = taps.length >= RESULT_SLOTS;
+  const full = taps.length >= ROUND_CAP;
   const canTap = started && !locked && !full;
 
   const padState: PadState = locked ? "locked" : canTap ? "live" : "inert";
@@ -92,7 +97,7 @@ export default function Home() {
       // tap would flash "Reading it back…" for the length of the debounce and
       // then blink out, announcing a read-back that never happens.
       if (willReadBack(useGameStore.getState().taps.length + 1)) setSpoken(0);
-      tap(index, RESULT_SLOTS);
+      tap(index, ROUND_CAP);
     },
     [tap],
   );
