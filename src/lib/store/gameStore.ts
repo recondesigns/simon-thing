@@ -13,22 +13,20 @@ export type Cadence = "fast" | "normal" | "relaxed" | "slow";
 /**
  * Silence between read-back numbers, in ms, per cadence.
  *
- * The slower three are even 300ms steps, so each is a noticeably different pace
- * rather than a nudge. **Fast is deliberately off that scale.** At the 200ms it
- * started on it ran too quick to follow at the machine, so it sits halfway to
- * Normal instead — 150ms from its neighbour rather than 300.
- *
- * That makes Fast and Normal closer together than any other pair, which is the
- * point: the useful range turned out to be narrower at the quick end than an
- * even scale assumed. Don't "restore" the 300 for symmetry.
+ * **None of these are on an even scale, and that is the whole point.** Each has
+ * been moved on its own at the machine, which is the only place the right value
+ * exists — Fast started at 200 and ran too quick to follow, and Normal was 500
+ * until it was played and wanted a little more room. The steps that result
+ * (200, 250, 300) describe where the useful range actually is; they are not an
+ * arithmetic sequence someone forgot to finish. **Don't tidy them into one.**
  *
  * Changing these numbers needs no migration. What persists is the `cadence`
- * key, never the milliseconds, so a stored `"fast"` picks up whatever Fast
+ * key, never the milliseconds, so a stored `"normal"` picks up whatever Normal
  * currently means — and anyone who never touches the setting keeps `relaxed`.
  */
 export const CADENCE_GAP_MS: Record<Cadence, number> = {
   fast: 350,
-  normal: 500,
+  normal: 550,
   relaxed: 800,
   slow: 1100,
 };
@@ -116,7 +114,8 @@ export interface Session {
  * completes that dot); a **session** is a visit's worth of rounds.
  *
  * The pattern is cumulative, so `taps` holds the whole current round (up to 20)
- * and dot N's time is the gap between tap N-1 and tap N (dot 1 counts from Start).
+ * and dot N's time is the gap between tap N-1 and tap N. Dot 1 measures nothing —
+ * it *anchors* the clock, and is recorded as 0 meaning "unmeasured".
  * `dotDurations` is the round in progress; finished rounds live in a session's
  * `rounds`; `sessions` is every visit, oldest first, the last one open.
  *
@@ -266,7 +265,9 @@ export const useGameStore = create<GameStore>()(
           const sessions = activeSession(state.sessions)
             ? state.sessions
             : [...state.sessions, { startedAt: now, endedAt: null, rounds: [] }];
-          return { sessions, startedAt: now, lastTapAt: now, locked: false };
+          // `startedAt` opens the round; `lastTapAt` stays null so the *clock*
+          // doesn't. The first pad anchors it — see `tap`.
+          return { sessions, startedAt: now, lastTapAt: null, locked: false };
         }),
 
       tap: (index, max) =>
@@ -277,7 +278,13 @@ export const useGameStore = create<GameStore>()(
           const now = Date.now();
           // Replacing an undone dot? Inherit the time it measured and leave the
           // clock where it was, so the fumble stretches neither this dot nor the
-          // next one. Otherwise time it normally, from the last tap or Start.
+          // next one. Otherwise time it normally, from the last tap.
+          //
+          // With no last tap this is the round's *anchor* — `now - now` is 0,
+          // which means "not measured", not "instant". A real interval can't be
+          // 0: the board is locked for at least SILENT_LOCK_MS after every tap.
+          // `formatDotSeconds` relies on that to tell the two apart, and rounds
+          // banked before this change carry a real first-dot time instead.
           const [inherited, ...rest] = state.pendingDurations;
           const replacing = inherited !== undefined;
           return {
@@ -330,7 +337,11 @@ export const useGameStore = create<GameStore>()(
             dotDurations: [],
             pendingDurations: [],
             startedAt: now,
-            lastTapAt: now,
+            // Roll into the next round live, but with the clock stopped. Ending
+            // a round is not the same event as the next one beginning: the
+            // machine sets up and plays its pattern in between, and how long
+            // that takes has nothing to do with how fast anyone is tapping.
+            lastTapAt: null,
             locked: false,
           };
         }),
