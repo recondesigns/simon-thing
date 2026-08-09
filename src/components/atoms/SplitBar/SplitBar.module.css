@@ -1,0 +1,33 @@
+/*
+ * The pill radius lives on the container with `overflow: hidden`, so only the
+ * outer corners round — the two segments meet square across the gap. Rounding
+ * each segment instead would read as two separate bars rather than one total
+ * divided.
+ */
+.bar {
+  display: flex;
+  gap: 3px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.segment {
+  /* Grow in proportion to the value, with no basis of its own, so the two
+     widths are exactly the ratio between them. */
+  flex: var(--segment-value) 1 0;
+  min-width: 0;
+}
+
+/*
+ * The bright text colours rather than the tinted `bg/*` surfaces. Those
+ * surfaces are built to sit *under* bright text; here the bar is the signal
+ * itself, so it takes the colour the eye is meant to land on.
+ */
+.success {
+  background-color: var(--sem-text-success);
+}
+
+.danger {
+  background-color: var(--sem-text-danger);
+}
