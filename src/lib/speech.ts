@@ -83,7 +83,11 @@ const WORD_WATCHDOG_MS = 3000;
 // sounds faster than it used to. Don't "fix" that by restoring a flat gap — the
 // cadence numbers are still the group-boundary pause, which is the one a
 // listener actually paces against.
-const GROUP_SIZE = 3;
+// Exported because the read-back's phrasing is a fact two other places need:
+// the tests that pin the rhythm, and anything wanting to group the progress
+// indicator to match what the ear is hearing. A second `3` elsewhere would
+// drift from this one the first time either moved.
+export const GROUP_SIZE = 3;
 
 // How much of the group-boundary gap is left *inside* a group. A third, so the
 // three numbers rattle off as one unit rather than as three separate ones with
@@ -105,7 +109,7 @@ const INTRA_GROUP_RATIO = 1 / 3;
 // and hand back most of what the grouping saves, to solve a problem only Fast
 // has. It costs Fast about 5.6s across a twenty-dot round, which buys nothing
 // if the numbers can't be told apart.
-const MIN_INTRA_GROUP_MS = 160;
+export const MIN_INTRA_GROUP_MS = 160;
 
 /**
  * Speak each word in turn, starting the next only once the previous has finished
