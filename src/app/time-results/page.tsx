@@ -60,6 +60,11 @@ export default function TimeResultsPage() {
             return {
               label: `Dot ${dotIndex + 1}`,
               value: formatDotSeconds(ms),
+              // No unit on the anchor dot: it prints as a dash, and "—s" reads
+              // as a unit attached to nothing. Keyed on the value rather than
+              // the index, because rounds banked before the clock moved to the
+              // first tap carry a real first-dot time and still deserve theirs.
+              unit: ms === 0 ? undefined : "s",
               // Rounds banked before store v2 recorded durations alone, so their
               // dots have no colour to show — see `Round.pads`.
               color:

@@ -188,7 +188,7 @@ describe("speakSequence cadences", () => {
   // the store is not imported because it reaches for localStorage on load.
   const CADENCES: [name: string, gapMs: number, inGroupMs: number][] = [
     ["fast", 350, 160],
-    ["normal", 500, 167],
+    ["normal", 550, 183],
     ["relaxed", 800, 267],
     ["slow", 1100, 367],
   ];

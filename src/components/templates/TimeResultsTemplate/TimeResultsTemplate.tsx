@@ -12,6 +12,12 @@ export interface DotView {
   /** Seconds, already formatted — the unit is rendered separately. */
   value: string;
   /**
+   * Rendered after the value in a smaller face. Omitted for the round's opening
+   * dot, which anchors the clock rather than measuring an interval and prints as
+   * a dash — "—s" reads as a unit attached to nothing.
+   */
+  unit?: string;
+  /**
    * Which pad. Only known for the round being played right now: banked rounds
    * store durations alone, so their dots have no colour to show.
    */
@@ -105,7 +111,7 @@ export default function TimeResultsTemplate({
                   key={i}
                   label={dot.label}
                   value={dot.value}
-                  unit="s"
+                  unit={dot.unit}
                   dot={dot.color}
                 />
               ))}
