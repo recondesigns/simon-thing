@@ -114,19 +114,6 @@ export interface GameStore {
   pendingDurations: number[];
   /** Every session, oldest first. The last one is active if its `endedAt` is null. */
   sessions: Session[];
-  /**
-   * How many rounds have been thrown away with Scrap round.
-   *
-   * A count rather than records, because a scrapped round is deliberately not
-   * kept — the point of scrapping is that it didn't happen. But *how often* it
-   * happens is the one thing worth knowing about it, and it can only be known
-   * by counting at the moment it is discarded; nothing downstream can infer it
-   * from what survives.
-   *
-   * Only rounds with at least one dot count. Scrapping an untouched round is
-   * housekeeping, not a round lost.
-   */
-  scrappedRounds: number;
   /** Whether tapped numbers are read back aloud. Persisted preference. */
   speechEnabled: boolean;
   /** How much space to leave between read-back numbers. Persisted preference. */
@@ -232,7 +219,6 @@ export const useGameStore = create<GameStore>()(
       dotDurations: [],
       pendingDurations: [],
       sessions: [],
-      scrappedRounds: 0,
       speechEnabled: true,
       cadence: "relaxed",
       locked: false,
@@ -314,16 +300,7 @@ export const useGameStore = create<GameStore>()(
           };
         }),
 
-      discardRound: () =>
-        set((state) => ({
-          // Only a round with dots in it counts as one lost. Scrapping an
-          // untouched round is housekeeping.
-          scrappedRounds:
-            state.taps.length > 0
-              ? state.scrappedRounds + 1
-              : state.scrappedRounds,
-          ...freshRound,
-        })),
+      discardRound: () => set({ ...freshRound }),
 
       newSession: () =>
         set((state) => {
@@ -341,16 +318,13 @@ export const useGameStore = create<GameStore>()(
           return { sessions, ...freshRound };
         }),
 
-      // The count describes the history, so it goes when the history does —
-      // leaving it would report scrapped rounds against no rounds at all.
-      clearHistory: () => set({ sessions: [], scrappedRounds: 0, ...freshRound }),
+      clearHistory: () => set({ sessions: [], ...freshRound }),
 
       resetApp: () => {
         // Reset in-memory to defaults first (this re-persists), then drop the
         // stored key so nothing is left behind on disk.
         set({
           sessions: [],
-          scrappedRounds: 0,
           speechEnabled: true,
           cadence: "relaxed",
           ...freshRound,
@@ -374,7 +348,6 @@ export const useGameStore = create<GameStore>()(
       // round or the running clock.
       partialize: (state) => ({
         sessions: state.sessions,
-        scrappedRounds: state.scrappedRounds,
         speechEnabled: state.speechEnabled,
         cadence: state.cadence,
       }),

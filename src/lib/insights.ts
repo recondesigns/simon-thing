@@ -62,20 +62,29 @@ export interface RoundTotals {
   /**
    * Banked rounds that stopped short of the cap.
    *
-   * Almost always a round lost: the player pressed End round because they had
-   * mis-read the pattern, and it banks exactly like a finished one. Nothing
-   * records *why* a round ended, so its length is the only evidence — and it is
-   * good evidence, because reaching the cap is the one ending the board forces.
+   * Whether that was a mis-read or simply stopping is not recorded and does not
+   * need to be: the question this answers is how often a round goes the
+   * distance, and everything else is the other side of that.
    *
-   * Kept apart from `finished` because lumping them together makes "completed"
+   * Kept apart from `finished` because lumping them together makes the figure
    * mean "banked", which reads as success and is mostly the opposite.
    */
   endedEarly: number;
-  /** Rounds thrown away with Scrap round. */
-  scrapped: number;
-  /** Every round played, however it ended. */
+  /** Every banked round. */
   total: number;
 }
+
+/*
+ * Scrapped rounds are deliberately not counted anywhere.
+ *
+ * Scrapping means the round didn't happen, and nothing downstream asked to know
+ * how often it does — so there is nothing to store. That is worth more than it
+ * looks: a count would be the one piece of state in the app that cannot be
+ * merged across devices, because a bare number carries no per-event identity.
+ * Two devices reading 4 and 3 could be 7 or could be 4, and a retried sync
+ * would double-count. Every other thing here is a record with a length, so it
+ * dedupes. Don't reintroduce a counter without solving that first.
+ */
 
 /**
  * Pairs up to 18, then 19 and 20 alone.
@@ -104,21 +113,16 @@ const padNumber = (index: number) =>
 const allRounds = (sessions: Session[]) =>
   sessions.flatMap((session) => session.rounds);
 
-export function roundTotals(
-  sessions: Session[],
-  scrapped: number,
-): RoundTotals {
+export function roundTotals(sessions: Session[]): RoundTotals {
   const rounds = allRounds(sessions);
   const finished = rounds.filter(
     (round) => round.durations.length >= ROUND_CAP,
   ).length;
-  const endedEarly = rounds.length - finished;
 
   return {
     finished,
-    endedEarly,
-    scrapped,
-    total: rounds.length + scrapped,
+    endedEarly: rounds.length - finished,
+    total: rounds.length,
   };
 }
 
@@ -178,11 +182,8 @@ export interface Insights {
   empty: boolean;
 }
 
-export function buildInsights(
-  sessions: Session[],
-  scrapped: number,
-): Insights {
-  const rounds = roundTotals(sessions, scrapped);
+export function buildInsights(sessions: Session[]): Insights {
+  const rounds = roundTotals(sessions);
   return {
     rounds,
     taps: tapTotals(sessions),

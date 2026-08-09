@@ -21,22 +21,20 @@ const session = (rounds: ReturnType<typeof round>[]): Session => ({
 });
 
 describe("roundTotals", () => {
-  it("adds scrapped rounds to banked ones", () => {
+  it("counts every banked round, across sessions", () => {
     const sessions = [session([round([0]), round([1])]), session([round([2])])];
 
-    expect(roundTotals(sessions, 4)).toEqual({
+    expect(roundTotals(sessions)).toEqual({
       finished: 0,
       endedEarly: 3,
-      scrapped: 4,
-      total: 7,
+      total: 3,
     });
   });
 
   it("counts nothing when nothing has been played", () => {
-    expect(roundTotals([], 0)).toEqual({
+    expect(roundTotals([])).toEqual({
       finished: 0,
       endedEarly: 0,
-      scrapped: 0,
       total: 0,
     });
   });
@@ -54,7 +52,7 @@ describe("roundTotals", () => {
       ]),
     ];
 
-    expect(roundTotals(sessions, 0)).toMatchObject({
+    expect(roundTotals(sessions)).toMatchObject({
       finished: 2,
       endedEarly: 2,
     });
@@ -62,11 +60,11 @@ describe("roundTotals", () => {
 
   it("counts a round one dot short of the cap as ended early", () => {
     // 19 and 20 are the whole distinction, so the boundary is spelled out.
-    expect(roundTotals([session([round([], 19)])], 0)).toMatchObject({
+    expect(roundTotals([session([round([], 19)])])).toMatchObject({
       finished: 0,
       endedEarly: 1,
     });
-    expect(roundTotals([session([round([], 20)])], 0)).toMatchObject({
+    expect(roundTotals([session([round([], 20)])])).toMatchObject({
       finished: 1,
       endedEarly: 0,
     });
@@ -74,11 +72,9 @@ describe("roundTotals", () => {
 
   it("always adds up", () => {
     const sessions = [session([round([], 20), round([], 5), round([], 12)])];
-    const totals = roundTotals(sessions, 6);
+    const totals = roundTotals(sessions);
 
-    expect(totals.finished + totals.endedEarly + totals.scrapped).toBe(
-      totals.total,
-    );
+    expect(totals.finished + totals.endedEarly).toBe(totals.total);
   });
 });
 
@@ -184,20 +180,19 @@ describe("lengthBuckets", () => {
 });
 
 describe("buildInsights", () => {
-  it("is empty only when nothing has been banked or scrapped", () => {
-    expect(buildInsights([], 0).empty).toBe(true);
-    expect(buildInsights([], 1).empty).toBe(false);
-    expect(buildInsights([session([round([0])])], 0).empty).toBe(false);
+  it("is empty only when nothing has been banked", () => {
+    expect(buildInsights([]).empty).toBe(true);
+    expect(buildInsights([session([])]).empty).toBe(true);
+    expect(buildInsights([session([round([0])])]).empty).toBe(false);
   });
 
   it("reports a session's history in one pass", () => {
-    const insights = buildInsights([session([round([0, 4, 8])])], 2);
+    const insights = buildInsights([session([round([0, 4, 8])])]);
 
     expect(insights.rounds).toEqual({
       finished: 0,
       endedEarly: 1,
-      scrapped: 2,
-      total: 3,
+      total: 1,
     });
     expect(insights.taps.total).toBe(3);
     expect(insights.buckets.find((b) => b.label === "4")!.count).toBe(1);

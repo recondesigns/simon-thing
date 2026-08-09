@@ -9,7 +9,7 @@ const meta = {
   args: {
     segments: [
       { value: 18, tone: "success" as const, label: "completed" },
-      { value: 4, tone: "danger" as const, label: "scrapped" },
+      { value: 4, tone: "neutral" as const, label: "ended early" },
     ],
   },
 } satisfies Meta<typeof SplitBar>;
@@ -28,20 +28,20 @@ const segments = (canvasElement: HTMLElement) => [
  */
 export const Split: Story = {
   play: async ({ canvasElement }) => {
-    const [done, scrapped] = segments(canvasElement);
+    const [done, early] = segments(canvasElement);
 
     // bg is the bright text colours, not the tinted bg/* surfaces — here the
     // bar is the signal, not a ground for text to sit on.
     await expect(getComputedStyle(done).backgroundColor).toBe(
       "rgb(127, 224, 168)", // text/success
     );
-    await expect(getComputedStyle(scrapped).backgroundColor).toBe(
-      "rgb(255, 122, 118)", // text/danger
+    await expect(getComputedStyle(early).backgroundColor).toBe(
+      "rgb(242, 239, 227)", // text/primary
     );
 
     // 18:4 within the bar, allowing for the 3px gap between them.
     const a = done.getBoundingClientRect().width;
-    const b = scrapped.getBoundingClientRect().width;
+    const b = early.getBoundingClientRect().width;
     await expect(Math.round((a / b) * 10) / 10).toBe(4.5);
   },
 };
@@ -50,11 +50,11 @@ export const Split: Story = {
  * A zero segment is dropped, not drawn at zero width — which would leave the
  * gap sitting against the end of the bar looking like a rendering fault.
  */
-export const NothingScrapped: Story = {
+export const NothingEndedEarly: Story = {
   args: {
     segments: [
       { value: 12, tone: "success" as const, label: "completed" },
-      { value: 0, tone: "danger" as const, label: "scrapped" },
+      { value: 0, tone: "neutral" as const, label: "ended early" },
     ],
   },
   play: async ({ canvasElement }) => {
@@ -74,7 +74,7 @@ export const Nothing: Story = {
   args: {
     segments: [
       { value: 0, tone: "success" as const, label: "completed" },
-      { value: 0, tone: "danger" as const, label: "scrapped" },
+      { value: 0, tone: "neutral" as const, label: "ended early" },
     ],
   },
   play: async ({ canvasElement }) => {
