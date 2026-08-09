@@ -29,14 +29,11 @@
 }
 
 /*
- * The middle of the three, and deliberately the quiet one. A round that ended
- * early is the ordinary outcome, not a failure worth painting in the danger
- * colour — that is reserved for the rounds thrown away on purpose.
+ * The quiet half. A round that ended early is the ordinary outcome of playing —
+ * most rounds end that way — so it takes the neutral cream rather than anything
+ * that reads as an alarm.
  */
 .neutral {
   background-color: var(--sem-text-primary);
 }
 
-.danger {
-  background-color: var(--sem-text-danger);
-}

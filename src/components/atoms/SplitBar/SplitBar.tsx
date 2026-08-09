@@ -4,7 +4,7 @@ import styles from "./SplitBar.module.css";
 export interface SplitBarSegment {
   value: number;
   /** Which semantic colour the segment paints in. */
-  tone: "success" | "neutral" | "danger";
+  tone: "success" | "neutral";
   /** For assistive tech, since the bar itself is only a shape. */
   label: string;
 }

@@ -26,7 +26,7 @@ const meta = {
   title: "Templates/InsightsTemplate",
   component: InsightsTemplate,
   parameters: { layout: "fullscreen" },
-  args: { insights: buildInsights(played, 3) },
+  args: { insights: buildInsights(played) },
 } satisfies Meta<typeof InsightsTemplate>;
 
 export default meta;
@@ -42,9 +42,9 @@ export const Populated: Story = {
     await expect(canvasElement.textContent).toContain("Taps per position");
     await expect(canvasElement.textContent).toContain("Where rounds end");
 
-    // 4 banked + 3 scrapped, and the banked ones split by whether they
-    // reached the cap: one 20-dot round finished, three ended early.
-    await expect(canvasElement.textContent).toContain("7 total");
+    // Four banked rounds, split by whether they reached the cap: one 20-dot
+    // round finished, three ended early.
+    await expect(canvasElement.textContent).toContain("4 total");
     await expect(canvasElement.textContent).toContain("1 finished");
     await expect(canvasElement.textContent).toContain("3 ended early");
     // All nine positions, always.
@@ -71,7 +71,7 @@ export const ScrollsRatherThanSquashes: Story = {
 
 /** Nothing played: one sentence, not three empty charts. */
 export const Empty: Story = {
-  args: { insights: buildInsights([], 0) },
+  args: { insights: buildInsights([]) },
   play: async ({ canvasElement }) => {
     await expect(canvasElement.textContent).toContain("Nothing to show yet");
     await expect(canvasElement.querySelector("section")).toBeNull();
