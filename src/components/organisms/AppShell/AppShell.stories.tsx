@@ -137,3 +137,42 @@ export const GroupingSettingReflectsTheStore: Story = {
       .toBe("2");
   },
 };
+
+/**
+ * **The group-gap slider is wired to the store, and starts at "the original
+ * speed."**
+ *
+ * `0` is the default so introducing this setting can't change any cadence's
+ * boundary gap until a player actually moves it — every value CADENCE_GAP_MS
+ * spells out stays exactly as tuned at rest.
+ */
+export const GroupGapSettingReflectsTheStore: Story = {
+  play: async ({ canvasElement, step }) => {
+    await step("open the sheet", async () => {
+      canvasElement
+        .querySelectorAll<HTMLButtonElement>("button")
+        .forEach((b) => {
+          if (/menu/i.test(b.getAttribute("aria-label") ?? "")) b.click();
+        });
+    });
+
+    const input = await new Promise<HTMLInputElement>((resolve) => {
+      const find = () =>
+        document.querySelector<HTMLInputElement>(
+          'input[type="range"][aria-label*="pause between groups"]',
+        );
+      const tick = () => {
+        const el = find();
+        if (el) resolve(el);
+        else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+
+    await expect(input.min).toBe("0");
+    await expect(input.max).toBe("1500");
+    // DEFAULT_GROUP_GAP_MS — no widening until the player asks for it.
+    await expect(input.value).toBe("0");
+    await expect(document.body.textContent).toContain("Original");
+  },
+};

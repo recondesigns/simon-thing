@@ -7,10 +7,15 @@ import MenuSheet from "@/components/organisms/MenuSheet/MenuSheet";
 import Button from "@/components/atoms/Button/Button";
 import Switch from "@/components/atoms/Switch/Switch";
 import SegmentedControl from "@/components/atoms/SegmentedControl/SegmentedControl";
+import Slider from "@/components/atoms/Slider/Slider";
 import {
   useGameStore,
   CADENCE_OPTIONS,
   GROUP_SIZE_OPTIONS,
+  GROUP_GAP_MIN_MS,
+  GROUP_GAP_MAX_MS,
+  GROUP_GAP_STEP_MS,
+  GROUP_GAP_MARKS,
   type Cadence,
   type GroupSize,
 } from "@/lib/store/gameStore";
@@ -19,6 +24,10 @@ import styles from "./AppShell.module.css";
 const BOARD_PATH = "/";
 const TIMES_PATH = "/time-results";
 const INSIGHTS_PATH = "/insights";
+
+/** Mirrors the slider's own `valueLabelFormat` for the at-rest readout beside it. */
+const formatGroupGap = (ms: number) =>
+  ms === 0 ? "Original" : `+${(ms / 1000).toFixed(2)}s`;
 
 /**
  * The chrome both routes sit inside: the app bar, and the sheet behind its menu
@@ -39,9 +48,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const speechEnabled = useGameStore((state) => state.speechEnabled);
   const cadence = useGameStore((state) => state.cadence);
   const groupSize = useGameStore((state) => state.groupSize);
+  const groupGapMs = useGameStore((state) => state.groupGapMs);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
   const setCadence = useGameStore((state) => state.setCadence);
   const setGroupSize = useGameStore((state) => state.setGroupSize);
+  const setGroupGapMs = useGameStore((state) => state.setGroupGapMs);
   const newSession = useGameStore((state) => state.newSession);
   const discardRound = useGameStore((state) => state.discardRound);
   const resetApp = useGameStore((state) => state.resetApp);
@@ -156,6 +167,28 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 options={GROUP_SIZE_OPTIONS}
                 value={groupSize}
                 onChange={setGroupSize}
+              />
+            </div>
+
+            {/* Independent of groupSize by design — it widens the pause the
+                same amount whether grouping is Off or five, rather than
+                scaling with the size. */}
+            <div className={styles.settingBlock}>
+              <span className={styles.settingCaptionRow}>
+                <span className={styles.settingCaption}>Gap between groups</span>
+                <span className={styles.settingValue}>
+                  {formatGroupGap(groupGapMs)}
+                </span>
+              </span>
+              <Slider
+                label="Extra pause between groups in the read-back"
+                min={GROUP_GAP_MIN_MS}
+                max={GROUP_GAP_MAX_MS}
+                step={GROUP_GAP_STEP_MS}
+                marks={GROUP_GAP_MARKS}
+                value={groupGapMs}
+                onChange={setGroupGapMs}
+                formatValue={formatGroupGap}
               />
             </div>
 
