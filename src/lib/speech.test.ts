@@ -75,9 +75,10 @@ async function gapsFor(
   count: number,
   gapMs: number,
   groupSize: number = DEFAULT_GROUP_SIZE,
+  groupGapMs: number = 0,
 ): Promise<number[]> {
   const words = Array.from({ length: count }, (_, i) => String((i % 9) + 1));
-  speakSequence(words, { gapMs, groupSize });
+  speakSequence(words, { gapMs, groupSize, groupGapMs });
   // Long enough for any cadence to finish, including the 3s per-word watchdogs
   // that fire harmlessly behind the already-advanced chain.
   await vi.advanceTimersByTimeAsync(120_000);
@@ -180,6 +181,63 @@ describe("speakSequence group size", () => {
       expect(totals[i]).toBeLessThan(totals[i - 1]);
     }
   });
+
+  it("stays strictly faster the longer the group even with a large groupGapMs", async () => {
+    // The boundary widening a player dials in lands the same at every group
+    // size — it can never favour a smaller group, only make every size's
+    // boundaries pricier by the same amount. Fewer, pricier boundaries traded
+    // for more, cheaper in-group gaps is still a win at any groupGapMs.
+    const words = Array.from({ length: 20 }, (_, i) => String((i % 9) + 1));
+    const totals: number[] = [];
+    for (const size of [1, 2, 3, 4, 5]) {
+      speakSequence(words, { gapMs: 800, groupSize: size, groupGapMs: 1500 });
+      await vi.advanceTimersByTimeAsync(120_000);
+      totals.push(
+        spokenAt.slice(1).reduce((sum, at, i) => sum + (at - spokenAt[i]), 0),
+      );
+      spokenAt = [];
+    }
+
+    for (let i = 1; i < totals.length; i++) {
+      expect(totals[i]).toBeLessThan(totals[i - 1]);
+    }
+  });
+});
+
+describe("speakSequence groupGapMs", () => {
+  // The extra pause a player dials in on top of the cadence gap — flat, and
+  // applied the same regardless of groupSize, unlike the cadence-derived
+  // in-group gap.
+
+  it("adds flatly to the boundary, leaving the in-group gap untouched", async () => {
+    const gaps = await gapsFor(9, 800, 3, 200);
+
+    // Boundaries after the 3rd and 6th: 800 + 200. In-group stays at 267 —
+    // the ratio is still a fraction of the base cadence gap, not the widened
+    // boundary.
+    expect(gaps).toEqual([267, 267, 1000, 267, 267, 1000, 267, 267]);
+  });
+
+  it("applies the same widening at every group size, including Off", async () => {
+    const off = await gapsFor(4, 800, 1, 300);
+    spokenAt = [];
+    const four = await gapsFor(9, 800, 4, 300);
+
+    for (const gap of off) expect(gap).toBe(1100); // every gap is a boundary
+    for (const gap of atBoundary(four, 4)) expect(gap).toBe(1100);
+  });
+
+  it("defaults to zero — no widening unless the player asks for it", async () => {
+    const gaps = await gapsFor(9, 800, 4);
+
+    for (const gap of atBoundary(gaps, 4)) expect(gap).toBe(800);
+  });
+
+  it("gives Normal's four-dot grouping a full second when set to 450, the case that motivated the setting", async () => {
+    const gaps = await gapsFor(9, 550, 4, 450);
+
+    expect(atBoundary(gaps, 4)).toEqual([1000, 1000]);
+  });
 });
 
 describe("speakSequence cadences", () => {
@@ -201,6 +259,7 @@ describe("speakSequence cadences", () => {
       for (const gap of insideGroup(gaps)) expect(gap).toBe(inGroupMs);
     });
   }
+
 
   it("floors Fast rather than letting the ratio run it together", async () => {
     // The regression this whole floor exists for. A third of 350 is 117ms,

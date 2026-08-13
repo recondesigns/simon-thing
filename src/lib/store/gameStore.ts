@@ -40,7 +40,7 @@ export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
 ];
 
 /**
- * How many numbers the read-back speaks before pausing the full cadence gap.
+ * How many numbers the read-back speaks before pausing the boundary gap.
  *
  * A setting rather than a constant because raising it is *strictly* faster —
  * a longer group is a boundary pause not taken — while being harder to hold,
@@ -48,6 +48,11 @@ export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
  * kind of question as the cadence itself, and it's settled the same way: at the
  * machine. Only the size is adjustable; `INTRA_GROUP_RATIO` (how tight a group
  * is, as opposed to how long) stays fixed in `lib/speech.ts`.
+ *
+ * That "strictly faster" holds regardless of {@link GameStore.groupGapMs}: the
+ * extra pause it adds lands the same at every group size, so a bigger group is
+ * never worse off, only ever fewer, pricier boundaries traded for more, cheaper
+ * in-group gaps.
  */
 export type GroupSize = 1 | 2 | 3 | 4 | 5;
 
@@ -65,6 +70,33 @@ export const GROUP_SIZE_OPTIONS: { value: GroupSize; label: string }[] = [
   { value: 3, label: "3" },
   { value: 4, label: "4" },
   { value: 5, label: "5" },
+];
+
+/**
+ * Extra pause added to every group boundary, on top of the cadence gap —
+ * independent of {@link GroupSize}, so it applies the same whether grouping
+ * is Off or five. A player setting rather than a code constant: the boundary
+ * widening explored while tuning four-dot grouping needed re-tuning by ear
+ * more than once, which is exactly the sign a value belongs at the machine
+ * rather than in a commit.
+ *
+ * `0` is "the original speed" — the boundary is exactly the cadence gap, no
+ * widening, matching every cadence before this setting existed.
+ */
+export const GROUP_GAP_MIN_MS = 0;
+export const GROUP_GAP_MAX_MS = 1500;
+export const GROUP_GAP_STEP_MS = 50;
+export const DEFAULT_GROUP_GAP_MS = 0;
+
+/** Recommended points along the slider — ticks, not stops; the thumb still
+ * moves at GROUP_GAP_STEP_MS between them. */
+export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
+  { value: 0, label: "Original" },
+  { value: 300, label: "+0.3s" },
+  { value: 600, label: "+0.6s" },
+  { value: 900, label: "+0.9s" },
+  { value: 1200, label: "+1.2s" },
+  { value: 1500, label: "+1.5s" },
 ];
 
 /**
@@ -150,6 +182,11 @@ export interface GameStore {
   /** How many numbers to a group in the read-back. Persisted preference. */
   groupSize: GroupSize;
   /**
+   * Extra ms paused at every group boundary, on top of the cadence gap and
+   * regardless of `groupSize`. Persisted preference.
+   */
+  groupGapMs: number;
+  /**
    * True from the moment a dot is tapped until its read-back ends — one tap per
    * dot. It gates the pads so a stray or early second tap can't slip in around
    * the audio. The unlock is timed by the route (it knows how long the read-back
@@ -205,6 +242,8 @@ export interface GameStore {
   setCadence: (cadence: Cadence) => void;
   /** Set how many numbers the read-back groups together. */
   setGroupSize: (groupSize: GroupSize) => void;
+  /** Set the extra pause at every group boundary. Clamped to the slider's range. */
+  setGroupGapMs: (groupGapMs: number) => void;
 }
 
 /** The active (open) session is the last one, and only if it hasn't ended. */
@@ -255,6 +294,7 @@ export const useGameStore = create<GameStore>()(
       speechEnabled: true,
       cadence: "relaxed",
       groupSize: DEFAULT_GROUP_SIZE,
+      groupGapMs: DEFAULT_GROUP_GAP_MS,
       locked: false,
 
       start: () =>
@@ -374,6 +414,7 @@ export const useGameStore = create<GameStore>()(
           speechEnabled: true,
           cadence: "relaxed",
           groupSize: DEFAULT_GROUP_SIZE,
+          groupGapMs: DEFAULT_GROUP_GAP_MS,
           ...freshRound,
         });
         useGameStore.persist.clearStorage();
@@ -387,25 +428,34 @@ export const useGameStore = create<GameStore>()(
       setCadence: (cadence) => set({ cadence }),
 
       setGroupSize: (groupSize) => set({ groupSize }),
+
+      setGroupGapMs: (groupGapMs) =>
+        set({
+          groupGapMs: Math.min(
+            GROUP_GAP_MAX_MS,
+            Math.max(GROUP_GAP_MIN_MS, groupGapMs),
+          ),
+        }),
     }),
     {
       name: "simon-thing-game",
       version: 2,
       // Deferred; StoreHydrator calls rehydrate() after mount. See the note above.
       skipHydration: true,
-      // Persist sessions and the three preferences only — never the in-progress
+      // Persist sessions and the preferences only — never the in-progress
       // round or the running clock.
       //
-      // `groupSize` was added without bumping the version on purpose. Zustand
-      // merges the persisted object over the initial state, so a store written
-      // before it existed simply keeps the default — which is the same value it
-      // was behaving as anyway. A migration step would have to invent nothing
-      // and change nothing.
+      // `groupSize` and `groupGapMs` were both added without bumping the
+      // version, on purpose. Zustand merges the persisted object over the
+      // initial state, so a store written before either existed simply keeps
+      // the default — which is the same value it was behaving as anyway. A
+      // migration step would have to invent nothing and change nothing.
       partialize: (state) => ({
         sessions: state.sessions,
         speechEnabled: state.speechEnabled,
         cadence: state.cadence,
         groupSize: state.groupSize,
+        groupGapMs: state.groupGapMs,
       }),
       /**
        * Steps run in sequence, oldest first, so each only has to know the shape

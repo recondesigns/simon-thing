@@ -64,6 +64,15 @@ export interface SpeakSequenceOptions {
    */
   groupSize?: number;
   /**
+   * Extra ms added on top of `gapMs` at every group boundary — flat, and the
+   * same regardless of `groupSize` (including `1`, grouping "Off"). A player
+   * setting (`groupGapMs` in the store) rather than something computed from
+   * the group size: the right amount turned out to need re-tuning by ear more
+   * than once, which is exactly the sign it belongs at the machine and not in
+   * a formula.
+   */
+  groupGapMs?: number;
+  /**
    * Fired as each word finishes, with how many have now been spoken. Drives the
    * read-back progress indicator off the real audio rather than a predicted
    * schedule — the two drift, and a progress dot that lies is worse than none.
@@ -143,7 +152,7 @@ export function speakSequence(
 
   // Floored at 1: `index % 0` is NaN, which would silently make every gap an
   // in-group one and read the whole sequence as a single blur.
-  const { gapMs = 700, onSpoke, onDone } = options;
+  const { gapMs = 700, groupGapMs = 0, onSpoke, onDone } = options;
   const groupSize = Math.max(1, Math.round(options.groupSize ?? DEFAULT_GROUP_SIZE));
 
   cancelSpeech();
@@ -173,18 +182,19 @@ export function speakSequence(
       onSpoke?.(index);
       if (index < words.length) {
         // `index` is now how many have been spoken, so a multiple of the group
-        // size means the one just finished closed a group: pause the full
-        // cadence gap. Inside a group, cut it to INTRA_GROUP_RATIO but never
-        // below the floor — and never *above* the boundary gap either, which
-        // would invert the rhythm and undo the phrasing entirely. That clamp is
-        // dead code at today's four cadences and stops being so the moment
-        // anyone adds one faster than 160ms.
+        // size means the one just finished closed a group: pause the boundary
+        // gap, `groupGapMs` on top — flat, so it lands the same regardless of
+        // `groupSize`. Inside a group, cut the *base* gap to INTRA_GROUP_RATIO
+        // but never below the floor — and never *above* the boundary gap
+        // either, which would invert the rhythm and undo the phrasing
+        // entirely.
         const closesGroup = index % groupSize === 0;
+        const boundaryMs = gapMs + groupGapMs;
         const inGroupMs = Math.min(
-          gapMs,
+          boundaryMs,
           Math.max(MIN_INTRA_GROUP_MS, Math.round(gapMs * INTRA_GROUP_RATIO)),
         );
-        const timer = setTimeout(speakNext, closesGroup ? gapMs : inGroupMs);
+        const timer = setTimeout(speakNext, closesGroup ? boundaryMs : inGroupMs);
         timers.push(timer);
       } else {
         onDone?.();

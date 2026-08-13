@@ -221,11 +221,16 @@ export default function Home() {
     // commit apart, so they cannot disagree — which they must not, since the
     // grouping is the one thing the picture and the sound have to share.
     const groupSize = useGameStore.getState().groupSize;
+    // The extra boundary pause is audio-only — the indicator's own spacing
+    // already matches groupSize, not the gap's exact duration — so it's read
+    // fresh here rather than pinned in handleTap alongside groupSize.
+    const groupGapMs = useGameStore.getState().groupGapMs;
 
     const startSpeaking = setTimeout(() => {
       speakSequence(words, {
         gapMs,
         groupSize,
+        groupGapMs,
         // Drives the progress dots. Each callback lands as a number finishes,
         // so the indicator tracks the audio rather than a predicted schedule.
         onSpoke: (n) => setSpoken(n),
@@ -246,10 +251,11 @@ export default function Home() {
 
     // Safety net: if the browser never fires the end event, don't leave the
     // board locked forever. Generous so it never pre-empts a slow-but-working
-    // voice.
+    // voice — budgets every word for the *widened* boundary gap, worst case,
+    // even though most words only pause the shorter in-group gap.
     const fallback = setTimeout(
       release,
-      READBACK_PAUSE_MS + count * (1500 + gapMs) + 5000,
+      READBACK_PAUSE_MS + count * (1500 + gapMs + groupGapMs) + 5000,
     );
 
     return () => {
