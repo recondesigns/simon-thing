@@ -46,8 +46,20 @@ export function formatRoundTotal(ms: number): string {
 /**
  * A single dot's duration, to two decimals. Finer than a round total because
  * these are the numbers being compared against each other.
+ *
+ * **Zero means unmeasured, and prints as a dash.** The round's clock starts on
+ * the first pad rather than on Start or End round, so the opening dot anchors it
+ * instead of measuring an interval — the machine's setup and pattern playback
+ * happen in that gap and have nothing to do with anyone's speed. Rendering it
+ * "0.00" would claim an instant tap, which is a lie about the fastest-looking
+ * number on the screen.
+ *
+ * Zero is safe as the sentinel because a genuine interval can't be one: the
+ * board locks for at least SILENT_LOCK_MS after every tap. Rounds banked before
+ * this change carry a real first-dot time and still print it.
  */
 export function formatDotSeconds(ms: number): string {
+  if (ms === 0) return "—";
   return (ms / 1000).toFixed(2);
 }
 

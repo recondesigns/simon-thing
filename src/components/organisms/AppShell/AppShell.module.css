@@ -69,6 +69,19 @@
   color: var(--sem-text-secondary);
 }
 
+.settingCaptionRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* Numeral face: the value ticks as the slider drags, and a monospaced digit
+   doesn't jitter the row width as it changes. */
+.settingValue {
+  font: var(--type-numeral-sm);
+  color: var(--sem-text-secondary);
+}
+
 .dangerZone {
   display: flex;
   flex-direction: column;

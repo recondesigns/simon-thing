@@ -25,6 +25,8 @@ export interface HomeTemplateProps {
   exitingDots?: GameColor[];
   /** Present while the read-back is running — drives the progress indicator. */
   spoken?: number;
+  /** How the read-back in flight is phrased. Must match what it's speaking. */
+  groupSize?: number;
   /** True once the round is running. Flips the primary control's label. */
   started: boolean;
   /** The round has hit the 20-dot cap; only ending it is left. */
@@ -58,6 +60,7 @@ export default function HomeTemplate({
   arriving = false,
   exitingDots,
   spoken,
+  groupSize,
   started,
   full = false,
   onTap,
@@ -124,7 +127,11 @@ export default function HomeTemplate({
             the indicator back to "Reading it back…" mid-fade, and the player
             would watch the "Go!" they were waiting for un-happen. A full count
             is exactly the last frame it was showing. */}
-        <WaitingIndicator sequence={dots} spoken={spoken ?? dots.length} />
+        <WaitingIndicator
+          sequence={dots}
+          spoken={spoken ?? dots.length}
+          groupSize={groupSize}
+        />
       </Toast>
     </div>
   );

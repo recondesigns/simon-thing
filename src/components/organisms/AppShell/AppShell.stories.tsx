@@ -79,3 +79,100 @@ export const ProvidesTheAppBar: Story = {
     );
   },
 };
+
+/**
+ * **The read-back grouping setting is wired to the store.**
+ *
+ * It sits in the sheet beside the speed, because the two are one setting in two
+ * parts — how long the pauses are, and where they fall. Asserted through the
+ * sheet rather than in isolation because the wiring is the thing worth pinning:
+ * the control has to render the store's current value as selected, or a player
+ * changing it would be reading someone else's state.
+ *
+ * `aria-checked` alone would pass on a control MUI or the cascade had painted
+ * as unselected, so the pill's own position is read too — it is the only thing
+ * on screen that says which segment is chosen.
+ */
+export const GroupingSettingReflectsTheStore: Story = {
+  play: async ({ canvasElement, step }) => {
+    await step("open the sheet", async () => {
+      canvasElement
+        .querySelectorAll<HTMLButtonElement>("button")
+        .forEach((b) => {
+          if (/menu/i.test(b.getAttribute("aria-label") ?? "")) b.click();
+        });
+    });
+
+    const group = await new Promise<HTMLElement>((resolve) => {
+      const find = () =>
+        document.querySelector<HTMLElement>(
+          '[role="radiogroup"][aria-label*="group"]',
+        );
+      const tick = () => {
+        const el = find();
+        if (el) resolve(el);
+        else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+
+    const segments = [...group.querySelectorAll<HTMLElement>('[role="radio"]')];
+    // Off, 2, 3, 4, 5 — "Off" rather than "1" because that is what it does.
+    await expect(segments.map((s) => s.textContent)).toEqual([
+      "Off",
+      "2",
+      "3",
+      "4",
+      "5",
+    ]);
+
+    // The store's default is DEFAULT_GROUP_SIZE, the value actually played.
+    const checked = segments.findIndex(
+      (s) => s.getAttribute("aria-checked") === "true",
+    );
+    await expect(checked).toBe(2);
+    // The pill is placed arithmetically off --selected, so this is what the
+    // player actually sees rather than what the DOM claims.
+    await expect(getComputedStyle(group).getPropertyValue("--selected").trim())
+      .toBe("2");
+  },
+};
+
+/**
+ * **The group-gap slider is wired to the store, and starts at "the original
+ * speed."**
+ *
+ * `0` is the default so introducing this setting can't change any cadence's
+ * boundary gap until a player actually moves it — every value CADENCE_GAP_MS
+ * spells out stays exactly as tuned at rest.
+ */
+export const GroupGapSettingReflectsTheStore: Story = {
+  play: async ({ canvasElement, step }) => {
+    await step("open the sheet", async () => {
+      canvasElement
+        .querySelectorAll<HTMLButtonElement>("button")
+        .forEach((b) => {
+          if (/menu/i.test(b.getAttribute("aria-label") ?? "")) b.click();
+        });
+    });
+
+    const input = await new Promise<HTMLInputElement>((resolve) => {
+      const find = () =>
+        document.querySelector<HTMLInputElement>(
+          'input[type="range"][aria-label*="pause between groups"]',
+        );
+      const tick = () => {
+        const el = find();
+        if (el) resolve(el);
+        else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+
+    await expect(input.min).toBe("0");
+    await expect(input.max).toBe("1500");
+    // DEFAULT_GROUP_GAP_MS — no widening until the player asks for it.
+    await expect(input.value).toBe("0");
+    await expect(document.body.textContent).toContain("Original");
+  },
+};

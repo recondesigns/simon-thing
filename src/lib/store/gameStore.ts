@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { DEFAULT_GROUP_SIZE } from "@/lib/speech";
+
 /**
  * How much silence to leave between spoken numbers in the read-back. It's the
  * gap *between* dots (the digits themselves aren't slowed), tuned from the
@@ -11,22 +13,20 @@ export type Cadence = "fast" | "normal" | "relaxed" | "slow";
 /**
  * Silence between read-back numbers, in ms, per cadence.
  *
- * The slower three are even 300ms steps, so each is a noticeably different pace
- * rather than a nudge. **Fast is deliberately off that scale.** At the 200ms it
- * started on it ran too quick to follow at the machine, so it sits halfway to
- * Normal instead — 150ms from its neighbour rather than 300.
- *
- * That makes Fast and Normal closer together than any other pair, which is the
- * point: the useful range turned out to be narrower at the quick end than an
- * even scale assumed. Don't "restore" the 300 for symmetry.
+ * **None of these are on an even scale, and that is the whole point.** Each has
+ * been moved on its own at the machine, which is the only place the right value
+ * exists — Fast started at 200 and ran too quick to follow, and Normal was 500
+ * until it was played and wanted a little more room. The steps that result
+ * (200, 250, 300) describe where the useful range actually is; they are not an
+ * arithmetic sequence someone forgot to finish. **Don't tidy them into one.**
  *
  * Changing these numbers needs no migration. What persists is the `cadence`
- * key, never the milliseconds, so a stored `"fast"` picks up whatever Fast
+ * key, never the milliseconds, so a stored `"normal"` picks up whatever Normal
  * currently means — and anyone who never touches the setting keeps `relaxed`.
  */
 export const CADENCE_GAP_MS: Record<Cadence, number> = {
   fast: 350,
-  normal: 500,
+  normal: 550,
   relaxed: 800,
   slow: 1100,
 };
@@ -37,6 +37,66 @@ export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
   { value: "normal", label: "Normal" },
   { value: "relaxed", label: "Relaxed" },
   { value: "slow", label: "Slow" },
+];
+
+/**
+ * How many numbers the read-back speaks before pausing the boundary gap.
+ *
+ * A setting rather than a constant because raising it is *strictly* faster —
+ * a longer group is a boundary pause not taken — while being harder to hold,
+ * and no amount of arithmetic can say where that trade turns. It's the same
+ * kind of question as the cadence itself, and it's settled the same way: at the
+ * machine. Only the size is adjustable; `INTRA_GROUP_RATIO` (how tight a group
+ * is, as opposed to how long) stays fixed in `lib/speech.ts`.
+ *
+ * That "strictly faster" holds regardless of {@link GameStore.groupGapMs}: the
+ * extra pause it adds lands the same at every group size, so a bigger group is
+ * never worse off, only ever fewer, pricier boundaries traded for more, cheaper
+ * in-group gaps.
+ */
+export type GroupSize = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Ordered shortest to longest.
+ *
+ * `1` is labelled "Off" rather than "1" because that is what it does: a
+ * boundary after every number is exactly the flat read-back grouping replaced.
+ * Keeping it reachable means the setting can turn phrasing off, not just retune
+ * it — worth having when the whole point is finding out whether it helps.
+ */
+export const GROUP_SIZE_OPTIONS: { value: GroupSize; label: string }[] = [
+  { value: 1, label: "Off" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3" },
+  { value: 4, label: "4" },
+  { value: 5, label: "5" },
+];
+
+/**
+ * Extra pause added to every group boundary, on top of the cadence gap —
+ * independent of {@link GroupSize}, so it applies the same whether grouping
+ * is Off or five. A player setting rather than a code constant: the boundary
+ * widening explored while tuning four-dot grouping needed re-tuning by ear
+ * more than once, which is exactly the sign a value belongs at the machine
+ * rather than in a commit.
+ *
+ * `0` is "the original speed" — the boundary is exactly the cadence gap, no
+ * widening, matching every cadence before this setting existed.
+ */
+export const GROUP_GAP_MIN_MS = 0;
+export const GROUP_GAP_MAX_MS = 1500;
+export const GROUP_GAP_STEP_MS = 50;
+export const DEFAULT_GROUP_GAP_MS = 0;
+
+/** Recommended points along the slider — ticks, not stops; the thumb still
+ * moves at GROUP_GAP_STEP_MS between them. */
+export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
+  { value: 0, label: "Original" },
+  { value: 300, label: "+0.3s" },
+  { value: 600, label: "+0.6s" },
+  { value: 900, label: "+0.9s" },
+  { value: 1200, label: "+1.2s" },
+  { value: 1500, label: "+1.5s" },
 ];
 
 /**
@@ -86,11 +146,12 @@ export interface Session {
  * completes that dot); a **session** is a visit's worth of rounds.
  *
  * The pattern is cumulative, so `taps` holds the whole current round (up to 20)
- * and dot N's time is the gap between tap N-1 and tap N (dot 1 counts from Start).
+ * and dot N's time is the gap between tap N-1 and tap N. Dot 1 measures nothing —
+ * it *anchors* the clock, and is recorded as 0 meaning "unmeasured".
  * `dotDurations` is the round in progress; finished rounds live in a session's
  * `rounds`; `sessions` is every visit, oldest first, the last one open.
  *
- * Sessions and the two preferences are persisted to localStorage; the in-progress
+ * Sessions and the three preferences are persisted to localStorage; the in-progress
  * round and its running clock are not, so a reload keeps your history and the
  * current visit but drops you back to Start. Rehydration is deferred
  * (`skipHydration`) and run after mount by StoreHydrator, so the first client
@@ -118,6 +179,13 @@ export interface GameStore {
   speechEnabled: boolean;
   /** How much space to leave between read-back numbers. Persisted preference. */
   cadence: Cadence;
+  /** How many numbers to a group in the read-back. Persisted preference. */
+  groupSize: GroupSize;
+  /**
+   * Extra ms paused at every group boundary, on top of the cadence gap and
+   * regardless of `groupSize`. Persisted preference.
+   */
+  groupGapMs: number;
   /**
    * True from the moment a dot is tapped until its read-back ends — one tap per
    * dot. It gates the pads so a stray or early second tap can't slip in around
@@ -172,6 +240,10 @@ export interface GameStore {
   toggleSpeech: () => void;
   /** Set the read-back cadence. */
   setCadence: (cadence: Cadence) => void;
+  /** Set how many numbers the read-back groups together. */
+  setGroupSize: (groupSize: GroupSize) => void;
+  /** Set the extra pause at every group boundary. Clamped to the slider's range. */
+  setGroupGapMs: (groupGapMs: number) => void;
 }
 
 /** The active (open) session is the last one, and only if it hasn't ended. */
@@ -221,6 +293,8 @@ export const useGameStore = create<GameStore>()(
       sessions: [],
       speechEnabled: true,
       cadence: "relaxed",
+      groupSize: DEFAULT_GROUP_SIZE,
+      groupGapMs: DEFAULT_GROUP_GAP_MS,
       locked: false,
 
       start: () =>
@@ -231,7 +305,9 @@ export const useGameStore = create<GameStore>()(
           const sessions = activeSession(state.sessions)
             ? state.sessions
             : [...state.sessions, { startedAt: now, endedAt: null, rounds: [] }];
-          return { sessions, startedAt: now, lastTapAt: now, locked: false };
+          // `startedAt` opens the round; `lastTapAt` stays null so the *clock*
+          // doesn't. The first pad anchors it — see `tap`.
+          return { sessions, startedAt: now, lastTapAt: null, locked: false };
         }),
 
       tap: (index, max) =>
@@ -242,7 +318,13 @@ export const useGameStore = create<GameStore>()(
           const now = Date.now();
           // Replacing an undone dot? Inherit the time it measured and leave the
           // clock where it was, so the fumble stretches neither this dot nor the
-          // next one. Otherwise time it normally, from the last tap or Start.
+          // next one. Otherwise time it normally, from the last tap.
+          //
+          // With no last tap this is the round's *anchor* — `now - now` is 0,
+          // which means "not measured", not "instant". A real interval can't be
+          // 0: the board is locked for at least SILENT_LOCK_MS after every tap.
+          // `formatDotSeconds` relies on that to tell the two apart, and rounds
+          // banked before this change carry a real first-dot time instead.
           const [inherited, ...rest] = state.pendingDurations;
           const replacing = inherited !== undefined;
           return {
@@ -295,7 +377,11 @@ export const useGameStore = create<GameStore>()(
             dotDurations: [],
             pendingDurations: [],
             startedAt: now,
-            lastTapAt: now,
+            // Roll into the next round live, but with the clock stopped. Ending
+            // a round is not the same event as the next one beginning: the
+            // machine sets up and plays its pattern in between, and how long
+            // that takes has nothing to do with how fast anyone is tapping.
+            lastTapAt: null,
             locked: false,
           };
         }),
@@ -327,6 +413,8 @@ export const useGameStore = create<GameStore>()(
           sessions: [],
           speechEnabled: true,
           cadence: "relaxed",
+          groupSize: DEFAULT_GROUP_SIZE,
+          groupGapMs: DEFAULT_GROUP_GAP_MS,
           ...freshRound,
         });
         useGameStore.persist.clearStorage();
@@ -338,18 +426,36 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({ speechEnabled: !state.speechEnabled })),
 
       setCadence: (cadence) => set({ cadence }),
+
+      setGroupSize: (groupSize) => set({ groupSize }),
+
+      setGroupGapMs: (groupGapMs) =>
+        set({
+          groupGapMs: Math.min(
+            GROUP_GAP_MAX_MS,
+            Math.max(GROUP_GAP_MIN_MS, groupGapMs),
+          ),
+        }),
     }),
     {
       name: "simon-thing-game",
       version: 2,
       // Deferred; StoreHydrator calls rehydrate() after mount. See the note above.
       skipHydration: true,
-      // Persist sessions and the two preferences only — never the in-progress
+      // Persist sessions and the preferences only — never the in-progress
       // round or the running clock.
+      //
+      // `groupSize` and `groupGapMs` were both added without bumping the
+      // version, on purpose. Zustand merges the persisted object over the
+      // initial state, so a store written before either existed simply keeps
+      // the default — which is the same value it was behaving as anyway. A
+      // migration step would have to invent nothing and change nothing.
       partialize: (state) => ({
         sessions: state.sessions,
         speechEnabled: state.speechEnabled,
         cadence: state.cadence,
+        groupSize: state.groupSize,
+        groupGapMs: state.groupGapMs,
       }),
       /**
        * Steps run in sequence, oldest first, so each only has to know the shape

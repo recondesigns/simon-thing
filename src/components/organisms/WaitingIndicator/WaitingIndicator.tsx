@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { GameColor } from "@/lib/theme/tokens";
-import { GROUP_SIZE } from "@/lib/speech";
+import { DEFAULT_GROUP_SIZE } from "@/lib/speech";
 import styles from "./WaitingIndicator.module.css";
 
 export interface WaitingIndicatorProps {
@@ -8,6 +8,18 @@ export interface WaitingIndicatorProps {
   sequence: GameColor[];
   /** How many have been spoken. Equal to the length means the read-back is done. */
   spoken?: number;
+  /**
+   * How many dots to a visual group. **Must be the same value the read-back is
+   * speaking**, or the picture and the sound describe different rhythms — which
+   * is worse than not grouping at all, because the eye would be marking off
+   * chunks the ear never hears.
+   *
+   * This used to import `GROUP_SIZE` directly, which made drift impossible. Now
+   * that it's a player setting the guarantee has to come from above: the route
+   * reads `groupSize` once and hands the same variable to `speakSequence` and to
+   * here. Don't reintroduce a second read of the store on this path.
+   */
+  groupSize?: number;
   label?: string;
   doneLabel?: string;
   className?: string;
@@ -27,6 +39,7 @@ export interface WaitingIndicatorProps {
 export default function WaitingIndicator({
   sequence,
   spoken = 0,
+  groupSize = DEFAULT_GROUP_SIZE,
   label = "Reading it back…",
   doneLabel = "Go!",
   className,
@@ -45,11 +58,18 @@ export default function WaitingIndicator({
         {sequence.map((color, i) => {
           const isSpoken = i < spoken;
           const isNow = i === spoken && !done;
-          // Opens a new group of three, so it takes the wider gap that stands
-          // for the pause the ear is hearing at the same point. Driven off
-          // speech.ts's own GROUP_SIZE rather than a second 3 here, so the two
-          // can't drift into disagreeing about where the groups fall.
-          const opensGroup = i > 0 && i % GROUP_SIZE === 0;
+          // Opens a new group, so it takes the wider gap that stands for the
+          // pause the ear is hearing at the same point.
+          //
+          // The `groupSize > 1` guard is load-bearing, not defensive: `i % 1`
+          // is always 0, so without it the "Off" setting makes *every* dot a
+          // group opener and draws the widest row of any setting — 371px at the
+          // twenty-dot cap against 293px grouped, on a row that already
+          // overflows. Off draws the narrowest row instead, which is right for
+          // a second reason: with one uniform gap there is no second gap to
+          // read it against, so the width carries no meaning and may as well
+          // cost nothing.
+          const opensGroup = groupSize > 1 && i > 0 && i % groupSize === 0;
           return (
             <span
               key={i}
