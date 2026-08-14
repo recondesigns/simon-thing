@@ -45,3 +45,6 @@ storybook-static
 
 # test diagnostics (see #83)
 .test-output.log
+
+# editor
+.idea/
