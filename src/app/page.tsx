@@ -9,6 +9,8 @@ import {
   useGameStore,
   CADENCE_GAP_MS,
   CADENCE_RATE,
+  ENDED_REASON_OPTIONS,
+  type EndedReason,
 } from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
@@ -62,6 +64,9 @@ export default function Home() {
   const unlock = useGameStore((state) => state.unlock);
   const start = useGameStore((state) => state.start);
   const logRound = useGameStore((state) => state.logRound);
+  const setLastRoundEndedReason = useGameStore(
+    (state) => state.setLastRoundEndedReason,
+  );
 
   // How many numbers the read-back has spoken. Undefined when nothing is being
   // read, which is what tells the template to show a hint instead.
@@ -77,6 +82,10 @@ export default function Home() {
   const [exitingDots, setExitingDots] = useState<GameColor[] | undefined>(
     undefined,
   );
+  // How far the early-ended round got, or null when nothing is being asked
+  // about. Holds the length rather than a boolean so the sheet can name the
+  // round it means, after the board underneath has already moved on.
+  const [endedEarlyDots, setEndedEarlyDots] = useState<number | null>(null);
 
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
@@ -139,11 +148,35 @@ export default function Home() {
   // read-back effect calls this from inside a timeout, where a captured value
   // would be a round out of date.
   const endRound = useCallback(() => {
-    setExitingDots(useGameStore.getState().taps.map(padNumber));
+    const taps = useGameStore.getState().taps;
+    // Only a round that was actually banked *and* stopped short is worth asking
+    // about. An empty round is dropped rather than banked, and one at the cap
+    // wasn't ended early — it finished.
+    const endedEarly = taps.length > 0 && taps.length < ROUND_CAP;
+
+    setExitingDots(taps.map(padNumber));
     logRound();
     setSpoken(undefined);
     setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+
+    // Asked *after* banking, deliberately. Ending is irreversible and the next
+    // round's clock is already running, so this can't gate anything — and
+    // opening it first would charge however long the player spends answering to
+    // the very round being annotated.
+    if (endedEarly) setEndedEarlyDots(taps.length);
   }, [logRound]);
+
+  const handleEndReasonPick = useCallback(
+    (value: string) => {
+      setLastRoundEndedReason(value as EndedReason);
+      setEndedEarlyDots(null);
+    },
+    [setLastRoundEndedReason],
+  );
+
+  // Backdrop, Escape and Skip all land here. Nothing is recorded, which is not
+  // the same as recording "no reason".
+  const handleEndReasonSkip = useCallback(() => setEndedEarlyDots(null), []);
 
   const handlePrimary = useCallback(() => {
     if (!started) {
@@ -313,6 +346,15 @@ export default function Home() {
       groupSize={readbackGroupSize}
       started={started}
       full={full}
+      endReasonOpen={endedEarlyDots !== null}
+      endReasonOptions={ENDED_REASON_OPTIONS}
+      endReasonDetail={
+        endedEarlyDots === null
+          ? undefined
+          : `${endedEarlyDots} ${endedEarlyDots === 1 ? "dot" : "dots"}`
+      }
+      onEndReasonPick={handleEndReasonPick}
+      onEndReasonSkip={handleEndReasonSkip}
       onTap={handleTap}
       onPrimary={handlePrimary}
       lastDotLabel={

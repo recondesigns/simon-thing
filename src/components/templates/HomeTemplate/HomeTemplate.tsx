@@ -9,6 +9,7 @@ import StatusStrip, {
   StatusHint,
 } from "@/components/organisms/StatusStrip/StatusStrip";
 import WaitingIndicator from "@/components/organisms/WaitingIndicator/WaitingIndicator";
+import EndReasonSheet from "@/components/organisms/EndReasonSheet/EndReasonSheet";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./HomeTemplate.module.css";
@@ -37,6 +38,16 @@ export interface HomeTemplateProps {
   full?: boolean;
   onTap?: (index: number) => void;
   onPrimary?: () => void;
+  /**
+   * The "why did it end early?" sheet, asked *after* the round is already
+   * banked. Passed through rather than owned here so the template stays
+   * presentational and the route keeps the store.
+   */
+  endReasonOpen?: boolean;
+  endReasonOptions?: { value: string; label: string }[];
+  endReasonDetail?: string;
+  onEndReasonPick?: (value: string) => void;
+  onEndReasonSkip?: () => void;
   /** The number on the last dot, e.g. "7", or null when the round is empty. */
   lastDotLabel?: string | null;
   onUndo?: () => void;
@@ -69,6 +80,11 @@ export default function HomeTemplate({
   full = false,
   onTap,
   onPrimary,
+  endReasonOpen = false,
+  endReasonOptions = [],
+  endReasonDetail,
+  onEndReasonPick,
+  onEndReasonSkip,
   lastDotLabel = null,
   onUndo,
   undoDisabled = false,
@@ -137,6 +153,16 @@ export default function HomeTemplate({
           groupSize={groupSize}
         />
       </Toast>
+
+      {/* Opens only after a round has already been banked early, so it annotates
+          rather than gates — see EndReasonSheet. */}
+      <EndReasonSheet
+        open={endReasonOpen}
+        options={endReasonOptions}
+        detail={endReasonDetail}
+        onPick={onEndReasonPick}
+        onSkip={onEndReasonSkip ?? (() => {})}
+      />
     </div>
   );
 }

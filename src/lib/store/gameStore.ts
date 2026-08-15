@@ -134,6 +134,24 @@ export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
  * closes it and opens the next.
  */
 /**
+ * Why a round was ended before reaching the cap.
+ *
+ * Recorded **per round**, never as a running count. That distinction is the
+ * same one that got a scrapped-round counter built and then removed: a bare
+ * total carries no per-event identity, so two devices reading 4 and 3 could be
+ * 7 or could be 4, and a retried sync would double it. A reason living on the
+ * round it describes dedupes by the round's own identity, so Insights can count
+ * these later without inheriting that problem.
+ */
+export type EndedReason = "distractions" | "mistake";
+
+/** Ordered as offered in the prompt. */
+export const ENDED_REASON_OPTIONS: { value: EndedReason; label: string }[] = [
+  { value: "distractions", label: "Distractions" },
+  { value: "mistake", label: "Mistake" },
+];
+
+/**
  * A banked round: when it ran, how far it got, and what was tapped.
  *
  * **The round is timed as a whole, not as a sum of its dots.** `startedAt` is
@@ -171,6 +189,15 @@ export interface Round {
    * empty as "unknown", never as "no pads".
    */
   pads: number[];
+  /**
+   * Why the round was ended early, if the player said.
+   *
+   * **Absent means "not recorded", never "no reason"** — the prompt is
+   * skippable, it only appears for rounds ended before the cap, and every round
+   * banked before this existed has none. A round that reached the cap should
+   * never carry one: it wasn't ended early, it finished.
+   */
+  endedReason?: EndedReason;
 }
 
 /**
@@ -282,6 +309,15 @@ export interface GameStore {
    * the preferences. The key reappears (with defaults) on the next state change.
    */
   resetApp: () => void;
+  /**
+   * Record why the round just banked was ended early, on that round.
+   *
+   * Deliberately addresses "the last banked round" rather than taking an id,
+   * because rounds have none — see the note on {@link EndedReason}. Called
+   * immediately after `logRound`, from the prompt it opens, so the round it
+   * means is unambiguous. A no-op if nothing has been banked.
+   */
+  setLastRoundEndedReason: (reason: EndedReason) => void;
   /** Release the one-tap-per-dot lock once the read-back has finished. */
   unlock: () => void;
   /** Flip number read-back on/off. */
@@ -549,6 +585,21 @@ export const useGameStore = create<GameStore>()(
         });
         useGameStore.persist.clearStorage();
       },
+
+      setLastRoundEndedReason: (reason) =>
+        set((state) => {
+          const sessionIndex = state.sessions.length - 1;
+          if (sessionIndex < 0) return {};
+          const session = state.sessions[sessionIndex];
+          const roundIndex = session.rounds.length - 1;
+          if (roundIndex < 0) return {};
+
+          const rounds = [...session.rounds];
+          rounds[roundIndex] = { ...rounds[roundIndex], endedReason: reason };
+          const sessions = [...state.sessions];
+          sessions[sessionIndex] = { ...session, rounds };
+          return { sessions };
+        }),
 
       unlock: () => set({ locked: false }),
 
