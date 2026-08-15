@@ -1,6 +1,5 @@
-/* MUI owns the positioning and the transition; these rules only dress the
-   surface. Matches MenuSheet, because they are the same surface in two roles
-   and a player shouldn't have to read two different sheets. */
+/* Same surface as MenuSheet and EndReasonSheet — a player shouldn't have to
+   read three different sheets. */
 .paper {
   max-width: var(--column-max);
   width: 100%;
@@ -40,14 +39,36 @@
   color: var(--sem-text-surface);
 }
 
-/* The round's length, so the question names which round it is asking about. */
-.detail {
-  font: 400 13px/1 var(--font-numeral);
-  color: var(--sem-text-secondary);
+.field {
+  margin-bottom: var(--space-3);
 }
 
-/* Last thing in the sheet now that Skip is gone, so it carries the bottom
-   padding itself rather than leaving a gap under a control that isn't there. */
-.selectLast {
-  margin-bottom: 0;
+/*
+ * Full width so it is as easy to hit as the control above it — skipping is a
+ * legitimate answer, not a discouraged one — but painted as quiet text rather
+ * than a button, so it doesn't read as the second half of a pair of actions.
+ */
+.skip {
+  display: block;
+  margin-top: var(--space-1);
+  width: 100%;
+  min-height: var(--size-control);
+  border: none;
+  background-color: transparent;
+  font: 700 14px/1 var(--font-body);
+  color: var(--sem-text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.skip:focus-visible {
+  border-radius: var(--radius-pill);
+  box-shadow: var(--elev-glow-focus);
+  outline: none;
+}
+
+@media (hover: hover) {
+  .skip:hover {
+    color: var(--sem-text-surface);
+  }
 }

@@ -1,5 +1,12 @@
+/*
+ * Three columns with equal outer thirds, so the middle one is centred against
+ * the bar itself. A flex row would centre the title in the space left over
+ * after the mark and the buttons, which is not the same place and moves
+ * whenever either side changes.
+ */
 .bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: var(--space-3);
   height: var(--app-bar-h);
@@ -11,21 +18,10 @@
   border-bottom: 1px solid var(--sem-border-surface);
 }
 
-/* Baseline, not centre — the wordmark is a 22px display face and the subtitle a
-   12px caption, so centring them leaves the caption floating. */
-.identity {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  align-items: baseline;
-  gap: 10px;
-}
-
 .wordmark {
   margin: 0;
-  font: 400 22px/1 var(--font-display);
-  letter-spacing: var(--tracking-display);
-  color: var(--sem-text-primary);
+  display: flex;
+  justify-self: start;
 }
 
 .wordmarkLink {
@@ -34,6 +30,8 @@
 }
 
 .subtitle {
+  justify-self: center;
+  text-align: center;
   font: var(--type-caption);
   letter-spacing: var(--tracking-caption);
   text-transform: uppercase;
@@ -46,6 +44,18 @@
 .controls {
   display: flex;
   align-items: center;
+  justify-self: end;
   gap: var(--space-1);
 }
 
+
+/*
+ * The mark is a link target, so it needs a real one — the glyph itself is only
+ * 26px across at a 6px socket.
+ */
+.wordmarkLink {
+  display: flex;
+  align-items: center;
+  min-height: var(--size-hit-min);
+  padding-right: var(--space-2);
+}

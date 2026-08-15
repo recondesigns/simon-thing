@@ -13,6 +13,12 @@ export interface DataRowProps {
   unit?: string;
   /** A pad colour chip, so a dot's row is identifiable without reading it. */
   dot?: GameColor;
+  /**
+   * Colours the value. `success` is money won — the one figure here that is
+   * good news rather than a measurement. `danger` is a round that ended on
+   * something going wrong.
+   */
+  tone?: "default" | "success" | "danger";
   className?: string;
 }
 
@@ -28,6 +34,7 @@ export default function DataRow({
   value,
   unit,
   dot,
+  tone = "default",
   className,
 }: DataRowProps) {
   return (
@@ -40,7 +47,15 @@ export default function DataRow({
       )}
       <span className={styles.label}>{label}</span>
       {value !== undefined && (
-        <span className={styles.value}>
+        <span
+          className={[
+            styles.value,
+            tone === "success" && styles.success,
+            tone === "danger" && styles.danger,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
           {value}
           {unit && <span className={styles.unit}>{unit}</span>}
         </span>

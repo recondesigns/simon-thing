@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import DotsMark from "@/components/atoms/DotsMark/DotsMark";
 import IconButton from "@/components/atoms/IconButton/IconButton";
 import styles from "./AppBar.module.css";
 
@@ -11,6 +12,7 @@ export interface AppBarProps {
   onOpenSettings?: () => void;
   /** Opens navigation and the session actions, as a side sheet. */
   onOpenMenu?: () => void;
+  /** Names the mark for assistive tech, which sees a grid of spans otherwise. */
   title?: string;
 }
 
@@ -28,6 +30,16 @@ export interface AppBarProps {
  * adjusted mid-session while standing at the machine; the menu is where you go,
  * plus the session actions and the destructive controls.
  *
+ * The wordmark is the app's own board reduced to a mark rather than the word
+ * "DOTS": the player already knows that shape from every screen, so it says the
+ * same thing without the typography, and it leaves the middle of the bar free
+ * for the page title.
+ *
+ * Laid out as a three-column grid, not a flex row, so the title is centred
+ * against *the bar* rather than against whatever space the mark and the buttons
+ * happen to leave. The two side columns are equal by construction, which is the
+ * only way the centre stays put as the controls change.
+ *
  * Presentational — every value arrives as a prop. The layout wires it to the
  * store, which keeps this renderable in any state without mocking one.
  */
@@ -39,16 +51,15 @@ export default function AppBar({
 }: AppBarProps) {
   return (
     <header className={styles.bar}>
-      <div className={styles.identity}>
-        <h1 className={styles.wordmark}>
-          <Link href="/" className={styles.wordmarkLink}>
-            {title}
-          </Link>
-        </h1>
-        {/* Truncates rather than wraps: the bar is a fixed 60px, and a second
-            line would push the controls out of it. */}
-        {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
-      </div>
+      <h1 className={styles.wordmark}>
+        <Link href="/" className={styles.wordmarkLink} aria-label={title}>
+          <DotsMark size={6} />
+        </Link>
+      </h1>
+
+      {/* Truncates rather than wraps: the bar is a fixed 60px, and a second
+          line would push the controls out of it. */}
+      {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
 
       <div className={styles.controls}>
         <IconButton

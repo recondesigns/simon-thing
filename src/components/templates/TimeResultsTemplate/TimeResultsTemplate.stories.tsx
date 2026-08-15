@@ -8,7 +8,7 @@ const SESSIONS: SessionView[] = [
   {
     key: "1",
     title: "Session 2",
-    when: "Aug 8, 9:44 AM",
+    won: { amount: "$1,234.50", positive: true },
     meta: "2 rounds · 0:03",
     isActive: true,
     rounds: [
@@ -34,7 +34,7 @@ const SESSIONS: SessionView[] = [
   {
     key: "0",
     title: "Session 1",
-    when: "Aug 7, 8:15 PM",
+    won: { amount: "$0", positive: false },
     meta: "3 rounds · 0:12",
     isActive: false,
     rounds: [],

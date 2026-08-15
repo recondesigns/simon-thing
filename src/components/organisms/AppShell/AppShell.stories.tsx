@@ -117,9 +117,11 @@ export const GroupingSettingReflectsTheStore: Story = {
     });
 
     const segments = [...group.querySelectorAll<HTMLElement>('[role="radio"]')];
-    // Off, 2, 3, 4, 5 — "Off" rather than "1" because that is what it does.
+    // 1 through 5. A group of one *is* grouping off, but the number is the
+    // honest label — "Off" hid the setting behind a word and made the control
+    // look as though grouping started at 2.
     await expect(segments.map((s) => s.textContent)).toEqual([
-      "Off",
+      "1",
       "2",
       "3",
       "4",

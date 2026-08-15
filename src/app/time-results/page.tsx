@@ -16,15 +16,59 @@ import {
   formatRoundTotal,
   formatSessionStart,
 } from "@/lib/time";
+import { ROUND_CAP } from "@/lib/game/roundCap";
+import { COMPLETED_ROUND_PAYOUT } from "@/lib/game/payout";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
 
 const sum = (values: number[]) => values.reduce((total, v) => total + v, 0);
 
-/** The stored value is what persists; the label is only ever for display. */
-const reasonLabel = (round: Round) =>
-  ENDED_REASON_OPTIONS.find((o) => o.value === round.endedReason)?.label;
+/**
+ * Money, with a thousands separator — a visit's winnings run to four figures
+ * more readily than a single round's do. Client-only, like every other format
+ * here, because the store rehydrates after mount.
+ */
+const formatMoney = (amount: number) =>
+  `$${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+/**
+ * How a round's ending reads, or undefined when it has none to show.
+ *
+ * A spin win is its own sentence rather than an early end with a label — it
+ * carries a figure, and "Spin won / $12.50" says more than "Ended early /
+ * Spin". The amount is optional even here, because that prompt is skippable
+ * too: an unrecorded amount reads as the bare fact that the spin won, never as
+ * a win of nothing.
+ */
+const ending = (
+  round: Round,
+): { label: string; value: string; tone?: "success" | "danger" } | undefined => {
+  if (round.endedReason === "spin") {
+    if (round.spinWon === undefined) {
+      // Nothing to celebrate in a dash — the amount simply wasn't recorded.
+      return { label: "Spin won", value: "—" };
+    }
+    return {
+      label: "Spin won",
+      value: `$${round.spinWon.toFixed(2)}`,
+      tone: "success",
+    };
+  }
+  // Both picker reasons read red here. On Insights they are told apart —
+  // distractions amber, mistake red — because there the point is which is
+  // which; on a single round the point is only that it ended on something
+  // going wrong.
+  const reason = ENDED_REASON_OPTIONS.find(
+    (o) => o.value === round.endedReason,
+  );
+  return reason
+    ? { label: "Ended early", value: reason.label, tone: "danger" }
+    : undefined;
+};
 
 /**
  * A clock that ticks while a round is in progress, so the live round's total
@@ -108,26 +152,60 @@ export default function TimeResultsPage() {
       .map(roundElapsedMs)
       .filter((ms): ms is number => ms !== null);
 
+    // Two ways to be paid on a visit, added together because they are the same
+    // money: the spins that won, and the rounds taken all the way to the cap.
+    //
+    // Only spin amounts actually recorded count — one whose prompt was skipped
+    // contributes nothing rather than zero, so the figure can under-report but
+    // never invent. Completed rounds need nothing recorded at all: reaching the
+    // cap is evidence of itself.
+    const won =
+      sum(
+        allRounds
+          .map((round) => round.spinWon)
+          .filter((amount): amount is number => amount !== undefined),
+      ) +
+      allRounds.filter((round) => round.dots >= ROUND_CAP).length *
+        COMPLETED_ROUND_PAYOUT;
+
     return {
       key: String(index),
       title: isEarlier ? "Earlier" : `Session ${number}`,
-      when: isEarlier
-        ? undefined
-        : formatSessionStart(session.startedAt as number),
-      meta: `${allRounds.length} ${allRounds.length === 1 ? "round" : "rounds"} · ${
-        timed.length > 0 ? formatDuration(sum(timed)) : "—"
-      }`,
+      // `$0` rather than `$0.00`: a visit that won nothing is saying so, not
+      // reporting a precise amount, and the cents are noise on a round number.
+      won: { amount: won > 0 ? formatMoney(won) : "$0", positive: won > 0 },
+      // The date trails the figures rather than leading them: which visit this
+      // is gets answered by the name above, so the timestamp is the least
+      // urgent thing here. The legacy "Earlier" bucket predates sessions and
+      // has none to show.
+      meta: [
+        timed.length > 0 ? formatDuration(sum(timed)) : "—",
+        `${allRounds.length} ${allRounds.length === 1 ? "round" : "rounds"}`,
+        ...(isEarlier
+          ? []
+          : [formatSessionStart(session.startedAt as number)]),
+      ].join(" · "),
       isActive,
       rounds: allRounds
         .map((round, roundIndex) => {
           const ms = roundElapsedMs(round);
+          // A round that went the distance shows what it paid instead of how
+          // long it took. The time is the interesting number while a round is
+          // still a question — how fast, how far — and once it is finished the
+          // answer is the money.
+          const completed = round.dots >= ROUND_CAP;
           return {
             key: String(roundIndex),
             label: `Round ${roundIndex + 1}`,
             // A dash, not "0:00.0" — see the v2 → v3 migration. These rounds
             // were timed per dot, which is not the same quantity.
-            total: ms === null ? "—" : formatRoundTotal(ms),
-            endedReason: reasonLabel(round),
+            total: completed
+              ? formatMoney(COMPLETED_ROUND_PAYOUT)
+              : ms === null
+                ? "—"
+                : formatRoundTotal(ms),
+            totalTone: completed ? ("success" as const) : undefined,
+            ending: ending(round),
             live: roundIndex === liveIndex,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {
               const pad = round.pads[dotIndex];

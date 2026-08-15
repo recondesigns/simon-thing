@@ -64,6 +64,7 @@ export default function Home() {
   const unlock = useGameStore((state) => state.unlock);
   const start = useGameStore((state) => state.start);
   const logRound = useGameStore((state) => state.logRound);
+  const discardRound = useGameStore((state) => state.discardRound);
   const setLastRoundEndedReason = useGameStore(
     (state) => state.setLastRoundEndedReason,
   );
@@ -86,6 +87,11 @@ export default function Home() {
   // about. Holds the length rather than a boolean so the sheet can name the
   // round it means, after the board underneath has already moved on.
   const [endedEarlyDots, setEndedEarlyDots] = useState<number | null>(null);
+  // True while the spin-win amount is being asked for. The round is already
+  // banked and already marked a spin win by then — this only collects the
+  // figure, so it is a separate flag from the reason prompt rather than a mode
+  // of it.
+  const [askingSpinAmount, setAskingSpinAmount] = useState(false);
 
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
@@ -166,6 +172,50 @@ export default function Home() {
     if (endedEarly) setEndedEarlyDots(taps.length);
   }, [logRound]);
 
+  /**
+   * The spin paid out, so this round never needed playing. Banks it exactly as
+   * End round does, marks it a spin win straight away — the button already said
+   * that much — and then asks only for the amount.
+   *
+   * The reason prompt is deliberately skipped: it would be asking a question
+   * that has already been answered.
+   */
+  const handleSpinWin = useCallback(() => {
+    // Whether a round was already running decides where the board lands
+    // afterwards — see below.
+    const wasStarted = useGameStore.getState().startedAt !== null;
+    setExitingDots(useGameStore.getState().taps.map(padNumber));
+    // Marked at bank time rather than straight after, because **a spin win is
+    // usually a zero-dot round** — you won, so there was no pattern to play —
+    // and an empty round is otherwise dropped rather than banked. Passing the
+    // reason in is what tells `bankRound` this one is worth keeping.
+    logRound("spin");
+    setSpoken(undefined);
+    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+
+    // `logRound` always rolls into the next round with the clock running, which
+    // is right when a round was already going. From the Start screen it is not:
+    // the player hasn't started anything, and quietly starting a round for them
+    // — clock included — is a side effect they didn't ask for. The round just
+    // banked is untouched by this; the in-progress one it rolled into is empty.
+    if (!wasStarted) discardRound();
+
+    setAskingSpinAmount(true);
+  }, [logRound, discardRound]);
+
+  const handleSpinAmountSave = useCallback(
+    (amount: number) => {
+      setLastRoundEndedReason("spin", amount);
+      setAskingSpinAmount(false);
+    },
+    [setLastRoundEndedReason],
+  );
+
+  const handleSpinAmountSkip = useCallback(
+    () => setAskingSpinAmount(false),
+    [],
+  );
+
   const handleEndReasonPick = useCallback(
     (value: string) => {
       setLastRoundEndedReason(value as EndedReason);
@@ -174,9 +224,7 @@ export default function Home() {
     [setLastRoundEndedReason],
   );
 
-  // Backdrop, Escape and Skip all land here. Nothing is recorded, which is not
-  // the same as recording "no reason".
-  const handleEndReasonSkip = useCallback(() => setEndedEarlyDots(null), []);
+
 
   const handlePrimary = useCallback(() => {
     if (!started) {
@@ -345,7 +393,6 @@ export default function Home() {
       spoken={spoken}
       groupSize={readbackGroupSize}
       started={started}
-      full={full}
       endReasonOpen={endedEarlyDots !== null}
       endReasonOptions={ENDED_REASON_OPTIONS}
       endReasonDetail={
@@ -354,9 +401,12 @@ export default function Home() {
           : `${endedEarlyDots} ${endedEarlyDots === 1 ? "dot" : "dots"}`
       }
       onEndReasonPick={handleEndReasonPick}
-      onEndReasonSkip={handleEndReasonSkip}
       onTap={handleTap}
       onPrimary={handlePrimary}
+      onSpinWin={handleSpinWin}
+      spinWinOpen={askingSpinAmount}
+      onSpinWinSave={handleSpinAmountSave}
+      onSpinWinSkip={handleSpinAmountSkip}
       lastDotLabel={
         taps.length > 0 ? String(padNumber(taps[taps.length - 1])) : null
       }

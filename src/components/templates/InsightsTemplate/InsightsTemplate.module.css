@@ -17,10 +17,12 @@
   overflow-y: auto;
 }
 
-.empty {
-  margin: auto;
-  max-width: 24ch;
-  text-align: center;
-  font: var(--type-body);
-  color: var(--sem-text-secondary);
+/* Centres the empty state in the page rather than letting it sit under the
+   bar — the same treatment the Times screen gives its own. */
+.pageEmpty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }

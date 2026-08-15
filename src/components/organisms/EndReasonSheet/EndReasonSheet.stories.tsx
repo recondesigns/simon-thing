@@ -16,7 +16,6 @@ const meta = {
     options: OPTIONS,
     detail: "7 dots",
     onPick: fn(),
-    onSkip: fn(),
   },
 } satisfies Meta<typeof EndReasonSheet>;
 
@@ -53,28 +52,29 @@ export const PickingReportsTheValue: Story = {
     await userEvent.selectOptions(select, "mistake");
 
     await expect(args.onPick).toHaveBeenCalledWith("mistake");
-    await expect(args.onSkip).not.toHaveBeenCalled();
   },
 };
 
 /**
- * Skipping is a first-class outcome — the round is already banked, so this
- * records nothing rather than failing anything.
+ * **There is no way out but answering.** No Skip control, and the backdrop is
+ * inert — an early end that can dodge the question mostly will, and the
+ * Insights split is only worth reading if every one of them is in it.
  */
-export const Skipping: Story = {
+export const AnsweringIsTheOnlyWayOut: Story = {
   play: async ({ args }) => {
     const skip = [...document.querySelectorAll("button")].find(
       (b) => b.textContent?.trim() === "Skip",
-    )!;
-    // Full width and a real touch target: skipping must be as easy to hit as
-    // answering, or the data is shaped by which control was easier to press.
-    await expect(
-      parseInt(getComputedStyle(skip).minHeight, 10),
-    ).toBeGreaterThanOrEqual(44);
+    );
+    await expect(skip).toBeUndefined();
 
-    await userEvent.click(skip);
-    await expect(args.onSkip).toHaveBeenCalled();
+    // The backdrop is still there — it dims the board — it just does nothing.
+    const backdrop = document.querySelector(".MuiBackdrop-root") as HTMLElement;
+    await expect(backdrop).toBeTruthy();
+    await userEvent.click(backdrop);
     await expect(args.onPick).not.toHaveBeenCalled();
+
+    const paper = document.querySelector(".MuiDrawer-paper") as HTMLElement;
+    await expect(getComputedStyle(paper).visibility).toBe("visible");
   },
 };
 

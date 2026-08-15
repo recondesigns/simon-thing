@@ -16,8 +16,6 @@ export interface EndReasonSheetProps {
   options: EndReasonOption[];
   /** Picking a reason records it and closes — there is no separate confirm. */
   onPick?: (value: string) => void;
-  /** Dismiss without recording anything. */
-  onSkip: () => void;
   /** Required by SwipeableDrawer's controlled API; swipe-to-open is disabled. */
   onOpen?: () => void;
   /** How far the round got, e.g. "7 dots" — names the round being asked about. */
@@ -27,12 +25,15 @@ export interface EndReasonSheetProps {
 /**
  * Asks why a round was ended before the cap.
  *
- * **The round is already banked by the time this opens, and closing it either
- * way changes nothing about that.** Ending a round is irreversible and the next
- * round's clock is already running, so this cannot be a gate — it is an
- * annotation offered after the fact. Skipping is a first-class outcome, not a
- * failure path: a reason that isn't given is recorded as absent rather than
- * guessed at.
+ * **The round is already banked by the time this opens**, so this is not a gate
+ * on anything — ending a round is irreversible and the next round's clock is
+ * already running. It is an annotation collected after the fact.
+ *
+ * **There is no way out but answering.** No Skip, and backdrop and Escape are
+ * both ignored, because a reason that can be dodged is one that mostly is —
+ * and the Insights split is only worth reading if every early end is in it.
+ * Two options and one tap is a small enough toll to make mandatory; anything
+ * longer would not be.
  *
  * A bottom sheet rather than a centre dialog for the same reason the menu is
  * one — it is reached one-handed while standing at a machine — and on MUI's
@@ -48,7 +49,6 @@ export default function EndReasonSheet({
   open,
   options,
   onPick,
-  onSkip,
   onOpen,
   detail,
 }: EndReasonSheetProps) {
@@ -58,8 +58,9 @@ export default function EndReasonSheet({
     <SwipeableDrawer
       anchor="bottom"
       open={open}
-      // Backdrop tap and Escape both land here, and both mean "not saying".
-      onClose={onSkip}
+      // Deliberately inert. MUI routes backdrop, Escape and swipe-to-close
+      // here; none of them are ways out, because answering is the only one.
+      onClose={() => {}}
       onOpen={onOpen ?? (() => {})}
       disableSwipeToOpen
       transitionDuration={reducedMotion ? 160 : 320}
@@ -85,19 +86,13 @@ export default function EndReasonSheet({
       </div>
 
       <Select
-        className={styles.select}
+        className={styles.selectLast}
         label="Why did the round end early?"
         placeholder="Choose a reason…"
         options={options}
         value={null}
         onChange={(next) => onPick?.(next)}
       />
-
-      {/* Deliberately plain text, not a Button: skipping is the neutral
-          outcome and shouldn't compete with the choice above it. */}
-      <button type="button" className={styles.skip} onClick={onSkip}>
-        Skip
-      </button>
     </SwipeableDrawer>
   );
 }

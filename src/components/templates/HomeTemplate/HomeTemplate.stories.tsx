@@ -44,8 +44,11 @@ export const Running: Story = {
   },
   play: async ({ canvasElement, args }) => {
     await expect(canvasElement.textContent).toContain("End round");
-    // Undo names the dot it would take back, so a mis-tap is unambiguous.
-    await expect(canvasElement.textContent).toContain("Undo 9");
+    // Undo is icon-only now, so the dot it would take back is named in its
+    // accessible label rather than on screen.
+    await expect(
+      canvasElement.querySelector('[aria-label="Undo 9"]'),
+    ).toBeTruthy();
 
     await userEvent.click(pads(canvasElement)[0]);
     await expect(args.onTap).toHaveBeenCalledWith(0);
@@ -53,13 +56,13 @@ export const Running: Story = {
 };
 
 /**
- * **Undo and the round control split the bottom edge evenly, 20px apart.**
+ * **The round control leads and the icon buttons sit hard right.**
  *
- * The gap is the part worth pinning. Ending a round banks it, and a banked
- * round can't be edited — so this row puts a recoverable action next to an
- * irreversible one, and the space between them is what keeps a hurried thumb
- * from crossing over. A future tidy-up that collapses it to the column's usual
- * 10px would be a real regression, not a cosmetic one.
+ * The distance between them is the part worth pinning. Ending a round banks it,
+ * and a banked round can't be edited — so this row holds an irreversible
+ * control away from the recoverable ones, and `space-between` is what keeps a
+ * hurried thumb from crossing over. A tidy-up that packed them together would
+ * be a real regression, not a cosmetic one.
  */
 export const ControlsSplitTheBottomEdge: Story = {
   args: {
@@ -70,32 +73,42 @@ export const ControlsSplitTheBottomEdge: Story = {
     onUndo: fn(),
   },
   play: async ({ canvasElement }) => {
-    const buttons = [...canvasElement.querySelectorAll("button")];
-    const undo = buttons.find((b) => b.textContent?.includes("Undo"))!;
-    const cta = buttons.find((b) => b.textContent?.includes("End round"))!;
-    const a = undo.getBoundingClientRect();
-    const b = cta.getBoundingClientRect();
+    const cta = [...canvasElement.querySelectorAll("button")].find((b) =>
+      b.textContent?.includes("End round"),
+    )!;
+    const undo = canvasElement.querySelector('[aria-label="Undo 5"]')!;
+    const spin = canvasElement.querySelector(
+      '[aria-label="Log a spin win"]',
+    )!;
 
-    // Side by side, on one line.
-    await expect(a.top).toBe(b.top);
-    // Even halves.
-    await expect(Math.round(a.width)).toBe(Math.round(b.width));
-    // --space-5, and not the column's 10px.
-    await expect(Math.round(b.left - a.right)).toBe(20);
+    const cRect = cta.getBoundingClientRect();
+    const uRect = undo.getBoundingClientRect();
+    const sRect = spin.getBoundingClientRect();
 
-    // Below the pads now, which is what freed the height they grew into.
+    // One line, and the round control first.
+    await expect(uRect.top).toBe(cRect.top);
+    await expect(cRect.left).toBeLessThan(uRect.left);
+    // The spin button is last, hard against the right edge.
+    await expect(sRect.left).toBeGreaterThan(uRect.left);
+
+    // Pushed apart, not merely spaced — comfortably more than the column's 10px.
+    await expect(uRect.left - cRect.right).toBeGreaterThan(20);
+
+    // The icon buttons match the round control's height rather than the 44px
+    // they take in the app bar.
+    await expect(Math.round(uRect.height)).toBe(Math.round(cRect.height));
+
+    // Below the pads, which is what freed the height they grew into.
     const lastPad = pads(canvasElement).at(-1)!;
-    await expect(a.top).toBeGreaterThanOrEqual(
+    await expect(cRect.top).toBeGreaterThanOrEqual(
       lastPad.getBoundingClientRect().bottom,
     );
   },
 };
 
 /**
- * The read-back is a toast now, not a row in the status strip. The strip still
- * holds its 44px while it plays — it just holds it empty, because "tap along"
- * is actively wrong with the pads locked, and the toast is carrying the real
- * message.
+ * The read-back is a toast, floating over the board rather than taking a row in
+ * it — the column has no spare height to lend one.
  */
 export const ReadBackIsAToast: Story = {
   args: {
@@ -104,7 +117,7 @@ export const ReadBackIsAToast: Story = {
     started: true,
     spoken: 1,
   },
-  play: async ({ canvasElement }) => {
+  play: async () => {
     const toast = document.querySelector("[class*='toast']")!;
     await expect(toast).not.toBeNull();
     await expect(toast.textContent).toContain("Reading it back…");
@@ -119,12 +132,6 @@ export const ReadBackIsAToast: Story = {
     // containing block it finds, and Storybook's preview gives it a different
     // one than the app does.
     await expect(getComputedStyle(toast).top).toBe("38px");
-
-    // The strip is empty but has not collapsed — anything that reflowed here
-    // would shift the pad grid under a thumb already on its way down.
-    const strip = canvasElement.querySelector("[class*='strip']")!;
-    await expect(strip.textContent).toBe("");
-    await expect(strip.getBoundingClientRect().height).toBe(44);
   },
 };
 
@@ -158,7 +165,7 @@ export const ToastDoesNotLockThePads: Story = {
   },
 };
 
-/** Resting, the strip carries the hint and no toast exists at all. */
+/** Resting, no toast exists at all — not merely hidden. */
 export const NoToastWhenNotReading: Story = {
   args: {
     dots: [5] as GameColor[],
@@ -166,20 +173,17 @@ export const NoToastWhenNotReading: Story = {
     started: true,
     lastDotLabel: "5",
   },
-  play: async ({ canvasElement }) => {
+  play: async () => {
     await expect(document.querySelector("[class*='toast']")).toBeNull();
-    const strip = canvasElement.querySelector("[class*='strip']")!;
-    await expect(strip.textContent).toContain("Tap along");
   },
 };
 
-/** At the cap only ending the round is left, so the pads gate again. */
+/** At the cap the pads gate while the board banks the round itself. */
 export const Full: Story = {
   args: {
     dots: Array.from({ length: 20 }, (_, i) => ((i % 9) + 1) as GameColor),
     padState: "inert",
     started: true,
-    full: true,
   },
   play: async ({ canvasElement }) => {
     for (const p of pads(canvasElement)) await expect(p).toBeDisabled();

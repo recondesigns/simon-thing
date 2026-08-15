@@ -29,6 +29,8 @@ describe("roundTotals", () => {
     expect(roundTotals(sessions)).toEqual({
       finished: 0,
       endedEarly: 3,
+      // No reason was ever given for any of them.
+      early: { distractions: 0, mistake: 0, spin: 0 },
       total: 3,
     });
   });
@@ -37,6 +39,7 @@ describe("roundTotals", () => {
     expect(roundTotals([])).toEqual({
       finished: 0,
       endedEarly: 0,
+      early: { distractions: 0, mistake: 0, spin: 0 },
       total: 0,
     });
   });
@@ -194,6 +197,7 @@ describe("buildInsights", () => {
     expect(insights.rounds).toEqual({
       finished: 0,
       endedEarly: 1,
+      early: { distractions: 0, mistake: 0, spin: 0 },
       total: 1,
     });
     expect(insights.taps.total).toBe(3);

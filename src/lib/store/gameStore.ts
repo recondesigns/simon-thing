@@ -88,13 +88,17 @@ export type GroupSize = 1 | 2 | 3 | 4 | 5;
 /**
  * Ordered shortest to longest.
  *
- * `1` is labelled "Off" rather than "1" because that is what it does: a
- * boundary after every number is exactly the flat read-back grouping replaced.
- * Keeping it reachable means the setting can turn phrasing off, not just retune
- * it — worth having when the whole point is finding out whether it helps.
+ * `1` reads as "1" rather than "Off", even though it *is* off: a group of one
+ * is a boundary after every number, which is exactly the flat read-back that
+ * grouping replaced. It was labelled "Off" first, and that named the effect at
+ * the cost of hiding it — the control showed no 1 and looked as though grouping
+ * began at 2. The number is the honest label, and the scale reads 1–5.
+ *
+ * Keeping it reachable at all is what lets the setting answer whether grouping
+ * helps, not just how much.
  */
 export const GROUP_SIZE_OPTIONS: { value: GroupSize; label: string }[] = [
-  { value: 1, label: "Off" },
+  { value: 1, label: "1" },
   { value: 2, label: "2" },
   { value: 3, label: "3" },
   { value: 4, label: "4" },
@@ -144,9 +148,16 @@ export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
  * round it describes dedupes by the round's own identity, so Insights can count
  * these later without inheriting that problem.
  */
-export type EndedReason = "distractions" | "mistake";
+export type EndedReason = "distractions" | "mistake" | "spin";
 
-/** Ordered as offered in the prompt. */
+/**
+ * Ordered as offered in the prompt.
+ *
+ * **`spin` is deliberately absent.** It isn't picked from a list — it has its
+ * own control on the board, because it is not "why did the round stop" so much
+ * as "the round never needed playing". The player won on the spin, so there was
+ * no pattern to record.
+ */
 export const ENDED_REASON_OPTIONS: { value: EndedReason; label: string }[] = [
   { value: "distractions", label: "Distractions" },
   { value: "mistake", label: "Mistake" },
@@ -199,6 +210,15 @@ export interface Round {
    * never carry one: it wasn't ended early, it finished.
    */
   endedReason?: EndedReason;
+  /**
+   * What the spin paid, when `endedReason` is `"spin"`. Meaningless otherwise.
+   *
+   * Optional even then: the amount prompt is skippable like the reason one, so
+   * a spin round can know it was a spin without knowing what it paid. Absent is
+   * "not recorded", never zero — zero would be a spin that won nothing, which
+   * is a different event and not one this button is for.
+   */
+  spinWon?: number;
 }
 
 /**
@@ -292,9 +312,15 @@ export interface GameStore {
    * Finish the current round: bank it into the active session and roll straight
    * into the next one with the clock running, so play continues without a Start.
    * This is the normal "the round is over, log it" action, and it's what the
-   * header's End round button calls.
+   * board's End round button calls.
+   *
+   * `endedReason` is passed only when the *control* already says why — today
+   * that is the spin-win button alone. The picker's reasons arrive afterwards
+   * through {@link GameStore.setLastRoundEndedReason}, because they are chosen
+   * after the round is already banked. Passing it here is also what lets a
+   * zero-dot spin win bank at all; see `bankRound`.
    */
-  logRound: () => void;
+  logRound: (endedReason?: EndedReason) => void;
   /** Discard the current round without saving it, and reset to Start. */
   discardRound: () => void;
   /**
@@ -318,7 +344,7 @@ export interface GameStore {
    * immediately after `logRound`, from the prompt it opens, so the round it
    * means is unambiguous. A no-op if nothing has been banked.
    */
-  setLastRoundEndedReason: (reason: EndedReason) => void;
+  setLastRoundEndedReason: (reason: EndedReason, spinWon?: number) => void;
   /** Release the one-tap-per-dot lock once the read-back has finished. */
   unlock: () => void;
   /** Flip number read-back on/off. */
@@ -346,7 +372,12 @@ function bankRound(
   round: Round,
   now: number,
 ): Session[] {
-  if (round.dots === 0) return sessions;
+  // A round with no dots is normally dropped — nothing happened, so there is
+  // nothing to bank. **A spin win is the exception, and it is the common case
+  // for one:** winning on the spin means there was no pattern to play, so a
+  // spin round usually has zero dots and the amount it paid is the entire
+  // reason for recording it.
+  if (round.dots === 0 && round.endedReason !== "spin") return sessions;
   const last = sessions[sessions.length - 1];
   if (last && last.endedAt === null) {
     return [
@@ -516,7 +547,7 @@ export const useGameStore = create<GameStore>()(
           };
         }),
 
-      logRound: () =>
+      logRound: (endedReason) =>
         set((state) => {
           const now = Date.now();
           let sessions = bankRound(
@@ -526,6 +557,7 @@ export const useGameStore = create<GameStore>()(
               endedAt: now,
               dots: state.taps.length,
               pads: state.taps,
+              ...(endedReason === undefined ? {} : { endedReason }),
             },
             now,
           );
@@ -587,7 +619,7 @@ export const useGameStore = create<GameStore>()(
         useGameStore.persist.clearStorage();
       },
 
-      setLastRoundEndedReason: (reason) =>
+      setLastRoundEndedReason: (reason, spinWon) =>
         set((state) => {
           const sessionIndex = state.sessions.length - 1;
           if (sessionIndex < 0) return {};
@@ -596,7 +628,13 @@ export const useGameStore = create<GameStore>()(
           if (roundIndex < 0) return {};
 
           const rounds = [...session.rounds];
-          rounds[roundIndex] = { ...rounds[roundIndex], endedReason: reason };
+          rounds[roundIndex] = {
+            ...rounds[roundIndex],
+            endedReason: reason,
+            // Only ever written alongside a `spin` reason, and left off
+            // entirely when no amount was given.
+            ...(spinWon === undefined ? {} : { spinWon }),
+          };
           const sessions = [...state.sessions];
           sessions[sessionIndex] = { ...session, rounds };
           return { sessions };
