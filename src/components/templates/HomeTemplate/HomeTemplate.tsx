@@ -29,7 +29,11 @@ export interface HomeTemplateProps {
   groupSize?: number;
   /** True once the round is running. Flips the primary control's label. */
   started: boolean;
-  /** The round has hit the 20-dot cap; only ending it is left. */
+  /**
+   * The round has hit the 20-dot cap and is on its way out — the board banks it
+   * itself once the read-back finishes, so this is a state to narrate, not one
+   * the player has to act on.
+   */
   full?: boolean;
   onTap?: (index: number) => void;
   onPrimary?: () => void;
@@ -80,7 +84,7 @@ export default function HomeTemplate({
             that message, and "tap along" would be actively wrong with the pads
             locked. The strip still holds its 44px, so nothing reflows. */}
         {reading ? null : full ? (
-          <StatusHint tone="success">Round full — end it to log</StatusHint>
+          <StatusHint tone="success">Round full — logging it</StatusHint>
         ) : started ? (
           <StatusHint>Tap along — eyes on the TV</StatusHint>
         ) : (

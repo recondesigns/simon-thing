@@ -12,13 +12,15 @@ const SESSIONS: SessionView[] = [
     meta: "2 rounds · 0:03",
     isActive: true,
     rounds: [
+      // Banked before round-level timing and before pads: it knows it was two
+      // dots long and nothing else, so both the total and the dots read as "—".
       {
         key: "b",
         label: "Round 2",
-        total: "0:01.2",
+        total: "—",
         dots: [
-          { label: "Dot 1", value: "0.50" },
-          { label: "Dot 2", value: "0.70" },
+          { label: "Dot 1", value: "—" },
+          { label: "Dot 2", value: "—" },
         ],
       },
       {
@@ -26,8 +28,8 @@ const SESSIONS: SessionView[] = [
         label: "Round 1",
         total: "0:02.4",
         dots: [
-          { label: "Dot 1", value: "0.82", color: 5 },
-          { label: "Dot 2", value: "0.64", color: 1 },
+          { label: "Dot 1", value: "5", color: 5 },
+          { label: "Dot 2", value: "1", color: 1 },
         ],
       },
     ],
@@ -63,7 +65,7 @@ export const Populated: Story = {
 
 /**
  * A dot's colour chip appears only when the round recorded which pads were hit.
- * Rounds banked before store v2 kept durations alone, so their dots show a time
+ * Rounds banked before store v2 kept no pad identity, so their dots show a dash
  * and no chip — "unknown" rendered as absence rather than as a placeholder.
  */
 export const OnlyRoundsWithPadsShowChips: Story = {

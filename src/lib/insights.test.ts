@@ -10,7 +10,9 @@ import type { Session } from "@/lib/store/gameStore";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 
 const round = (pads: number[], length = pads.length) => ({
-  durations: Array.from({ length }, () => 1000),
+  startedAt: 0,
+  endedAt: length * 1000,
+  dots: length,
   pads,
 });
 

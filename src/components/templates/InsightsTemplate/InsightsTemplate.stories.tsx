@@ -5,7 +5,9 @@ import { buildInsights } from "@/lib/insights";
 import type { Session } from "@/lib/store/gameStore";
 
 const round = (pads: number[], length = pads.length) => ({
-  durations: Array.from({ length }, () => 1200),
+  startedAt: 0,
+  endedAt: length * 1200,
+  dots: length,
   pads,
 });
 

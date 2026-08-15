@@ -9,17 +9,15 @@ import styles from "./TimeResultsTemplate.module.css";
 
 export interface DotView {
   label: string;
-  /** Seconds, already formatted — the unit is rendered separately. */
+  /**
+   * The pad's keypad number, or a dash when the round predates pad recording.
+   * Dots are no longer timed individually — a round is timed as a whole — so
+   * this says *where* the dot landed, not how long it took.
+   */
   value: string;
   /**
-   * Rendered after the value in a smaller face. Omitted for the round's opening
-   * dot, which anchors the clock rather than measuring an interval and prints as
-   * a dash — "—s" reads as a unit attached to nothing.
-   */
-  unit?: string;
-  /**
-   * Which pad. Only known for the round being played right now: banked rounds
-   * store durations alone, so their dots have no colour to show.
+   * Which pad. Absent for rounds banked before store v2, which recorded no pad
+   * identity at all and so have no colour to show.
    */
   color?: GameColor;
 }
@@ -27,7 +25,10 @@ export interface DotView {
 export interface RoundView {
   key: string;
   label: string;
-  /** Formatted total, e.g. "0:07.0". */
+  /**
+   * Formatted wall-clock length, e.g. "0:07.0" — or "—" for rounds banked
+   * before round-level timing existed.
+   */
   total: string;
   dots: DotView[];
   /** The round being played right now. */
@@ -111,7 +112,6 @@ export default function TimeResultsTemplate({
                   key={i}
                   label={dot.label}
                   value={dot.value}
-                  unit={dot.unit}
                   dot={dot.color}
                 />
               ))}

@@ -129,17 +129,25 @@ export default function Home() {
   // Ending a round banks it and rolls straight into the next with the clock
   // already going, so there's nothing to wait for — the outgoing dots are held
   // for their fade while the board underneath is already the new round.
+  //
+  // Shared by the round control and by the cap, so both ends bank identically.
+  // Reads the taps out of the store rather than closing over `dots`, because the
+  // read-back effect calls this from inside a timeout, where a captured value
+  // would be a round out of date.
+  const endRound = useCallback(() => {
+    setExitingDots(useGameStore.getState().taps.map(padNumber));
+    logRound();
+    setSpoken(undefined);
+    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+  }, [logRound]);
+
   const handlePrimary = useCallback(() => {
     if (!started) {
       start();
       return;
     }
-    const banked = dots;
-    logRound();
-    setExitingDots(banked);
-    setSpoken(undefined);
-    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
-  }, [started, start, logRound, dots]);
+    endRound();
+  }, [started, start, endRound]);
 
   // Releasing the lock also fires the unlock cue, which is the single most
   // important piece of feedback here — it's what someone watching the TV rather
@@ -194,6 +202,21 @@ export default function Home() {
     // those cases, and the strip only reads `spoken` while it's locked.
     if (count <= previous) return;
 
+    // The twentieth dot is the last one a round can hold, so the round is over
+    // the moment its read-back is — no End round press, which was the one bit of
+    // bookkeeping the player had to do at a point where the outcome was already
+    // decided. It banks when the audio finishes rather than when the tap lands:
+    // the read-back is played in full first, and the round's clock runs to the
+    // end of it. See `endRound` for the fade.
+    const atCap = count >= ROUND_CAP;
+
+    // Every path out of the lock goes through here, so the cap is handled once
+    // instead of at each of the three places that reopen the board.
+    const finish = () => {
+      release();
+      if (atCap) endRound();
+    };
+
     // A new tap that isn't getting read back — either speech is off, or the
     // sequence is still short enough not to need it. Both are the same tap from
     // the player's side: silence, and a short debounce before unlocking. One
@@ -205,7 +228,7 @@ export default function Home() {
         // read-back that never happened. Below the threshold `spoken` was never
         // set in the first place, so this is a no-op on that path.
         setSpoken(undefined);
-        release();
+        finish();
       }, SILENT_LOCK_MS);
       return () => clearTimeout(timer);
     }
@@ -242,9 +265,13 @@ export default function Home() {
         // Nothing waits on the toast: it fades on its own afterwards, and the
         // pads' own unlock cue is what actually announces the reopening at
         // arm's length.
+        //
+        // At the cap this also banks the round, so `spoken` is cleared in the
+        // same commit and the "Go!" never lands — correctly, because there is
+        // nothing to go and do. The dots fading out are the signal instead.
         onDone: () => {
           setSpoken(words.length);
-          release();
+          finish();
         },
       });
     }, READBACK_PAUSE_MS);
@@ -254,7 +281,7 @@ export default function Home() {
     // voice — budgets every word for the *widened* boundary gap, worst case,
     // even though most words only pause the shorter in-group gap.
     const fallback = setTimeout(
-      release,
+      finish,
       READBACK_PAUSE_MS + count * (1500 + gapMs + groupGapMs) + 5000,
     );
 
@@ -263,7 +290,7 @@ export default function Home() {
       clearTimeout(fallback);
       cancelSpeech();
     };
-  }, [taps, unlock, release]);
+  }, [taps, unlock, release, endRound]);
 
   return (
     <HomeTemplate

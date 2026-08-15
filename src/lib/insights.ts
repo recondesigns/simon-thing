@@ -26,7 +26,7 @@ export interface TapTotals {
   /** Taps that could be attributed to a pad. The sum of `pads`. */
   total: number;
   /**
-   * Rounds holding times but no pads, and the taps inside them.
+   * Rounds with a known length but no pads, and the taps inside them.
    *
    * Every round banked before store v2 is like this: the board discarded pad
    * identity at `logRound`, so those taps happened and can never be attributed.
@@ -116,7 +116,7 @@ const allRounds = (sessions: Session[]) =>
 export function roundTotals(sessions: Session[]): RoundTotals {
   const rounds = allRounds(sessions);
   const finished = rounds.filter(
-    (round) => round.durations.length >= ROUND_CAP,
+    (round) => round.dots >= ROUND_CAP,
   ).length;
 
   return {
@@ -134,9 +134,9 @@ export function tapTotals(sessions: Session[]): TapTotals {
     if (round.pads.length === 0) {
       // Not "no taps" — unknowable ones. A round with times but no pads was
       // played; we just can't say where.
-      if (round.durations.length > 0) {
+      if (round.dots > 0) {
         unattributed.rounds += 1;
-        unattributed.taps += round.durations.length;
+        unattributed.taps += round.dots;
       }
       continue;
     }
@@ -161,9 +161,9 @@ export function tapTotals(sessions: Session[]): TapTotals {
 }
 
 export function lengthBuckets(sessions: Session[]): LengthBucket[] {
-  // Length comes from `durations`, not `pads`, so rounds that predate pad
-  // recording still count here. They know how long they were, just not where.
-  const lengths = allRounds(sessions).map((round) => round.durations.length);
+  // Length comes from `dots`, not `pads.length`, so rounds that predate pad
+  // recording still count here. They know how far they got, just not where.
+  const lengths = allRounds(sessions).map((round) => round.dots);
 
   return BUCKET_BOUNDS.map(([min, max]) => ({
     label: min === max ? String(min) : String(max),

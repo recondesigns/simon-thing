@@ -105,26 +105,52 @@ export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
  * closes it and opens the next.
  */
 /**
- * A banked round: what was tapped, and how long each dot took.
+ * A banked round: when it ran, how far it got, and what was tapped.
  *
- * The two arrays are the same length and the same order — dot N's duration is
- * `durations[N]` and the pad it landed on is `pads[N]`. They're one object rather
- * than two parallel arrays on {@link Session} because anything that edits a round
- * has to keep them in step, and two lists indexed in lockstep desynchronise the
- * first time something touches one and forgets the other.
+ * **The round is timed as a whole, not as a sum of its dots.** `startedAt` is
+ * when the round opened — Start for the first round of a visit, the previous
+ * End round for every one after — and `endedAt` is when it was banked. The gap
+ * between them therefore *includes* the machine setting up and playing its
+ * pattern back, which is deliberate: that playback is part of the round from the
+ * player's side, and it grows with the sequence.
+ *
+ * This replaced per-dot timing (v3). Dot times used to be measured tap-to-tap
+ * and summed for a total, which measured only the tapping and only from the
+ * first tap onward. The two are not the same quantity, so rounds banked before
+ * v3 carry `null` for both timestamps rather than a converted total — see the
+ * migration.
  */
 export interface Round {
-  /** Each dot's duration in ms, oldest first. */
-  durations: number[];
+  /** Epoch ms when the round opened. **Null for rounds banked before v3.** */
+  startedAt: number | null;
+  /** Epoch ms when the round was banked. **Null for rounds banked before v3.** */
+  endedAt: number | null;
+  /**
+   * How many dots the round reached.
+   *
+   * The authoritative length, and deliberately *not* derived from `pads.length`:
+   * rounds banked before v2 have no pads at all but still know how far they got,
+   * and the round-length histogram counts them.
+   */
+  dots: number;
   /**
    * Pad indices 0–8 in tap order.
    *
    * **Empty for every round banked before v2.** The board threw pad identity away
-   * at `logRound` until then, so that history has durations and nothing else —
+   * at `logRound` until then, so that history has a length and nothing else —
    * and it can't be recovered, because the information was never written. Treat
    * empty as "unknown", never as "no pads".
    */
   pads: number[];
+}
+
+/**
+ * A round's wall-clock length in ms, or null if it predates v3 and never
+ * recorded one. Null means "not recorded", never zero — a round always took time.
+ */
+export function roundElapsedMs(round: Round): number | null {
+  if (round.startedAt === null || round.endedAt === null) return null;
+  return Math.max(0, round.endedAt - round.startedAt);
 }
 
 export interface Session {
@@ -145,11 +171,10 @@ export interface Session {
  * is a cumulative Simon sequence of up to twenty dots (each tap adds one and
  * completes that dot); a **session** is a visit's worth of rounds.
  *
- * The pattern is cumulative, so `taps` holds the whole current round (up to 20)
- * and dot N's time is the gap between tap N-1 and tap N. Dot 1 measures nothing —
- * it *anchors* the clock, and is recorded as 0 meaning "unmeasured".
- * `dotDurations` is the round in progress; finished rounds live in a session's
- * `rounds`; `sessions` is every visit, oldest first, the last one open.
+ * The pattern is cumulative, so `taps` holds the whole current round (up to 20).
+ * Timing is per *round*, not per dot: `startedAt` opens the clock and `logRound`
+ * closes it, so nothing has to be measured tap by tap. Finished rounds live in a
+ * session's `rounds`; `sessions` is every visit, oldest first, the last one open.
  *
  * Sessions and the three preferences are persisted to localStorage; the in-progress
  * round and its running clock are not, so a reload keeps your history and the
@@ -160,19 +185,14 @@ export interface Session {
 export interface GameStore {
   /** The accumulated pattern (pad indices 0–8) for the current round, in order. */
   taps: number[];
-  /** Epoch ms when the current round started, or null before Start (pads gated). */
-  startedAt: number | null;
-  /** Epoch ms of the last tap (or the start), used to time the next dot. */
-  lastTapAt: number | null;
-  /** The current round's dot times in ms, one per tapped circle, oldest first. */
-  dotDurations: number[];
   /**
-   * Times freed by {@link GameStore.undoDot}, oldest first, waiting for the taps
-   * that replace them. A mis-tap is a wrong *pad*, not a wrong moment — the gap
-   * it measured was real — so the correction inherits that time instead of being
-   * re-measured and charged for the fumble.
+   * Epoch ms when the current round opened, or null before Start (pads gated).
+   *
+   * This is the round's clock as well as its gate: whatever it holds becomes the
+   * banked round's `startedAt`. `logRound` sets it to the moment the round ended,
+   * so the next round's clock covers the machine's setup and playback.
    */
-  pendingDurations: number[];
+  startedAt: number | null;
   /** Every session, oldest first. The last one is active if its `endedAt` is null. */
   sessions: Session[];
   /** Whether tapped numbers are read back aloud. Persisted preference. */
@@ -197,19 +217,18 @@ export interface GameStore {
   /** Begin the round: start the clock, ungate the pads, open a session if none is. */
   start: () => void;
   /**
-   * Add a dot — appends the pad and banks the dot's time (now minus the last
-   * tap/start), up to `max` dots. Ignored before Start or once the cap is reached.
+   * Add a dot — appends the pad, up to `max` dots. Ignored before Start or once
+   * the cap is reached. Nothing is timed here: the round's clock is already
+   * running, and a dot no longer carries a duration of its own.
    */
   tap: (index: number, max: number) => void;
   /**
-   * Take the last dot back so the right pad can be tapped instead. Its time is
-   * parked in `pendingDurations` for the replacement and the board unlocks at
-   * once, since the whole point is to re-tap before the next dot arrives.
+   * Take the last dot back so the right pad can be tapped instead. The board
+   * unlocks at once, since the whole point is to re-tap before the next dot
+   * arrives. Press twice to walk back two dots.
    *
-   * `lastTapAt` deliberately does *not* move: the mis-tapped dot landed at the
-   * right moment, so the dot after the correction is still measured from there
-   * and the fumble doesn't stretch it. Press twice to walk back two dots — the
-   * freed times are handed back in order.
+   * The round's clock keeps running through a correction, which is the honest
+   * reading: fumbling a pad is time the round actually took.
    */
   undoDot: () => void;
   /**
@@ -261,7 +280,7 @@ function bankRound(
   round: Round,
   now: number,
 ): Session[] {
-  if (round.durations.length === 0) return sessions;
+  if (round.dots === 0) return sessions;
   const last = sessions[sessions.length - 1];
   if (last && last.endedAt === null) {
     return [
@@ -275,21 +294,119 @@ function bankRound(
 /** The current round is cleared back to its not-yet-started state. */
 const freshRound = {
   taps: [] as number[],
-  dotDurations: [] as number[],
-  pendingDurations: [] as number[],
   startedAt: null as number | null,
-  lastTapAt: null as number | null,
   locked: false,
 };
+
+/**
+ * The persisted slice, as it comes back off disk. Everything but `sessions` is
+ * optional: preferences added without a version bump simply aren't there in an
+ * older store, and zustand merges the defaults in behind them.
+ */
+type PersistedGameState = {
+  sessions: Session[];
+  speechEnabled?: boolean;
+  cadence?: Cadence;
+  groupSize?: GroupSize;
+  groupGapMs?: number;
+};
+
+/**
+ * Steps run in sequence, oldest first, so each only has to know the shape
+ * immediately before it — a store two versions behind walks through both.
+ *
+ * - **v0 → v1.** v0 stored `games` (each game = a round's dot times). They
+ *   predate sessions and can't be sorted into visits, so they fold into a
+ *   single closed "Earlier" bucket.
+ * - **v1 → v2.** A round widened from `number[]` (durations alone) to
+ *   `{ durations, pads }`. Everything banked before v2 gets an empty `pads`:
+ *   the board discarded pad identity at `logRound`, so it was never written
+ *   down and cannot be reconstructed here. Guessing would be worse than
+ *   admitting the gap.
+ * - **v2 → v3.** Timing moved from per-dot to per-round, so `durations` became
+ *   `{ startedAt, endedAt, dots }`. The dot *count* survives —
+ *   `durations.length` is exactly what `dots` means, so the round-length
+ *   histogram is unaffected. The dot *times* do not, and they are not converted
+ *   into a round total either: summing them would measure first-tap-to-last-tap,
+ *   while v3's timestamps measure Start-to-End including the machine's setup and
+ *   playback. Those are different quantities, and quietly relabelling one as the
+ *   other would put two incompatible measurements in the same column. Pre-v3
+ *   rounds carry `null` timestamps and render as "—", the same way pre-v2 rounds
+ *   admit they have no pads.
+ *
+ * Exported so it can be tested directly: it is the one piece of this store that
+ * touches history already on someone's phone, and it cannot be reached through
+ * `useGameStore.persist` outside a browser.
+ */
+export function migrateGameState(
+  persisted: unknown,
+  version: number,
+): PersistedGameState {
+  if (!persisted || typeof persisted !== "object") {
+    return { sessions: [], speechEnabled: true, cadence: "relaxed" };
+  }
+
+  let state = persisted as {
+    games?: number[][];
+    sessions?: unknown[];
+    speechEnabled?: boolean;
+    cadence?: Cadence;
+  };
+
+  if (version < 1) {
+    state = {
+      sessions:
+        state.games && state.games.length > 0
+          ? [{ startedAt: null, endedAt: 0, rounds: state.games }]
+          : [],
+      speechEnabled: state.speechEnabled ?? true,
+      cadence: "relaxed",
+    };
+  }
+
+  if (version < 2) {
+    type V1Session = {
+      startedAt: number | null;
+      endedAt: number | null;
+      rounds: number[][];
+    };
+    state = {
+      ...state,
+      sessions: ((state.sessions ?? []) as V1Session[]).map((session) => ({
+        ...session,
+        rounds: session.rounds.map((durations) => ({ durations, pads: [] })),
+      })),
+    };
+  }
+
+  if (version < 3) {
+    type V2Session = {
+      startedAt: number | null;
+      endedAt: number | null;
+      rounds: { durations: number[]; pads: number[] }[];
+    };
+    state = {
+      ...state,
+      sessions: ((state.sessions ?? []) as V2Session[]).map((session) => ({
+        ...session,
+        rounds: session.rounds.map(({ durations, pads }) => ({
+          startedAt: null,
+          endedAt: null,
+          dots: durations.length,
+          pads,
+        })),
+      })),
+    };
+  }
+
+  return state as unknown as PersistedGameState;
+}
 
 export const useGameStore = create<GameStore>()(
   persist(
     (set) => ({
       taps: [],
       startedAt: null,
-      lastTapAt: null,
-      dotDurations: [],
-      pendingDurations: [],
       sessions: [],
       speechEnabled: true,
       cadence: "relaxed",
@@ -305,9 +422,10 @@ export const useGameStore = create<GameStore>()(
           const sessions = activeSession(state.sessions)
             ? state.sessions
             : [...state.sessions, { startedAt: now, endedAt: null, rounds: [] }];
-          // `startedAt` opens the round; `lastTapAt` stays null so the *clock*
-          // doesn't. The first pad anchors it — see `tap`.
-          return { sessions, startedAt: now, lastTapAt: null, locked: false };
+          // `startedAt` both opens the round and starts its clock. The machine's
+          // setup and pattern playback happen after this point and are counted,
+          // which is the intent: they're part of how long the round took.
+          return { sessions, startedAt: now, locked: false };
         }),
 
       tap: (index, max) =>
@@ -315,26 +433,8 @@ export const useGameStore = create<GameStore>()(
           if (state.startedAt === null) return {}; // gated until Start
           if (state.locked) return {}; // one tap per dot
           if (state.taps.length >= max) return {}; // capped at `max` dots
-          const now = Date.now();
-          // Replacing an undone dot? Inherit the time it measured and leave the
-          // clock where it was, so the fumble stretches neither this dot nor the
-          // next one. Otherwise time it normally, from the last tap.
-          //
-          // With no last tap this is the round's *anchor* — `now - now` is 0,
-          // which means "not measured", not "instant". A real interval can't be
-          // 0: the board is locked for at least SILENT_LOCK_MS after every tap.
-          // `formatDotSeconds` relies on that to tell the two apart, and rounds
-          // banked before this change carry a real first-dot time instead.
-          const [inherited, ...rest] = state.pendingDurations;
-          const replacing = inherited !== undefined;
           return {
             taps: [...state.taps, index],
-            dotDurations: [
-              ...state.dotDurations,
-              replacing ? inherited : now - (state.lastTapAt ?? now),
-            ],
-            pendingDurations: replacing ? rest : state.pendingDurations,
-            lastTapAt: replacing ? state.lastTapAt : now,
             locked: true, // held until the dot's read-back ends
           };
         }),
@@ -342,12 +442,8 @@ export const useGameStore = create<GameStore>()(
       undoDot: () =>
         set((state) => {
           if (state.taps.length === 0) return {};
-          const duration = state.dotDurations[state.dotDurations.length - 1];
           return {
             taps: state.taps.slice(0, -1),
-            dotDurations: state.dotDurations.slice(0, -1),
-            // Prepended, so walking back several dots refills them in order.
-            pendingDurations: [duration, ...state.pendingDurations],
             // Unlock now — the read-back of the wrong number is moot, and the
             // replacement tap is urgent. The route cancels the audio.
             locked: false,
@@ -357,11 +453,14 @@ export const useGameStore = create<GameStore>()(
       logRound: () =>
         set((state) => {
           const now = Date.now();
-          // `taps` and `dotDurations` stay the same length through tap and
-          // undoDot, so they pair up dot for dot.
           let sessions = bankRound(
             state.sessions,
-            { durations: state.dotDurations, pads: state.taps },
+            {
+              startedAt: state.startedAt,
+              endedAt: now,
+              dots: state.taps.length,
+              pads: state.taps,
+            },
             now,
           );
           // Roll straight into the next round — keep (or open) a session for it.
@@ -374,14 +473,11 @@ export const useGameStore = create<GameStore>()(
           return {
             sessions,
             taps: [],
-            dotDurations: [],
-            pendingDurations: [],
+            // Roll into the next round with its clock already running. Ending a
+            // round *is* the next one beginning: the machine sets up and plays
+            // its pattern in that gap, and the round is what the player waits
+            // through, not just what they tap.
             startedAt: now,
-            // Roll into the next round live, but with the clock stopped. Ending
-            // a round is not the same event as the next one beginning: the
-            // machine sets up and plays its pattern in between, and how long
-            // that takes has nothing to do with how fast anyone is tapping.
-            lastTapAt: null,
             locked: false,
           };
         }),
@@ -394,7 +490,12 @@ export const useGameStore = create<GameStore>()(
           // Bank any round in progress into the session we're closing.
           let sessions = bankRound(
             state.sessions,
-            { durations: state.dotDurations, pads: state.taps },
+            {
+              startedAt: state.startedAt,
+              endedAt: now,
+              dots: state.taps.length,
+              pads: state.taps,
+            },
             now,
           );
           const last = sessions[sessions.length - 1];
@@ -439,7 +540,7 @@ export const useGameStore = create<GameStore>()(
     }),
     {
       name: "simon-thing-game",
-      version: 2,
+      version: 3,
       // Deferred; StoreHydrator calls rehydrate() after mount. See the note above.
       skipHydration: true,
       // Persist sessions and the preferences only — never the in-progress
@@ -457,62 +558,7 @@ export const useGameStore = create<GameStore>()(
         groupSize: state.groupSize,
         groupGapMs: state.groupGapMs,
       }),
-      /**
-       * Steps run in sequence, oldest first, so each only has to know the shape
-       * immediately before it — a store two versions behind walks through both.
-       *
-       * - **v0 → v1.** v0 stored `games` (each game = a round's dot times). They
-       *   predate sessions and can't be sorted into visits, so they fold into a
-       *   single closed "Earlier" bucket.
-       * - **v1 → v2.** A round widened from `number[]` (durations alone) to
-       *   `{ durations, pads }`. Everything banked before v2 gets an empty
-       *   `pads`: the board discarded pad identity at `logRound`, so it was
-       *   never written down and cannot be reconstructed here. Guessing would be
-       *   worse than admitting the gap.
-       */
-      migrate: (persisted, version) => {
-        if (!persisted || typeof persisted !== "object") {
-          return { sessions: [], speechEnabled: true, cadence: "relaxed" };
-        }
-
-        let state = persisted as {
-          games?: number[][];
-          sessions?: unknown[];
-          speechEnabled?: boolean;
-          cadence?: Cadence;
-        };
-
-        if (version < 1) {
-          state = {
-            sessions:
-              state.games && state.games.length > 0
-                ? [{ startedAt: null, endedAt: 0, rounds: state.games }]
-                : [],
-            speechEnabled: state.speechEnabled ?? true,
-            cadence: "relaxed",
-          };
-        }
-
-        if (version < 2) {
-          type V1Session = {
-            startedAt: number | null;
-            endedAt: number | null;
-            rounds: number[][];
-          };
-          state = {
-            ...state,
-            sessions: ((state.sessions ?? []) as V1Session[]).map((session) => ({
-              ...session,
-              rounds: session.rounds.map((durations) => ({
-                durations,
-                pads: [],
-              })),
-            })),
-          };
-        }
-
-        return state as unknown as { sessions: Session[] };
-      },
+      migrate: migrateGameState,
     },
   ),
 );
