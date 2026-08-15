@@ -189,22 +189,24 @@ export default function TimeResultsPage() {
       rounds: allRounds
         .map((round, roundIndex) => {
           const ms = roundElapsedMs(round);
-          // A round that went the distance shows what it paid instead of how
-          // long it took. The time is the interesting number while a round is
-          // still a question — how fast, how far — and once it is finished the
-          // answer is the money.
+          // Every round reports both, in two places that each mean one thing:
+          // how long it took under the label, what it paid on the right. The
+          // payout used to *replace* the time on a completed round, which meant
+          // the rounds that went the full distance were the only ones whose
+          // length you couldn't read.
           const completed = round.dots >= ROUND_CAP;
+          const payout = completed
+            ? formatMoney(COMPLETED_ROUND_PAYOUT)
+            : round.spinWon !== undefined
+              ? formatMoney(round.spinWon)
+              : undefined;
           return {
             key: String(roundIndex),
             label: `Round ${roundIndex + 1}`,
             // A dash, not "0:00.0" — see the v2 → v3 migration. These rounds
             // were timed per dot, which is not the same quantity.
-            total: completed
-              ? formatMoney(COMPLETED_ROUND_PAYOUT)
-              : ms === null
-                ? "—"
-                : formatRoundTotal(ms),
-            totalTone: completed ? ("success" as const) : undefined,
+            elapsed: ms === null ? "—" : formatRoundTotal(ms),
+            payout,
             ending: ending(round),
             live: roundIndex === liveIndex,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {

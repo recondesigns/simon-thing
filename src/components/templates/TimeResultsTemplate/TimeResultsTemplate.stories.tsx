@@ -13,17 +13,18 @@ const SESSIONS: SessionView[] = [
     isActive: true,
     rounds: [
       // Banked before round-level timing and before pads: it knows it was two
-      // dots long and nothing else, so both the total and the dots read as "—".
+      // dots long and nothing else, so both the length and the dots read as "—".
       {
         key: "b",
         label: "Round 2",
-        total: "—",
+        elapsed: "—",
         dots: [{ label: "Dot 1" }, { label: "Dot 2" }],
       },
       {
         key: "a",
         label: "Round 1",
-        total: "0:02.4",
+        elapsed: "0:02.4",
+        payout: "$0.25",
         dots: [
           { label: "Dot 1", color: 5 },
           { label: "Dot 2", color: 1 },
