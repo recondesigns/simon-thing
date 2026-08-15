@@ -1,3 +1,4 @@
+import EmptyState from "@/components/organisms/EmptyState/EmptyState";
 import RoundsSummary from "@/components/organisms/RoundsSummary/RoundsSummary";
 import TapsPerPosition from "@/components/organisms/TapsPerPosition/TapsPerPosition";
 import RoundEndHistogram from "@/components/organisms/RoundEndHistogram/RoundEndHistogram";
@@ -20,11 +21,11 @@ export interface InsightsTemplateProps {
  */
 export default function InsightsTemplate({ insights }: InsightsTemplateProps) {
   if (insights.empty) {
+    // The same idling board the Times screen shows when it has nothing —
+    // two empty surfaces in one app should not be empty in two different ways.
     return (
-      <div className={styles.page}>
-        <p className={styles.empty}>
-          Nothing to show yet. Play a round and it will appear here.
-        </p>
+      <div className={styles.pageEmpty}>
+        <EmptyState body="Play a round and it will show up here." />
       </div>
     );
   }

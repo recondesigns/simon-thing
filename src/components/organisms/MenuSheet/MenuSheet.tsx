@@ -21,6 +21,15 @@ export interface MenuSheetItem {
 
 export interface MenuSheetProps {
   open: boolean;
+  /**
+   * Which edge it comes from. `bottom` is the settings sheet — short, tuned
+   * mid-session, and reached with a thumb. `right` is navigation and the
+   * session actions, which is a taller list and conventionally a side drawer.
+   *
+   * Only `bottom` gets the grab handle: it is the one that reads as draggable,
+   * and the gesture MUI honours here is vertical.
+   */
+  anchor?: "bottom" | "right";
   onClose: () => void;
   /** Required by SwipeableDrawer's controlled API; swipe-to-open is disabled. */
   onOpen?: () => void;
@@ -41,6 +50,7 @@ export interface MenuSheetProps {
  */
 export default function MenuSheet({
   open,
+  anchor = "bottom",
   onClose,
   onOpen,
   title = "Menu",
@@ -52,9 +62,11 @@ export default function MenuSheet({
   // than merely running the same slide faster.
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
+  const fromSide = anchor === "right";
+
   return (
     <SwipeableDrawer
-      anchor="bottom"
+      anchor={anchor}
       open={open}
       onClose={onClose}
       onOpen={onOpen ?? (() => {})}
@@ -64,7 +76,9 @@ export default function MenuSheet({
       transitionDuration={reducedMotion ? 160 : 320}
       slots={reducedMotion ? { transition: Fade } : undefined}
       slotProps={{
-        paper: { className: styles.paper },
+        paper: {
+          className: fromSide ? `${styles.paper} ${styles.paperSide}` : styles.paper,
+        },
         backdrop: { className: styles.scrim },
         // Springs on the way in, eases on the way out. An exit that overshoots
         // draws attention back to something already being dismissed.
@@ -78,7 +92,7 @@ export default function MenuSheet({
             },
       }}
     >
-      <div className={styles.grabHandle} aria-hidden="true" />
+      {!fromSide && <div className={styles.grabHandle} aria-hidden="true" />}
 
       <div className={styles.titleRow}>
         <span className={styles.title}>{title}</span>

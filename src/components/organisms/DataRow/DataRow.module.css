@@ -38,3 +38,21 @@
   font: var(--type-numeral-sm);
   color: var(--sem-text-secondary);
 }
+
+/*
+ * Money won. The bright success text rather than the tinted `bg/success`
+ * surface — that surface is built to sit *under* bright text, and here the
+ * figure itself is the thing being read.
+ */
+.success {
+  color: var(--sem-text-success);
+}
+
+/*
+ * A round that ended on something going wrong. The bright danger text, not the
+ * tinted `bg/danger` surface — that surface is built to sit *under* bright
+ * text, and here the words are what is being read.
+ */
+.danger {
+  color: var(--sem-text-danger);
+}

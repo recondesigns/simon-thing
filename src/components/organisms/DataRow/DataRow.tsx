@@ -4,25 +4,37 @@ import styles from "./DataRow.module.css";
 
 export interface DataRowProps {
   label: string;
-  value: string;
-  /** Suffixed to the value in a smaller face — "s" for seconds. */
+  /**
+   * Right-aligned detail. Optional: a dot's row carries its pad as the colour
+   * chip alone, and printing the pad number beside it said the same thing twice.
+   */
+  value?: string;
+  /** Suffixed to the value in a smaller face. */
   unit?: string;
   /** A pad colour chip, so a dot's row is identifiable without reading it. */
   dot?: GameColor;
+  /**
+   * Colours the value. `success` is money won — the one figure here that is
+   * good news rather than a measurement. `danger` is a round that ended on
+   * something going wrong.
+   */
+  tone?: "default" | "success" | "danger";
   className?: string;
 }
 
 /**
- * One dot inside an expanded round: which pad, and how long it took.
+ * A labelled row inside an expanded round — a dot and its pad, or a fact about
+ * the round itself.
  *
- * The value is set in the mono numeral face, so a column of times lines up on
- * the decimal and doesn't shuffle sideways as digits change.
+ * The value is set in the mono numeral face, so a column of numbers lines up
+ * rather than shuffling sideways as digits change.
  */
 export default function DataRow({
   label,
   value,
   unit,
   dot,
+  tone = "default",
   className,
 }: DataRowProps) {
   return (
@@ -34,10 +46,20 @@ export default function DataRow({
         />
       )}
       <span className={styles.label}>{label}</span>
-      <span className={styles.value}>
-        {value}
-        {unit && <span className={styles.unit}>{unit}</span>}
-      </span>
+      {value !== undefined && (
+        <span
+          className={[
+            styles.value,
+            tone === "success" && styles.success,
+            tone === "danger" && styles.danger,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          {value}
+          {unit && <span className={styles.unit}>{unit}</span>}
+        </span>
+      )}
     </div>
   );
 }

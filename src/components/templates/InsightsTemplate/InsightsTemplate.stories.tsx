@@ -5,7 +5,9 @@ import { buildInsights } from "@/lib/insights";
 import type { Session } from "@/lib/store/gameStore";
 
 const round = (pads: number[], length = pads.length) => ({
-  durations: Array.from({ length }, () => 1200),
+  startedAt: 0,
+  endedAt: length * 1200,
+  dots: length,
   pads,
 });
 
@@ -43,10 +45,11 @@ export const Populated: Story = {
     await expect(canvasElement.textContent).toContain("Where rounds end");
 
     // Four banked rounds, split by whether they reached the cap: one 20-dot
-    // round finished, three ended early.
-    await expect(canvasElement.textContent).toContain("4 total");
-    await expect(canvasElement.textContent).toContain("1 finished");
-    await expect(canvasElement.textContent).toContain("3 ended early");
+    // One round finished; the other three ended early with no reason on
+    // record, so they are attributable to no share — the bar adds up to less
+    // than the total, which is the honest reading.
+    const shares = [...canvasElement.querySelectorAll('[role="img"]')];
+    await expect(shares.map((s) => s.textContent)).toEqual(["0", "0", "0", "1"]);
     // All nine positions, always.
     await expect(canvasElement.querySelectorAll("[class*='bubble']")).toHaveLength(9);
   },
@@ -69,11 +72,21 @@ export const ScrollsRatherThanSquashes: Story = {
   },
 };
 
-/** Nothing played: one sentence, not three empty charts. */
+/**
+ * Nothing played: the shared empty state, not three empty charts — and the same
+ * one the Times screen shows, down to the idling board.
+ */
 export const Empty: Story = {
   args: { insights: buildInsights([]) },
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.textContent).toContain("Nothing to show yet");
+    await expect(canvasElement.textContent).toContain("Nothing here yet");
     await expect(canvasElement.querySelector("section")).toBeNull();
+    // The mark, not just the copy — nine sockets with the centre one lit.
+    // Asserted structurally rather than by class name, which is mangled
+    // differently by the Storybook build than by Next's.
+    const mark = [...canvasElement.querySelectorAll("span")].find(
+      (el) => el.children.length === 9,
+    );
+    await expect(mark).toBeTruthy();
   },
 };

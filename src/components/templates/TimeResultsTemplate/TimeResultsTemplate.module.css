@@ -9,7 +9,11 @@
   flex: 1;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  /* 32px of air under the bar before the first card — the list reads as a
+     separate thing from the chrome above it, rather than starting the instant
+     the border ends. It scrolls away with the content, being padding on the
+     scroller rather than a gap held outside it. */
+  padding: var(--space-8) var(--space-4) var(--space-4);
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -40,8 +44,20 @@
 .sessionTitle {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--space-1);
   padding: var(--space-2) 0;
+}
+
+/*
+ * The name and the winnings share a row and are pushed to its ends. `baseline`
+ * rather than `center` so the smaller figure sits on the same line as the name
+ * beside it, instead of floating in the middle of its cap height.
+ */
+.sessionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .sessionName {
@@ -49,10 +65,45 @@
   color: var(--sem-text-surface);
 }
 
-.sessionWhen {
-  font: var(--type-caption);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
+/*
+ * The visit's winnings, beside the name. Label and figure are separate elements
+ * because only one of them is coloured: "Won:" is a caption and stays quiet,
+ * while the amount carries the meaning.
+ */
+.sessionWon {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font: var(--type-numeral-sm);
+  /* Never squeezed by a long name — it is the shorter, harder fact. */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wonLabel {
+  color: var(--sem-text-secondary);
+}
+
+/* Zero is still a figure, just not good news — it reads in the ordinary ink. */
+.wonAmount {
+  color: var(--sem-text-surface);
+}
+
+/*
+ * Green only once there is something to be green about. The bright success
+ * text, not the tinted `bg/success` surface — the figure is what is being read
+ * rather than something sitting under it.
+ */
+.wonPositive {
+  color: var(--sem-text-success);
+}
+
+/*
+ * The round count, the total time and the winnings, on their own row beneath.
+ * It outgrew sitting beside the name once it carried three figures.
+ */
+.sessionMeta {
+  font: var(--type-numeral-sm);
   color: var(--sem-text-secondary);
 }
 

@@ -8,26 +8,25 @@ const SESSIONS: SessionView[] = [
   {
     key: "1",
     title: "Session 2",
-    when: "Aug 8, 9:44 AM",
+    won: { amount: "$1,234.50", positive: true },
     meta: "2 rounds · 0:03",
     isActive: true,
     rounds: [
+      // Banked before round-level timing and before pads: it knows it was two
+      // dots long and nothing else, so both the total and the dots read as "—".
       {
         key: "b",
         label: "Round 2",
-        total: "0:01.2",
-        dots: [
-          { label: "Dot 1", value: "0.50" },
-          { label: "Dot 2", value: "0.70" },
-        ],
+        total: "—",
+        dots: [{ label: "Dot 1" }, { label: "Dot 2" }],
       },
       {
         key: "a",
         label: "Round 1",
         total: "0:02.4",
         dots: [
-          { label: "Dot 1", value: "0.82", color: 5 },
-          { label: "Dot 2", value: "0.64", color: 1 },
+          { label: "Dot 1", color: 5 },
+          { label: "Dot 2", color: 1 },
         ],
       },
     ],
@@ -35,7 +34,7 @@ const SESSIONS: SessionView[] = [
   {
     key: "0",
     title: "Session 1",
-    when: "Aug 7, 8:15 PM",
+    won: { amount: "$0", positive: false },
     meta: "3 rounds · 0:12",
     isActive: false,
     rounds: [],
@@ -63,8 +62,8 @@ export const Populated: Story = {
 
 /**
  * A dot's colour chip appears only when the round recorded which pads were hit.
- * Rounds banked before store v2 kept durations alone, so their dots show a time
- * and no chip — "unknown" rendered as absence rather than as a placeholder.
+ * Rounds banked before store v2 kept no pad identity, so their dots show the
+ * label alone — "unknown" rendered as absence rather than as a placeholder.
  */
 export const OnlyRoundsWithPadsShowChips: Story = {
   play: async ({ canvasElement }) => {
