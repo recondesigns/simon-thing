@@ -170,7 +170,7 @@ export const GroupGapSettingReflectsTheStore: Story = {
     });
 
     await expect(input.min).toBe("0");
-    await expect(input.max).toBe("1500");
+    await expect(input.max).toBe("2000");
     // DEFAULT_GROUP_GAP_MS — no widening until the player asks for it.
     await expect(input.value).toBe("0");
     await expect(document.body.textContent).toContain("Original");

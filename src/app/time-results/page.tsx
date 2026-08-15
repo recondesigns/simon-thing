@@ -8,6 +8,7 @@ import TimeResultsTemplate, {
 import {
   useGameStore,
   roundElapsedMs,
+  ENDED_REASON_OPTIONS,
   type Round,
 } from "@/lib/store/gameStore";
 import {
@@ -20,6 +21,10 @@ import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
 
 const sum = (values: number[]) => values.reduce((total, v) => total + v, 0);
+
+/** The stored value is what persists; the label is only ever for display. */
+const reasonLabel = (round: Round) =>
+  ENDED_REASON_OPTIONS.find((o) => o.value === round.endedReason)?.label;
 
 /**
  * A clock that ticks while a round is in progress, so the live round's total
@@ -122,17 +127,16 @@ export default function TimeResultsPage() {
             // A dash, not "0:00.0" — see the v2 → v3 migration. These rounds
             // were timed per dot, which is not the same quantity.
             total: ms === null ? "—" : formatRoundTotal(ms),
+            endedReason: reasonLabel(round),
             live: roundIndex === liveIndex,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {
               const pad = round.pads[dotIndex];
               return {
                 label: `Dot ${dotIndex + 1}`,
-                // Rounds banked before store v2 recorded no pads, so their dots
-                // know they happened but not where — see `Round.pads`.
-                value:
-                  pad === undefined
-                    ? "—"
-                    : String(CELL_NUMBERS[CELL_POSITIONS[pad]]),
+                // The chip *is* the pad — printing its number beside it said the
+                // same thing twice. Rounds banked before store v2 recorded no
+                // pads at all, so theirs show neither: they know the dot
+                // happened, not where it landed. See `Round.pads`.
                 color:
                   pad === undefined
                     ? undefined

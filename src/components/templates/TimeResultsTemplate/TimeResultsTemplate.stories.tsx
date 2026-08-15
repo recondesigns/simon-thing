@@ -18,18 +18,15 @@ const SESSIONS: SessionView[] = [
         key: "b",
         label: "Round 2",
         total: "—",
-        dots: [
-          { label: "Dot 1", value: "—" },
-          { label: "Dot 2", value: "—" },
-        ],
+        dots: [{ label: "Dot 1" }, { label: "Dot 2" }],
       },
       {
         key: "a",
         label: "Round 1",
         total: "0:02.4",
         dots: [
-          { label: "Dot 1", value: "5", color: 5 },
-          { label: "Dot 2", value: "1", color: 1 },
+          { label: "Dot 1", color: 5 },
+          { label: "Dot 2", color: 1 },
         ],
       },
     ],
@@ -65,8 +62,8 @@ export const Populated: Story = {
 
 /**
  * A dot's colour chip appears only when the round recorded which pads were hit.
- * Rounds banked before store v2 kept no pad identity, so their dots show a dash
- * and no chip — "unknown" rendered as absence rather than as a placeholder.
+ * Rounds banked before store v2 kept no pad identity, so their dots show the
+ * label alone — "unknown" rendered as absence rather than as a placeholder.
  */
 export const OnlyRoundsWithPadsShowChips: Story = {
   play: async ({ canvasElement }) => {

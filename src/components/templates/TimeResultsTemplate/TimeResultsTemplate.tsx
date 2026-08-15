@@ -10,14 +10,12 @@ import styles from "./TimeResultsTemplate.module.css";
 export interface DotView {
   label: string;
   /**
-   * The pad's keypad number, or a dash when the round predates pad recording.
-   * Dots are no longer timed individually — a round is timed as a whole — so
-   * this says *where* the dot landed, not how long it took.
-   */
-  value: string;
-  /**
-   * Which pad. Absent for rounds banked before store v2, which recorded no pad
-   * identity at all and so have no colour to show.
+   * Which pad the dot landed on, shown as a colour chip and nothing else — the
+   * chip *is* the pad, so printing its number beside it said the same thing
+   * twice.
+   *
+   * Absent for rounds banked before store v2, which recorded no pad identity at
+   * all: those rows say a dot happened without saying where it went.
    */
   color?: GameColor;
 }
@@ -30,6 +28,12 @@ export interface RoundView {
    * before round-level timing existed.
    */
   total: string;
+  /**
+   * Why the round was ended early, already resolved to its label. Absent when
+   * the round reached the cap, or when the player skipped the prompt — those
+   * are different things, but neither has anything to show.
+   */
+  endedReason?: string;
   dots: DotView[];
   /** The round being played right now. */
   live?: boolean;
@@ -107,13 +111,13 @@ export default function TimeResultsTemplate({
                 )
               }
             >
+              {/* Above the dots because it is about the round, not about any
+                  one of them. */}
+              {round.endedReason && (
+                <DataRow label="Ended early" value={round.endedReason} />
+              )}
               {round.dots.map((dot, i) => (
-                <DataRow
-                  key={i}
-                  label={dot.label}
-                  value={dot.value}
-                  dot={dot.color}
-                />
+                <DataRow key={i} label={dot.label} dot={dot.color} />
               ))}
             </CollapsibleRow>
           ))}

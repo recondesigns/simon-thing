@@ -113,7 +113,7 @@ export const GROUP_SIZE_OPTIONS: { value: GroupSize; label: string }[] = [
  * widening, matching every cadence before this setting existed.
  */
 export const GROUP_GAP_MIN_MS = 0;
-export const GROUP_GAP_MAX_MS = 1500;
+export const GROUP_GAP_MAX_MS = 2000;
 export const GROUP_GAP_STEP_MS = 50;
 export const DEFAULT_GROUP_GAP_MS = 0;
 
@@ -126,6 +126,7 @@ export const GROUP_GAP_MARKS: { value: number; label: string }[] = [
   { value: 900, label: "+0.9s" },
   { value: 1200, label: "+1.2s" },
   { value: 1500, label: "+1.5s" },
+  { value: 2000, label: "+2s" },
 ];
 
 /**

@@ -6,7 +6,7 @@ const meta = {
   title: "Organisms/AppBar",
   component: AppBar,
   parameters: { layout: "fullscreen" },
-  args: { subtitle: "Round 7", navHref: "/time-results", navLabel: "Times" },
+  args: { subtitle: "Round 7" },
 } satisfies Meta<typeof AppBar>;
 
 export default meta;
@@ -16,76 +16,50 @@ const links = (canvasElement: HTMLElement) => [
   ...canvasElement.querySelectorAll<HTMLAnchorElement>("a"),
 ];
 
+/**
+ * The wordmark is home from anywhere, and since the nav link was removed it is
+ * the *only* link in the bar — both other surfaces are reached from the menu.
+ */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    // The wordmark is home from anywhere — the only always-available way back.
-    const [wordmark] = links(canvasElement);
-    await expect(wordmark.getAttribute("href")).toBe("/");
+    const all = links(canvasElement);
+    await expect(all).toHaveLength(1);
+    await expect(all[0].getAttribute("href")).toBe("/");
     await expect(canvasElement.textContent).toContain("Round 7");
   },
 };
 
 /**
- * The nav link is the app's only one-tap route between its two surfaces, now
- * that the sheet's copy is gone — so it has to be a real touch target, not just
- * a run of text. 44px is the minimum, and this is pressed with a thumb.
+ * Two sheets, two buttons. They open different things at different moments —
+ * the gear is read-back tuning adjusted mid-session, the menu is where you go —
+ * so each needs its own target rather than sharing one.
  */
-export const NavLinkIsAFullTouchTarget: Story = {
-  play: async ({ canvasElement }) => {
-    const nav = links(canvasElement).find(
-      (a) => a.getAttribute("href") === "/time-results",
+export const BothSheetsAreReachable: Story = {
+  args: { onOpenSettings: fn(), onOpenMenu: fn() },
+  play: async ({ canvasElement, args }) => {
+    const settings = canvasElement.querySelector<HTMLElement>(
+      '[aria-label="Read-back settings"]',
+    )!;
+    const menu = canvasElement.querySelector<HTMLElement>(
+      '[aria-label="Open menu"]',
     )!;
 
-    await expect(nav.textContent).toBe("Times");
-    await expect(nav.getBoundingClientRect().height).toBe(44);
-    // text/secondary (#A6A49B) — recedes beside the wordmark rather than
-    // competing with it.
-    await expect(getComputedStyle(nav).color).toBe("rgb(166, 164, 155)");
-  },
-};
+    // Both are thumb targets at the 44px minimum, not just icons.
+    await expect(settings.getBoundingClientRect().height).toBe(44);
+    await expect(menu.getBoundingClientRect().height).toBe(44);
 
-/**
- * The label and the target are both supplied, so the bar can point back to the
- * board from the Times route. Nothing here decides which — the shell does, and
- * it always names the surface you are *not* on.
- */
-export const PointingBackToTheBoard: Story = {
-  args: { subtitle: "Times", navHref: "/", navLabel: "Board" },
-  play: async ({ canvasElement }) => {
-    const [wordmark, nav] = links(canvasElement);
-    await expect(nav.textContent).toBe("Board");
-    // Both lead home from here, which is fine — one is a wordmark in the
-    // corner, the other a labelled target under the thumb.
-    await expect(wordmark.getAttribute("href")).toBe("/");
-    await expect(nav.getAttribute("href")).toBe("/");
-  },
-};
+    await userEvent.click(settings);
+    await expect(args.onOpenSettings).toHaveBeenCalled();
+    await expect(args.onOpenMenu).not.toHaveBeenCalled();
 
-/** With no target supplied the bar simply carries the menu, and doesn't break. */
-export const WithoutANavLink: Story = {
-  args: { navHref: undefined, navLabel: undefined },
-  play: async ({ canvasElement }) => {
-    await expect(links(canvasElement)).toHaveLength(1);
-    await expect(
-      canvasElement.querySelector('[aria-label="Open menu"]'),
-    ).toBeTruthy();
-  },
-};
-
-export const Interactions: Story = {
-  args: { onOpenMenu: fn() },
-  play: async ({ canvasElement, args }) => {
-    await userEvent.click(
-      canvasElement.querySelector('[aria-label="Open menu"]')!,
-    );
+    await userEvent.click(menu);
     await expect(args.onOpenMenu).toHaveBeenCalled();
   },
 };
 
 /**
  * The bar is a fixed 60px, so a long subtitle truncates rather than wrapping —
- * a second line would push the controls out of it. The nav link must not
- * truncate alongside it; it is the target, not the caption.
+ * a second line would push the controls out of it.
  */
 export const LongSubtitle: Story = {
   args: {
@@ -95,10 +69,10 @@ export const LongSubtitle: Story = {
     const bar = canvasElement.querySelector("header")!;
     await expect(bar.getBoundingClientRect().height).toBe(60);
 
-    const nav = links(canvasElement).find(
-      (a) => a.getAttribute("href") === "/time-results",
+    // The controls keep their full width rather than being squeezed by it.
+    const menu = canvasElement.querySelector<HTMLElement>(
+      '[aria-label="Open menu"]',
     )!;
-    // Holds its full label rather than being squeezed by the subtitle.
-    await expect(nav.scrollWidth).toBe(nav.clientWidth);
+    await expect(menu.getBoundingClientRect().width).toBe(44);
   },
 };
