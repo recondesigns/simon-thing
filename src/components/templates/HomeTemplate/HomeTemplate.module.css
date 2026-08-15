@@ -17,6 +17,8 @@
   --toast-anchor: var(--app-bar-h);
   gap: 10px;
   padding: var(--space-3) var(--space-4) var(--space-4);
+  /* The status strip used to hold the results and the pads apart; with it gone
+     the board carries that separation itself. See `.board`. */
   min-height: 0;
   /* Last resort only. The grids shrink first, and this never engages above
      roughly 600px of viewport — but if both hit their floors, scrolling beats
@@ -25,29 +27,50 @@
 }
 
 /*
- * Undo and the round control, paired on the bottom edge and splitting the width
- * evenly. Never shrinks and never scrolls out of reach.
+ * The round control on the left, the two icon buttons hard right. Never shrinks
+ * and never scrolls out of reach.
  *
- * The 20px gap is the one part of this row that isn't cosmetic. Ending a round
- * banks it, and a banked round can't be edited — so the two controls sitting
- * side by side put a recoverable action next to an irreversible one, and the
- * gap is what keeps a hurried thumb from crossing between them.
+ * Pushed apart rather than merely spaced, and that is the one part of this row
+ * that isn't cosmetic. Ending a round banks it and a banked round can't be
+ * edited, so the distance between the irreversible control and the recoverable
+ * ones is what keeps a hurried thumb from crossing between them — space-between
+ * gives more of it than any fixed gap would, and gives more the wider the
+ * screen.
  */
 .controls {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-5);
   flex-shrink: 0;
 }
 
-/* Even halves. `min-width: 0` because the labels are `nowrap` — without it a
-   long label sets the flex base and the split stops being even. */
-.control {
-  flex: 1;
-  min-width: 0;
+.secondaryControls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Squared up to the round control's height rather than the 44px an icon button
+   takes in the app bar — they share a row, and a short one would read as a
+   different class of control. */
+.iconControl {
+  width: var(--size-control);
+  height: var(--size-control);
 }
 
 .spacer {
   flex: 1;
   /* Collapses first on a short screen, before anything visible gives way. */
   min-height: 0;
+}
+
+/*
+ * 24px between the results and the pads, where the removed status strip used to
+ * sit. Carried as a margin on the board rather than by widening the column's
+ * `gap`, which would also push the pads away from the spacer and the controls
+ * and cost vertical room the grids need on a short screen.
+ */
+.board {
+  margin-bottom: calc(var(--space-6) - 10px);
 }

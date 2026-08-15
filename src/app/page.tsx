@@ -5,7 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
-import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
+import {
+  useGameStore,
+  CADENCE_GAP_MS,
+  CADENCE_RATE,
+  ENDED_REASON_OPTIONS,
+  type EndedReason,
+} from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -58,6 +64,10 @@ export default function Home() {
   const unlock = useGameStore((state) => state.unlock);
   const start = useGameStore((state) => state.start);
   const logRound = useGameStore((state) => state.logRound);
+  const discardRound = useGameStore((state) => state.discardRound);
+  const setLastRoundEndedReason = useGameStore(
+    (state) => state.setLastRoundEndedReason,
+  );
 
   // How many numbers the read-back has spoken. Undefined when nothing is being
   // read, which is what tells the template to show a hint instead.
@@ -73,6 +83,15 @@ export default function Home() {
   const [exitingDots, setExitingDots] = useState<GameColor[] | undefined>(
     undefined,
   );
+  // How far the early-ended round got, or null when nothing is being asked
+  // about. Holds the length rather than a boolean so the sheet can name the
+  // round it means, after the board underneath has already moved on.
+  const [endedEarlyDots, setEndedEarlyDots] = useState<number | null>(null);
+  // True while the spin-win amount is being asked for. The round is already
+  // banked and already marked a spin win by then — this only collects the
+  // figure, so it is a separate flag from the reason prompt rather than a mode
+  // of it.
+  const [askingSpinAmount, setAskingSpinAmount] = useState(false);
 
   const dots = useMemo(() => taps.map(padNumber), [taps]);
 
@@ -129,17 +148,91 @@ export default function Home() {
   // Ending a round banks it and rolls straight into the next with the clock
   // already going, so there's nothing to wait for — the outgoing dots are held
   // for their fade while the board underneath is already the new round.
+  //
+  // Shared by the round control and by the cap, so both ends bank identically.
+  // Reads the taps out of the store rather than closing over `dots`, because the
+  // read-back effect calls this from inside a timeout, where a captured value
+  // would be a round out of date.
+  const endRound = useCallback(() => {
+    const taps = useGameStore.getState().taps;
+    // Only a round that was actually banked *and* stopped short is worth asking
+    // about. An empty round is dropped rather than banked, and one at the cap
+    // wasn't ended early — it finished.
+    const endedEarly = taps.length > 0 && taps.length < ROUND_CAP;
+
+    setExitingDots(taps.map(padNumber));
+    logRound();
+    setSpoken(undefined);
+    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+
+    // Asked *after* banking, deliberately. Ending is irreversible and the next
+    // round's clock is already running, so this can't gate anything — and
+    // opening it first would charge however long the player spends answering to
+    // the very round being annotated.
+    if (endedEarly) setEndedEarlyDots(taps.length);
+  }, [logRound]);
+
+  /**
+   * The spin paid out, so this round never needed playing. Banks it exactly as
+   * End round does, marks it a spin win straight away — the button already said
+   * that much — and then asks only for the amount.
+   *
+   * The reason prompt is deliberately skipped: it would be asking a question
+   * that has already been answered.
+   */
+  const handleSpinWin = useCallback(() => {
+    // Whether a round was already running decides where the board lands
+    // afterwards — see below.
+    const wasStarted = useGameStore.getState().startedAt !== null;
+    setExitingDots(useGameStore.getState().taps.map(padNumber));
+    // Marked at bank time rather than straight after, because **a spin win is
+    // usually a zero-dot round** — you won, so there was no pattern to play —
+    // and an empty round is otherwise dropped rather than banked. Passing the
+    // reason in is what tells `bankRound` this one is worth keeping.
+    logRound("spin");
+    setSpoken(undefined);
+    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
+
+    // `logRound` always rolls into the next round with the clock running, which
+    // is right when a round was already going. From the Start screen it is not:
+    // the player hasn't started anything, and quietly starting a round for them
+    // — clock included — is a side effect they didn't ask for. The round just
+    // banked is untouched by this; the in-progress one it rolled into is empty.
+    if (!wasStarted) discardRound();
+
+    setAskingSpinAmount(true);
+  }, [logRound, discardRound]);
+
+  const handleSpinAmountSave = useCallback(
+    (amount: number) => {
+      setLastRoundEndedReason("spin", amount);
+      setAskingSpinAmount(false);
+    },
+    [setLastRoundEndedReason],
+  );
+
+  const handleSpinAmountSkip = useCallback(
+    () => setAskingSpinAmount(false),
+    [],
+  );
+
+  const handleEndReasonPick = useCallback(
+    (value: string) => {
+      setLastRoundEndedReason(value as EndedReason);
+      setEndedEarlyDots(null);
+    },
+    [setLastRoundEndedReason],
+  );
+
+
+
   const handlePrimary = useCallback(() => {
     if (!started) {
       start();
       return;
     }
-    const banked = dots;
-    logRound();
-    setExitingDots(banked);
-    setSpoken(undefined);
-    setTimeout(() => setExitingDots(undefined), ROUND_EXIT_MS);
-  }, [started, start, logRound, dots]);
+    endRound();
+  }, [started, start, endRound]);
 
   // Releasing the lock also fires the unlock cue, which is the single most
   // important piece of feedback here — it's what someone watching the TV rather
@@ -194,6 +287,21 @@ export default function Home() {
     // those cases, and the strip only reads `spoken` while it's locked.
     if (count <= previous) return;
 
+    // The twentieth dot is the last one a round can hold, so the round is over
+    // the moment its read-back is — no End round press, which was the one bit of
+    // bookkeeping the player had to do at a point where the outcome was already
+    // decided. It banks when the audio finishes rather than when the tap lands:
+    // the read-back is played in full first, and the round's clock runs to the
+    // end of it. See `endRound` for the fade.
+    const atCap = count >= ROUND_CAP;
+
+    // Every path out of the lock goes through here, so the cap is handled once
+    // instead of at each of the three places that reopen the board.
+    const finish = () => {
+      release();
+      if (atCap) endRound();
+    };
+
     // A new tap that isn't getting read back — either speech is off, or the
     // sequence is still short enough not to need it. Both are the same tap from
     // the player's side: silence, and a short debounce before unlocking. One
@@ -205,7 +313,7 @@ export default function Home() {
         // read-back that never happened. Below the threshold `spoken` was never
         // set in the first place, so this is a no-op on that path.
         setSpoken(undefined);
-        release();
+        finish();
       }, SILENT_LOCK_MS);
       return () => clearTimeout(timer);
     }
@@ -215,7 +323,11 @@ export default function Home() {
     // fifth tap reads all five numbers, exactly as any length does.
     // Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
-    const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
+    const cadence = useGameStore.getState().cadence;
+    const gapMs = CADENCE_GAP_MS[cadence];
+    // Read together with the gap and from the same cadence, so the two halves
+    // of a setting can never come from different ones.
+    const rate = CADENCE_RATE[cadence];
     // The dots were pinned to this same value in `handleTap`. Both are read
     // from the store rather than passed between, and the two reads are one
     // commit apart, so they cannot disagree — which they must not, since the
@@ -231,6 +343,7 @@ export default function Home() {
         gapMs,
         groupSize,
         groupGapMs,
+        rate,
         // Drives the progress dots. Each callback lands as a number finishes,
         // so the indicator tracks the audio rather than a predicted schedule.
         onSpoke: (n) => setSpoken(n),
@@ -242,9 +355,13 @@ export default function Home() {
         // Nothing waits on the toast: it fades on its own afterwards, and the
         // pads' own unlock cue is what actually announces the reopening at
         // arm's length.
+        //
+        // At the cap this also banks the round, so `spoken` is cleared in the
+        // same commit and the "Go!" never lands — correctly, because there is
+        // nothing to go and do. The dots fading out are the signal instead.
         onDone: () => {
           setSpoken(words.length);
-          release();
+          finish();
         },
       });
     }, READBACK_PAUSE_MS);
@@ -252,9 +369,10 @@ export default function Home() {
     // Safety net: if the browser never fires the end event, don't leave the
     // board locked forever. Generous so it never pre-empts a slow-but-working
     // voice — budgets every word for the *widened* boundary gap, worst case,
-    // even though most words only pause the shorter in-group gap.
+    // even though most words only pause the shorter in-group gap. The per-word
+    // 1500ms is budgeted at rate 1, so a faster cadence only leaves more slack.
     const fallback = setTimeout(
-      release,
+      finish,
       READBACK_PAUSE_MS + count * (1500 + gapMs + groupGapMs) + 5000,
     );
 
@@ -263,7 +381,7 @@ export default function Home() {
       clearTimeout(fallback);
       cancelSpeech();
     };
-  }, [taps, unlock, release]);
+  }, [taps, unlock, release, endRound]);
 
   return (
     <HomeTemplate
@@ -275,9 +393,20 @@ export default function Home() {
       spoken={spoken}
       groupSize={readbackGroupSize}
       started={started}
-      full={full}
+      endReasonOpen={endedEarlyDots !== null}
+      endReasonOptions={ENDED_REASON_OPTIONS}
+      endReasonDetail={
+        endedEarlyDots === null
+          ? undefined
+          : `${endedEarlyDots} ${endedEarlyDots === 1 ? "dot" : "dots"}`
+      }
+      onEndReasonPick={handleEndReasonPick}
       onTap={handleTap}
       onPrimary={handlePrimary}
+      onSpinWin={handleSpinWin}
+      spinWinOpen={askingSpinAmount}
+      onSpinWinSave={handleSpinAmountSave}
+      onSpinWinSkip={handleSpinAmountSkip}
       lastDotLabel={
         taps.length > 0 ? String(padNumber(taps[taps.length - 1])) : null
       }

@@ -1,0 +1,41 @@
+.mark {
+  display: grid;
+  grid-template-columns: repeat(3, var(--socket));
+  gap: var(--socket-gap);
+}
+
+.socket,
+.centre,
+.live {
+  width: var(--socket);
+  height: var(--socket);
+  box-sizing: border-box;
+  border-radius: var(--radius-round);
+}
+
+/*
+ * Dashed at 2px regardless of size. Scaling the border with the socket would
+ * put a sub-pixel dash on the small mark, which renders as a smudge rather than
+ * a ring.
+ */
+.socket {
+  border: 2px dashed var(--sem-border-surface-strong);
+}
+
+.centre,
+.live {
+  background-color: var(--accent-fill);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Slow enough to read as breathing rather than blinking — it's decoration, not
+   a notification. */
+.live {
+  animation: dots-breathe 2400ms var(--ease-in-out) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live {
+    animation: none;
+  }
+}

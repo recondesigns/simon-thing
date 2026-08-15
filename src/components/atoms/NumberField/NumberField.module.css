@@ -1,0 +1,53 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--size-control);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--sem-border-surface);
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-bg-surface-raised);
+}
+
+.wrap:focus-within {
+  box-shadow: var(--elev-glow-focus);
+}
+
+/*
+ * The currency sign is part of the field, not part of the value — it must never
+ * reach what gets parsed and stored. Rendered as its own element rather than
+ * prefilled into the input, and hidden from assistive tech, which reads the
+ * field's own label instead.
+ */
+.prefix {
+  font: var(--type-numeral);
+  color: var(--sem-text-secondary);
+  flex-shrink: 0;
+}
+
+/*
+ * The mono numeral face, so digits hold their width as they are typed — an
+ * amount that shuffles sideways under the caret is hard to read back.
+ */
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  font: var(--type-numeral);
+  color: var(--sem-text-primary);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.input::placeholder {
+  color: var(--sem-text-secondary);
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.disabled .input {
+  cursor: not-allowed;
+}

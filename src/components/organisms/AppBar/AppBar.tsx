@@ -1,59 +1,72 @@
 "use client";
 
 import Link from "next/link";
+import DotsMark from "@/components/atoms/DotsMark/DotsMark";
 import IconButton from "@/components/atoms/IconButton/IconButton";
 import styles from "./AppBar.module.css";
 
 export interface AppBarProps {
   /** Shown beside the wordmark — the session, the round, or the area name. */
   subtitle?: string;
-  /** Where the nav link goes, and what it says. */
-  navHref?: string;
-  navLabel?: string;
+  /** Opens the read-back settings, as a bottom sheet. */
+  onOpenSettings?: () => void;
+  /** Opens navigation and the session actions, as a side sheet. */
   onOpenMenu?: () => void;
+  /** Names the mark for assistive tech, which sees a grid of spans otherwise. */
   title?: string;
 }
 
 /**
- * The persistent bar. It carries the wordmark, which is the way back to the
- * board from anywhere, and the two controls that have to be reachable without
- * opening anything: the link to the other surface, and the menu.
+ * The persistent bar: the wordmark, and the two sheets.
  *
- * The nav link replaced a sound toggle that sat here. Sound is a preference set
- * once and rarely changed, so it didn't earn a permanent slot in a 60px bar; it
- * lives in the sheet's settings, where the read-back speed it pairs with
- * already was. Moving between the two surfaces is the thing done constantly,
- * and it was previously buried a tap deeper than the setting.
+ * The wordmark is the way back to the board from anywhere, and is now the
+ * *only* one — the text link that used to name the other surface is gone, and
+ * both Times and Insights are reached from the menu instead. Three surfaces
+ * could never be served by a single link that named "the one you are not on",
+ * and picking one of the three to privilege made the other two second-class.
+ *
+ * Two icons rather than one, because the sheets behind them answer different
+ * questions and are opened at different times: the gear is read-back tuning,
+ * adjusted mid-session while standing at the machine; the menu is where you go,
+ * plus the session actions and the destructive controls.
+ *
+ * The wordmark is the app's own board reduced to a mark rather than the word
+ * "DOTS": the player already knows that shape from every screen, so it says the
+ * same thing without the typography, and it leaves the middle of the bar free
+ * for the page title.
+ *
+ * Laid out as a three-column grid, not a flex row, so the title is centred
+ * against *the bar* rather than against whatever space the mark and the buttons
+ * happen to leave. The two side columns are equal by construction, which is the
+ * only way the centre stays put as the controls change.
  *
  * Presentational — every value arrives as a prop. The layout wires it to the
  * store, which keeps this renderable in any state without mocking one.
  */
 export default function AppBar({
   subtitle,
-  navHref,
-  navLabel,
+  onOpenSettings,
   onOpenMenu,
   title = "DOTS",
 }: AppBarProps) {
   return (
     <header className={styles.bar}>
-      <div className={styles.identity}>
-        <h1 className={styles.wordmark}>
-          <Link href="/" className={styles.wordmarkLink}>
-            {title}
-          </Link>
-        </h1>
-        {/* Truncates rather than wraps: the bar is a fixed 60px, and a second
-            line would push the controls out of it. */}
-        {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
-      </div>
+      <h1 className={styles.wordmark}>
+        <Link href="/" className={styles.wordmarkLink} aria-label={title}>
+          <DotsMark size={6} />
+        </Link>
+      </h1>
+
+      {/* Truncates rather than wraps: the bar is a fixed 60px, and a second
+          line would push the controls out of it. */}
+      {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
 
       <div className={styles.controls}>
-        {navHref && navLabel && (
-          <Link href={navHref} className={styles.navLink}>
-            {navLabel}
-          </Link>
-        )}
+        <IconButton
+          icon="settings"
+          label="Read-back settings"
+          onClick={onOpenSettings}
+        />
         <IconButton icon="menu" label="Open menu" onClick={onOpenMenu} />
       </div>
     </header>

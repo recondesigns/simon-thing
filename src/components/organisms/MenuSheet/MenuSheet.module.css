@@ -15,6 +15,26 @@
   box-shadow: var(--elev-3);
 }
 
+/*
+ * The side variant. Full height against the right edge, so it is a drawer
+ * rather than a sheet — and capped well under the column so the board stays
+ * visible behind it, which is what makes it read as "over" rather than "away".
+ *
+ * Overrides only what the edge changes: the rounded corners move to the left
+ * side, and the missing border moves to the right.
+ */
+.paperSide {
+  height: 100%;
+  width: min(320px, 85vw);
+  max-width: none;
+  margin: 0;
+  padding: var(--space-4) var(--space-4) var(--space-6);
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  border: 1px solid var(--sem-border-surface-strong);
+  border-right: none;
+  overflow-y: auto;
+}
+
 .scrim {
   background-color: var(--sem-bg-scrim);
 }

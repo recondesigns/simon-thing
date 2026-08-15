@@ -2,13 +2,13 @@
 
 
 import Button from "@/components/atoms/Button/Button";
+import IconButton from "@/components/atoms/IconButton/IconButton";
+import SpinWinSheet from "@/components/organisms/SpinWinSheet/SpinWinSheet";
 import Toast from "@/components/atoms/Toast/Toast";
 import PadGrid from "@/components/organisms/PadGrid/PadGrid";
 import ResultsBoard from "@/components/organisms/ResultsBoard/ResultsBoard";
-import StatusStrip, {
-  StatusHint,
-} from "@/components/organisms/StatusStrip/StatusStrip";
 import WaitingIndicator from "@/components/organisms/WaitingIndicator/WaitingIndicator";
+import EndReasonSheet from "@/components/organisms/EndReasonSheet/EndReasonSheet";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./HomeTemplate.module.css";
@@ -29,10 +29,27 @@ export interface HomeTemplateProps {
   groupSize?: number;
   /** True once the round is running. Flips the primary control's label. */
   started: boolean;
-  /** The round has hit the 20-dot cap; only ending it is left. */
-  full?: boolean;
   onTap?: (index: number) => void;
   onPrimary?: () => void;
+  /**
+   * Logs a spin win, then asks what it paid. Never disabled: a spin can pay out
+   * before the player has started anything, and that win is still worth
+   * recording.
+   */
+  onSpinWin?: () => void;
+  /** The "what did the spin pay?" sheet, opened after that round is banked. */
+  spinWinOpen?: boolean;
+  onSpinWinSave?: (amount: number) => void;
+  onSpinWinSkip?: () => void;
+  /**
+   * The "why did it end early?" sheet, asked *after* the round is already
+   * banked. Passed through rather than owned here so the template stays
+   * presentational and the route keeps the store.
+   */
+  endReasonOpen?: boolean;
+  endReasonOptions?: { value: string; label: string }[];
+  endReasonDetail?: string;
+  onEndReasonPick?: (value: string) => void;
   /** The number on the last dot, e.g. "7", or null when the round is empty. */
   lastDotLabel?: string | null;
   onUndo?: () => void;
@@ -62,9 +79,16 @@ export default function HomeTemplate({
   spoken,
   groupSize,
   started,
-  full = false,
   onTap,
   onPrimary,
+  onSpinWin,
+  spinWinOpen = false,
+  onSpinWinSave,
+  onSpinWinSkip,
+  endReasonOpen = false,
+  endReasonOptions = [],
+  endReasonDetail,
+  onEndReasonPick,
   lastDotLabel = null,
   onUndo,
   undoDisabled = false,
@@ -73,20 +97,12 @@ export default function HomeTemplate({
 
   return (
     <div className={styles.page}>
-      <ResultsBoard dots={dots} arriving={arriving} exitingDots={exitingDots} />
-
-      <StatusStrip>
-        {/* Deliberately empty while the read-back runs: the toast is carrying
-            that message, and "tap along" would be actively wrong with the pads
-            locked. The strip still holds its 44px, so nothing reflows. */}
-        {reading ? null : full ? (
-          <StatusHint tone="success">Round full — end it to log</StatusHint>
-        ) : started ? (
-          <StatusHint>Tap along — eyes on the TV</StatusHint>
-        ) : (
-          <StatusHint>Start a round, then tap what the machine shows</StatusHint>
-        )}
-      </StatusStrip>
+      <ResultsBoard
+        className={styles.board}
+        dots={dots}
+        arriving={arriving}
+        exitingDots={exitingDots}
+      />
 
       <PadGrid state={padState} justUnlocked={justUnlocked} onTap={onTap} />
 
@@ -94,26 +110,33 @@ export default function HomeTemplate({
           any viewport height, without being positioned there. */}
       <div className={styles.spacer} />
 
+      {/* The round control leads, and the two icon buttons sit against the far
+          edge. The gap between them is the point: ending a round banks it and a
+          banked round can't be edited, so the width of the row is what keeps a
+          hurried thumb from crossing between a recoverable action and an
+          irreversible one. */}
       <div className={styles.controls}>
-        <Button
-          variant="secondary"
-          size="lg"
-          icon="undo"
-          className={styles.control}
-          disabled={undoDisabled || lastDotLabel === null}
-          onClick={onUndo}
-        >
-          {lastDotLabel === null ? "Undo" : `Undo ${lastDotLabel}`}
-        </Button>
-
-        <Button
-          variant="primary"
-          size="lg"
-          className={styles.control}
-          onClick={onPrimary}
-        >
+        <Button variant="primary" size="lg" onClick={onPrimary}>
           {started ? "End round" : "Start round"}
         </Button>
+
+        <div className={styles.secondaryControls}>
+          <IconButton
+            icon="undo"
+            variant="raised"
+            className={styles.iconControl}
+            label={lastDotLabel === null ? "Undo" : `Undo ${lastDotLabel}`}
+            disabled={undoDisabled || lastDotLabel === null}
+            onClick={onUndo}
+          />
+          <IconButton
+            icon="dollar"
+            variant="raised"
+            className={styles.iconControl}
+            label="Log a spin win"
+            onClick={onSpinWin}
+          />
+        </div>
       </div>
 
       {/* Floats at the top of the column rather than taking a row anywhere in
@@ -133,6 +156,21 @@ export default function HomeTemplate({
           groupSize={groupSize}
         />
       </Toast>
+
+      {/* Opens only after a round has already been banked early, so it annotates
+          rather than gates — see EndReasonSheet. */}
+      <SpinWinSheet
+        open={spinWinOpen}
+        onSave={onSpinWinSave}
+        onSkip={onSpinWinSkip ?? (() => {})}
+      />
+
+      <EndReasonSheet
+        open={endReasonOpen}
+        options={endReasonOptions}
+        detail={endReasonDetail}
+        onPick={onEndReasonPick}
+      />
     </div>
   );
 }

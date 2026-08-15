@@ -39,7 +39,9 @@ const formatGroupGap = (ms: number) =>
  * navigation it triggered.
  */
 export default function AppShell({ children }: { children: ReactNode }) {
+  // Two independent sheets, so opening one never leaves the other half-open.
   const [menuOpen, setMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -57,6 +59,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const discardRound = useGameStore((state) => state.discardRound);
   const resetApp = useGameStore((state) => state.resetApp);
 
+  const onBoard = pathname === BOARD_PATH;
   const onTimes = pathname === TIMES_PATH;
   const onInsights = pathname === INSIGHTS_PATH;
 
@@ -77,10 +80,11 @@ export default function AppShell({ children }: { children: ReactNode }) {
       ? `Round ${roundNumber}`
       : `Session ${sessionNumber}`;
 
-  const close = () => setMenuOpen(false);
+  const closeMenu = () => setMenuOpen(false);
+  const closeSettings = () => setSettingsOpen(false);
   const run = (action: () => void) => () => {
     action();
-    close();
+    closeMenu();
   };
 
   return (
@@ -88,30 +92,41 @@ export default function AppShell({ children }: { children: ReactNode }) {
       {/* Sticky rather than fixed: it keeps its place in the flow, so nothing
           below needs a matching offset, and content scrolls behind its fill. */}
       <div className={styles.bar}>
-        {/* Two surfaces made this "the one you are not on"; three can't be
-            named that way, so the rule is now: the bar always offers the way
-            back to the board, except on the board itself, where it offers
-            Times. Insights is reached from the sheet — it is a place you go
-            occasionally to read, not one you flip to mid-round. */}
+        {/* No text link any more. Two surfaces could be served by one that named
+            "the one you are not on"; three can't, and privileging one of them
+            made the other two second-class. Both now live in the menu, and the
+            wordmark is the way back to the board. */}
         <AppBar
           subtitle={subtitle}
-          navHref={onTimes || onInsights ? BOARD_PATH : TIMES_PATH}
-          navLabel={onTimes || onInsights ? "Board" : "Times"}
+          onOpenSettings={() => setSettingsOpen(true)}
           onOpenMenu={() => setMenuOpen(true)}
         />
       </div>
 
       <main className={styles.main}>{children}</main>
 
+      {/* Navigation, the session actions, and the destructive controls — the
+          things you open deliberately, between rounds rather than during one.
+          A side drawer because it is a taller list than a bottom sheet wants,
+          and because the gear beside it already owns the bottom. */}
       <MenuSheet
         open={menuOpen}
-        onClose={close}
+        anchor="right"
+        onClose={closeMenu}
         onOpen={() => setMenuOpen(true)}
-        // The bar carries the Board/Times flip, which is the navigation done
-        // constantly. Insights is here instead: it is read between sessions
-        // rather than during one, so it has not earned a permanent slot in a
-        // 60px bar that only fits one link.
         items={[
+          {
+            icon: "chevron-right" as const,
+            label: "Board",
+            disabled: onBoard,
+            onSelect: run(() => router.push(BOARD_PATH)),
+          },
+          {
+            icon: "chevron-right" as const,
+            label: "Times",
+            disabled: onTimes,
+            onSelect: run(() => router.push(TIMES_PATH)),
+          },
           {
             icon: "chevron-right" as const,
             label: "Insights",
@@ -143,6 +158,30 @@ export default function AppShell({ children }: { children: ReactNode }) {
               />
             </div>
 
+            {/* Quarantined behind a rule, with the consequence spelled out —
+                it is the only control that also wipes the preferences. */}
+            <div className={styles.dangerZone}>
+              <Button variant="danger" fullWidth onClick={run(resetApp)}>
+                Reset app
+              </Button>
+              <span className={styles.dangerNote}>
+                Wipes all history and preferences.
+              </span>
+            </div>
+          </div>
+        }
+      />
+
+      {/* Read-back tuning only. Bottom-anchored and reached with a thumb,
+          because unlike the menu these are adjusted mid-session while standing
+          at the machine. */}
+      <MenuSheet
+        open={settingsOpen}
+        title="Settings"
+        onClose={closeSettings}
+        onOpen={() => setSettingsOpen(true)}
+        footer={
+          <div className={styles.settings}>
             <div className={styles.settingBlock}>
               <span className={styles.settingCaption}>Read-back speed</span>
               <SegmentedControl<Cadence>
@@ -190,17 +229,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 onChange={setGroupGapMs}
                 formatValue={formatGroupGap}
               />
-            </div>
-
-            {/* Quarantined behind a rule, with the consequence spelled out —
-                it is the only control that also wipes the preferences. */}
-            <div className={styles.dangerZone}>
-              <Button variant="danger" fullWidth onClick={run(resetApp)}>
-                Reset app
-              </Button>
-              <span className={styles.dangerNote}>
-                Wipes all history and preferences.
-              </span>
             </div>
           </div>
         }

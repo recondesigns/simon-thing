@@ -1,0 +1,71 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/*
+ * `appearance: none` on all three prefixes — iOS Safari still needs the
+ * -webkit- one, and without it the platform draws its own control chrome on top
+ * of this box rather than instead of it.
+ *
+ * The right padding leaves room for our chevron; without it a long label runs
+ * underneath the glyph rather than being clipped before it.
+ */
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--sem-border-surface);
+  border-radius: var(--radius-pill);
+  background-color: var(--sem-bg-surface-raised);
+  font: 700 14px/1 var(--font-body);
+  color: var(--sem-text-primary);
+  text-overflow: ellipsis;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.select:focus-visible {
+  box-shadow: var(--elev-glow-focus);
+}
+
+/*
+ * The list itself is drawn by the platform, not by us — these two only reach it
+ * on the desktop engines that honour them, and keep the popup from falling back
+ * to a white system list against this app's dark surface.
+ */
+.select option {
+  background-color: var(--sem-bg-surface-raised);
+  color: var(--sem-text-primary);
+}
+
+/* Dimmer than a real choice: it is a prompt, not an answer. */
+.select:invalid,
+.select option:disabled {
+  color: var(--sem-text-secondary);
+}
+
+/*
+ * Sits over the select and must never take the tap — the whole box has to open
+ * the picker, including the 40px of padding reserved for this glyph.
+ */
+.chevron {
+  position: absolute;
+  right: 14px;
+  color: var(--sem-text-secondary);
+  pointer-events: none;
+}
+
+.disabled {
+  opacity: 0.5;
+}
+
+.disabled .select {
+  cursor: not-allowed;
+}

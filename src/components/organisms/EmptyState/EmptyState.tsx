@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
+import DotsMark from "@/components/atoms/DotsMark/DotsMark";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./EmptyState.module.css";
 
@@ -27,23 +28,7 @@ export default function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={[styles.empty, className].filter(Boolean).join(" ")}>
-      <div
-        className={styles.sockets}
-        aria-hidden="true"
-        style={
-          {
-            "--accent-fill": `var(--game-${accent})`,
-            "--accent-glow": `var(--game-${accent}-glow)`,
-          } as CSSProperties
-        }
-      >
-        {Array.from({ length: 9 }, (_, i) => (
-          <span
-            key={i}
-            className={i === 4 ? styles.live : styles.socket}
-          />
-        ))}
-      </div>
+      <DotsMark size={18} accent={accent} live />
 
       <div className={styles.copy}>
         <p className={styles.title}>{title}</p>

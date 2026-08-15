@@ -1,8 +1,13 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 /*
  * The pill radius lives on the container with `overflow: hidden`, so only the
- * outer corners round — the two segments meet square across the gap. Rounding
- * each segment instead would read as two separate bars rather than one total
- * divided.
+ * outer corners round — the segments meet square across the gaps. Rounding each
+ * segment instead would read as separate bars rather than one total divided.
  */
 .bar {
   display: flex;
@@ -12,28 +17,103 @@
   overflow: hidden;
 }
 
-.segment {
-  /* Grow in proportion to the value, with no basis of its own, so the two
-     widths are exactly the ratio between them. */
+/*
+ * Grow in proportion to the value, with no basis of its own, so the widths are
+ * exactly the ratio between them — floored at enough room for the number inside.
+ * The floor is what lets a zero share still show its zero.
+ */
+.segment,
+.slot {
   flex: var(--segment-value) 1 0;
-  min-width: 0;
+  min-width: 28px;
+}
+
+.segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /*
- * The bright text colours rather than the tinted `bg/*` surfaces. Those
- * surfaces are built to sit *under* bright text; here the bar is the signal
- * itself, so it takes the colour the eye is meant to land on.
+ * Near-black on every tone. These are the bright *text* colours used as fills,
+ * so they are all light enough that inverse ink is the only one that reads —
+ * the same rule `bg/primary` follows.
  */
-.success {
+.count {
+  font: var(--type-numeral-sm);
+  color: var(--sem-text-inverse);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+/* Mirrors the bar's gaps and flex so each icon lands under its own segment. */
+.icons {
+  display: flex;
+  gap: 3px;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * The tones colour the fill on a segment and the ink on an icon — the icon row
+ * has no fill of its own, so the colour is the only thing tying it to the share
+ * above it.
+ */
+.segment.success {
   background-color: var(--sem-text-success);
 }
 
+.slot.success {
+  color: var(--sem-text-success);
+}
+
 /*
- * The quiet half. A round that ended early is the ordinary outcome of playing —
- * most rounds end that way — so it takes the neutral cream rather than anything
- * that reads as an alarm.
+ * A round lost to a mis-read. Red is informative here rather than alarming: it
+ * is the one early end that says the pattern beat you, as against the ordinary
+ * business of stopping.
  */
-.neutral {
+.segment.danger {
+  background-color: var(--sem-text-danger);
+}
+
+.slot.danger {
+  color: var(--sem-text-danger);
+}
+
+/* Interrupted from outside — not a failure of play, so not red. */
+.segment.warning {
+  background-color: var(--sem-text-warning);
+}
+
+.slot.warning {
+  color: var(--sem-text-warning);
+}
+
+/*
+ * Won on the spin — neither a success at the pattern nor a failure of it, so it
+ * takes neither of their colours. Blue reads as "something else happened".
+ */
+.segment.info {
+  background-color: var(--sem-text-info);
+}
+
+.slot.info {
+  color: var(--sem-text-info);
+}
+
+/*
+ * The quiet one. An early end with no reason given is the ordinary outcome of
+ * playing, and covers every round banked before the prompt existed, so it takes
+ * the neutral cream rather than anything that reads as a verdict.
+ */
+.segment.neutral {
   background-color: var(--sem-text-primary);
 }
 
+.slot.neutral {
+  color: var(--sem-text-secondary);
+}

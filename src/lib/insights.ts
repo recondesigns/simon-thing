@@ -1,4 +1,4 @@
-import type { Session } from "@/lib/store/gameStore";
+import type { EndedReason, Session } from "@/lib/store/gameStore";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -26,7 +26,7 @@ export interface TapTotals {
   /** Taps that could be attributed to a pad. The sum of `pads`. */
   total: number;
   /**
-   * Rounds holding times but no pads, and the taps inside them.
+   * Rounds with a known length but no pads, and the taps inside them.
    *
    * Every round banked before store v2 is like this: the board discarded pad
    * identity at `logRound`, so those taps happened and can never be attributed.
@@ -53,6 +53,22 @@ export interface LengthBucket {
   isCap: boolean;
 }
 
+/**
+ * Early ends, split by what the player said when asked.
+ *
+ * One key per {@link EndedReason} and nothing else. **Rounds with no reason are
+ * counted nowhere** — the prompt can't be skipped, so the only ones that exist
+ * were banked before it did, and they have no answer to give. They are left out
+ * rather than pooled into an "unsaid" share, which means these can sum to less
+ * than `endedEarly` on a history that predates the prompt. That gap is the
+ * whole of it, and it can only shrink.
+ *
+ * `spin` is an early end too — the round stopped short — but it is the one that
+ * isn't about the pattern at all: the spin paid out, so there was nothing to
+ * play. Hence a share of its own rather than being folded in with a mis-read.
+ */
+export type EarlyEndTotals = Record<EndedReason, number>;
+
 export interface RoundTotals {
   /**
    * Banked rounds that reached the cap — the pattern was seen all the way
@@ -70,6 +86,12 @@ export interface RoundTotals {
    * mean "banked", which reads as success and is mostly the opposite.
    */
   endedEarly: number;
+  /**
+   * How `endedEarly` divides by reason. Sums to `endedEarly` for anything
+   * banked since the prompt existed; older rounds carry no reason and are
+   * counted in neither — see {@link EarlyEndTotals}.
+   */
+  early: EarlyEndTotals;
   /** Every banked round. */
   total: number;
 }
@@ -115,13 +137,24 @@ const allRounds = (sessions: Session[]) =>
 
 export function roundTotals(sessions: Session[]): RoundTotals {
   const rounds = allRounds(sessions);
-  const finished = rounds.filter(
-    (round) => round.durations.length >= ROUND_CAP,
-  ).length;
+  const finished = rounds.filter((round) => round.dots >= ROUND_CAP).length;
+
+  const early: EarlyEndTotals = { mistake: 0, distractions: 0, spin: 0 };
+  for (const round of rounds) {
+    // Counted only among rounds that actually ended early. A round at the cap
+    // finished, so it has no reason to give even if one somehow got stored.
+    if (round.dots >= ROUND_CAP) continue;
+    if (round.endedReason === "mistake") early.mistake += 1;
+    else if (round.endedReason === "distractions") early.distractions += 1;
+    else if (round.endedReason === "spin") early.spin += 1;
+    // Anything else predates the prompt and has no reason to attribute. It is
+    // dropped rather than pooled — see EarlyEndTotals.
+  }
 
   return {
     finished,
     endedEarly: rounds.length - finished,
+    early,
     total: rounds.length,
   };
 }
@@ -134,9 +167,9 @@ export function tapTotals(sessions: Session[]): TapTotals {
     if (round.pads.length === 0) {
       // Not "no taps" — unknowable ones. A round with times but no pads was
       // played; we just can't say where.
-      if (round.durations.length > 0) {
+      if (round.dots > 0) {
         unattributed.rounds += 1;
-        unattributed.taps += round.durations.length;
+        unattributed.taps += round.dots;
       }
       continue;
     }
@@ -161,9 +194,20 @@ export function tapTotals(sessions: Session[]): TapTotals {
 }
 
 export function lengthBuckets(sessions: Session[]): LengthBucket[] {
-  // Length comes from `durations`, not `pads`, so rounds that predate pad
-  // recording still count here. They know how long they were, just not where.
-  const lengths = allRounds(sessions).map((round) => round.durations.length);
+  // Length comes from `dots`, not `pads.length`, so rounds that predate pad
+  // recording still count here. They know how far they got, just not where.
+  //
+  // **Zero-dot rounds are left out, and that is the one place this stops
+  // matching the split bar.** A spin win means the round never needed playing,
+  // so it has no length to bin — the buckets start at 1, and a round that was
+  // never played would either vanish silently or need a "0" column that says
+  // nothing about how far rounds get. This is a different thing from the old
+  // mismatch the frame showed, where the histogram summed to *more* than the
+  // banked figure; here it sums to fewer, by exactly the rounds that were won
+  // rather than played.
+  const lengths = allRounds(sessions)
+    .map((round) => round.dots)
+    .filter((n) => n > 0);
 
   return BUCKET_BOUNDS.map(([min, max]) => ({
     label: min === max ? String(min) : String(max),
