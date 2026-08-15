@@ -73,6 +73,17 @@ export interface SpeakSequenceOptions {
    */
   groupGapMs?: number;
   /**
+   * How fast each number is spoken, as a SpeechSynthesis rate multiplier.
+   * Defaults to 1 — the pace every cadence used before X-Fast, and still the
+   * pace of all but that one.
+   *
+   * Exposed because gaps alone could not buy a genuinely faster tier: most of a
+   * read-back is the speaking, and most of the remaining silence is already at
+   * MIN_INTRA_GROUP_MS. Raising this shortens the *words*, which is the part the
+   * cadence has never been able to reach.
+   */
+  rate?: number;
+  /**
    * Fired as each word finishes, with how many have now been spoken. Drives the
    * read-back progress indicator off the real audio rather than a predicted
    * schedule — the two drift, and a progress dot that lies is worse than none.
@@ -152,7 +163,7 @@ export function speakSequence(
 
   // Floored at 1: `index % 0` is NaN, which would silently make every gap an
   // in-group one and read the whole sequence as a single blur.
-  const { gapMs = 700, groupGapMs = 0, onSpoke, onDone } = options;
+  const { gapMs = 700, groupGapMs = 0, rate = 1, onSpoke, onDone } = options;
   const groupSize = Math.max(1, Math.round(options.groupSize ?? DEFAULT_GROUP_SIZE));
 
   cancelSpeech();
@@ -170,7 +181,8 @@ export function speakSequence(
 
     const utterance = new SpeechSynthesisUtterance(words[index]);
     utterance.lang = "en-US";
-    utterance.rate = 1; // clear and unhurried for playback
+    // 1 is clear and unhurried, and is what every cadence but X-Fast uses.
+    utterance.rate = rate;
 
     let advanced = false;
     const advance = () => {

@@ -37,12 +37,14 @@ class FakeUtterance {
 
 let spokenAt: number[] = [];
 let spokenText: string[] = [];
+let spokenRates: number[] = [];
 let cancels = 0;
 
 beforeEach(() => {
   vi.useFakeTimers();
   spokenAt = [];
   spokenText = [];
+  spokenRates = [];
   cancels = 0;
 
   vi.stubGlobal("SpeechSynthesisUtterance", FakeUtterance);
@@ -51,6 +53,7 @@ beforeEach(() => {
       speak(utterance: FakeUtterance) {
         spokenAt.push(Date.now());
         spokenText.push(utterance.text);
+        spokenRates.push(utterance.rate);
         // Finish instantly. A word that takes no time to say makes the interval
         // between two `speak` calls exactly the gap that was scheduled — which
         // is the only thing under test. Real speech duration varies by voice
@@ -245,6 +248,7 @@ describe("speakSequence cadences", () => {
   // these has to be made deliberately. Mirrors CADENCE_GAP_MS in the store;
   // the store is not imported because it reaches for localStorage on load.
   const CADENCES: [name: string, gapMs: number, inGroupMs: number][] = [
+    ["xfast", 200, 160],
     ["fast", 350, 160],
     ["normal", 550, 183],
     ["relaxed", 800, 267],
@@ -264,8 +268,8 @@ describe("speakSequence cadences", () => {
   it("floors Fast rather than letting the ratio run it together", async () => {
     // The regression this whole floor exists for. A third of 350 is 117ms,
     // which was measured at the machine and could not be followed — the digits
-    // ran into each other. Removing MIN_INTRA_GROUP_MS fails here and nowhere
-    // else, because Fast is the only cadence the floor binds on.
+    // ran into each other. The floor binds on Fast and, harder, on X-Fast; the
+    // three slower cadences are nowhere near it.
     const gaps = await gapsFor(9, 350);
 
     expect(insideGroup(gaps)[0]).toBe(MIN_INTRA_GROUP_MS);
@@ -276,6 +280,24 @@ describe("speakSequence cadences", () => {
     // 4 that expression is 88, and the assertion would still pass while pinning
     // nothing.
     expect(insideGroup(gaps)[0]).not.toBe(117);
+  });
+
+  // X-Fast is the only cadence that touches the delivery rather than the
+  // silence, because tightening gaps alone could not make it a speed tier: most
+  // of a read-back is the speaking, and most of the rest is pinned at the floor
+  // above. These two pin that the other four are left alone.
+  it("speaks at the plain rate unless one is asked for", async () => {
+    await gapsFor(9, 350);
+
+    expect(spokenRates).toEqual(Array(9).fill(1));
+  });
+
+  it("applies a faster rate to every number, not just the first", async () => {
+    const words = ["1", "2", "3", "4", "5", "6"];
+    speakSequence(words, { gapMs: 200, rate: 1.3 });
+    await vi.advanceTimersByTimeAsync(120_000);
+
+    expect(spokenRates).toEqual(Array(6).fill(1.3));
   });
 
   it("saves real time against reading the same numbers evenly", async () => {

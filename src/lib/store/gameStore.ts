@@ -8,7 +8,7 @@ import { DEFAULT_GROUP_SIZE } from "@/lib/speech";
  * gap *between* dots (the digits themselves aren't slowed), tuned from the
  * drawer since the right pace is a feel thing.
  */
-export type Cadence = "fast" | "normal" | "relaxed" | "slow";
+export type Cadence = "xfast" | "fast" | "normal" | "relaxed" | "slow";
 
 /**
  * Silence between read-back numbers, in ms, per cadence.
@@ -25,14 +25,43 @@ export type Cadence = "fast" | "normal" | "relaxed" | "slow";
  * currently means — and anyone who never touches the setting keeps `relaxed`.
  */
 export const CADENCE_GAP_MS: Record<Cadence, number> = {
+  xfast: 200,
   fast: 350,
   normal: 550,
   relaxed: 800,
   slow: 1100,
 };
 
+/**
+ * How fast the numbers themselves are spoken, per cadence.
+ *
+ * **The first four are 1 and must stay 1.** Every cadence before X-Fast changed
+ * only the silence between numbers, never the delivery, and re-rating them now
+ * would retune four settings that were each settled by playing.
+ *
+ * X-Fast is the exception because tightening gaps alone could not make it one.
+ * At a group of three, roughly seventy per cent of a read-back is the speaking
+ * and only thirty the silence — and most of that silence is already pinned at
+ * {@link MIN_INTRA_GROUP_MS}, which a shorter cadence cannot go under. A gap-only
+ * X-Fast came out around seven per cent quicker, which is not a speed tier, it
+ * is a rounding error. The rate is the only lever big enough.
+ *
+ * 1.3 is a starting point, not a settled value — the same kind of number as the
+ * cadences and the floor, and it wants deciding at the machine. Push it too far
+ * and single digits stop being distinct, which is the failure the floor exists
+ * to prevent, arrived at from the other direction.
+ */
+export const CADENCE_RATE: Record<Cadence, number> = {
+  xfast: 1.3,
+  fast: 1,
+  normal: 1,
+  relaxed: 1,
+  slow: 1,
+};
+
 /** Ordered fastest to slowest for the settings control. */
 export const CADENCE_OPTIONS: { value: Cadence; label: string }[] = [
+  { value: "xfast", label: "X-Fast" },
   { value: "fast", label: "Fast" },
   { value: "normal", label: "Normal" },
   { value: "relaxed", label: "Relaxed" },

@@ -5,7 +5,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import HomeTemplate from "@/components/templates/HomeTemplate/HomeTemplate";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import type { PadState } from "@/components/atoms/InputPad/InputPad";
-import { useGameStore, CADENCE_GAP_MS } from "@/lib/store/gameStore";
+import {
+  useGameStore,
+  CADENCE_GAP_MS,
+  CADENCE_RATE,
+} from "@/lib/store/gameStore";
 import { speakSequence, cancelSpeech, primeSpeech } from "@/lib/speech";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -238,7 +242,11 @@ export default function Home() {
     // fifth tap reads all five numbers, exactly as any length does.
     // Cadence is read fresh so changing it takes effect next tap.
     const words = taps.map((index) => CELL_NUMBERS[CELL_POSITIONS[index]]);
-    const gapMs = CADENCE_GAP_MS[useGameStore.getState().cadence];
+    const cadence = useGameStore.getState().cadence;
+    const gapMs = CADENCE_GAP_MS[cadence];
+    // Read together with the gap and from the same cadence, so the two halves
+    // of a setting can never come from different ones.
+    const rate = CADENCE_RATE[cadence];
     // The dots were pinned to this same value in `handleTap`. Both are read
     // from the store rather than passed between, and the two reads are one
     // commit apart, so they cannot disagree — which they must not, since the
@@ -254,6 +262,7 @@ export default function Home() {
         gapMs,
         groupSize,
         groupGapMs,
+        rate,
         // Drives the progress dots. Each callback lands as a number finishes,
         // so the indicator tracks the audio rather than a predicted schedule.
         onSpoke: (n) => setSpoken(n),
@@ -279,7 +288,8 @@ export default function Home() {
     // Safety net: if the browser never fires the end event, don't leave the
     // board locked forever. Generous so it never pre-empts a slow-but-working
     // voice — budgets every word for the *widened* boundary gap, worst case,
-    // even though most words only pause the shorter in-group gap.
+    // even though most words only pause the shorter in-group gap. The per-word
+    // 1500ms is budgeted at rate 1, so a faster cadence only leaves more slack.
     const fallback = setTimeout(
       finish,
       READBACK_PAUSE_MS + count * (1500 + gapMs + groupGapMs) + 5000,
