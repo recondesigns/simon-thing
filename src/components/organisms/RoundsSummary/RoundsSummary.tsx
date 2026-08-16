@@ -43,9 +43,11 @@ export default function RoundsSummary({ totals }: RoundsSummaryProps) {
       </header>
 
       {/* Ordered worst outcome first, so the bar builds left to right towards
-          the one you want — interrupted, beaten, paid out, finished — and the
+          the one you want — beaten, interrupted, paid out, finished — and the
           green sits at the end as the thing being worked towards rather than
-          the thing already behind you.
+          the thing already behind you. A mistake leads because it is the one
+          early end where the pattern beat you; being interrupted from outside
+          is not a failure of play, so it follows.
 
           The order is fixed and never sorted by size: a share that moved with
           its count would make the reader hunt for the colour again every
@@ -53,16 +55,16 @@ export default function RoundsSummary({ totals }: RoundsSummaryProps) {
       <SplitBar
         segments={[
           {
-            value: early.distractions,
-            tone: "warning",
-            label: "ended early — distraction",
-            icon: <Icon name="bell" size={14} />,
-          },
-          {
             value: early.mistake,
             tone: "danger",
             label: "ended early — mistake",
             icon: <Icon name="x" size={14} />,
+          },
+          {
+            value: early.distractions,
+            tone: "warning",
+            label: "ended early — distraction",
+            icon: <Icon name="bell" size={14} />,
           },
           {
             value: early.spin,

@@ -1,4 +1,4 @@
-import type { EndedReason, Session } from "@/lib/store/gameStore";
+import type { EndedReason, Round, Session } from "@/lib/store/gameStore";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
@@ -37,6 +37,29 @@ export interface TapTotals {
   unattributed: { rounds: number; taps: number };
 }
 
+/**
+ * How the rounds inside one column ended, painted in the colours the split bar
+ * above counts those categories in.
+ *
+ * `neutral` is a round with no reason recorded — banked before the prompt
+ * existed. It keeps the plain cream every column used to be, so the colours
+ * only ever *add* to what was there.
+ */
+export type BucketTone = "danger" | "warning" | "info" | "success" | "neutral";
+
+/**
+ * Worst first, matching the split bar left to right, so a column reads bottom
+ * to top the way the bar reads left to right. `neutral` trails because it is
+ * not an outcome, it is the absence of a recorded one.
+ */
+const TONE_ORDER: BucketTone[] = [
+  "danger",
+  "warning",
+  "info",
+  "success",
+  "neutral",
+];
+
 /** One column of the round-length histogram. */
 export interface LengthBucket {
   /** Axis label — the top of the range, or the exact length for 19 and 20. */
@@ -51,6 +74,17 @@ export interface LengthBucket {
    * finished, not lost — so it earns its own column and its own colour.
    */
   isCap: boolean;
+  /**
+   * Spin wins, which have no length at all — the round never needed playing.
+   * Its own column at the head of the axis rather than a share of `1–4`,
+   * because binning it by a length it doesn't have would be inventing one.
+   */
+  isSpin: boolean;
+  /**
+   * The column split by how its rounds ended, in {@link TONE_ORDER}, with empty
+   * categories dropped. Sums to `count`.
+   */
+  parts: { tone: BucketTone; count: number }[];
 }
 
 /**
@@ -193,29 +227,68 @@ export function tapTotals(sessions: Session[]): TapTotals {
   };
 }
 
+/** Which category a round is counted under, wherever its colour is needed. */
+function toneOf(round: Round): BucketTone {
+  if (round.endedReason === "spin") return "info";
+  if (round.dots >= ROUND_CAP) return "success";
+  if (round.endedReason === "mistake") return "danger";
+  if (round.endedReason === "distractions") return "warning";
+  // Banked before the prompt existed. Not an outcome, an absent answer.
+  return "neutral";
+}
+
+/** The rounds of one column, split by how they ended, empties dropped. */
+const split = (rounds: Round[]) =>
+  TONE_ORDER.map((tone) => ({
+    tone,
+    count: rounds.filter((round) => toneOf(round) === tone).length,
+  })).filter((part) => part.count > 0);
+
 export function lengthBuckets(sessions: Session[]): LengthBucket[] {
   // Length comes from `dots`, not `pads.length`, so rounds that predate pad
   // recording still count here. They know how far they got, just not where.
   //
-  // **Zero-dot rounds are left out, and that is the one place this stops
-  // matching the split bar.** A spin win means the round never needed playing,
-  // so it has no length to bin — the buckets start at 1, and a round that was
-  // never played would either vanish silently or need a "0" column that says
-  // nothing about how far rounds get. This is a different thing from the old
-  // mismatch the frame showed, where the histogram summed to *more* than the
-  // banked figure; here it sums to fewer, by exactly the rounds that were won
-  // rather than played.
-  const lengths = allRounds(sessions)
-    .map((round) => round.dots)
-    .filter((n) => n > 0);
+  // **A spin win has no length**, so it takes a column of its own at the head
+  // of the axis rather than being binned by one it doesn't have. It sat out of
+  // this chart entirely at first, on the reasoning that a round nobody played
+  // says nothing about how far rounds get — true, and it also made the chart
+  // sum to fewer rounds than the split bar above it, which is the sort of gap a
+  // reader has to be told about. Given its own column it says exactly what it
+  // is, and the two now agree: **every banked round is in here somewhere.**
+  const rounds = allRounds(sessions);
+  const spins = rounds.filter((round) => round.endedReason === "spin");
+  // Anything else with no dots was never banked (`bankRound` drops it); the
+  // guard is here so a column can never be padded by a round that didn't
+  // happen.
+  const played = rounds.filter(
+    (round) => round.endedReason !== "spin" && round.dots > 0,
+  );
 
-  return BUCKET_BOUNDS.map(([min, max]) => ({
-    label: min === max ? String(min) : String(max),
-    min,
-    max,
-    count: lengths.filter((n) => n >= min && n <= max).length,
-    isCap: min === 20,
-  }));
+  return [
+    {
+      label: "$",
+      min: 0,
+      max: 0,
+      count: spins.length,
+      isCap: false,
+      isSpin: true,
+      parts: split(spins),
+    },
+    ...BUCKET_BOUNDS.map(([min, max]) => {
+      const inside = played.filter(
+        (round) => round.dots >= min && round.dots <= max,
+      );
+      return {
+        label: min === max ? String(min) : String(max),
+        min,
+        max,
+        count: inside.length,
+        isCap: min === 20,
+        isSpin: false,
+        parts: split(inside),
+      };
+    }),
+  ];
 }
 
 export interface Insights {

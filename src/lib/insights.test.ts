@@ -129,6 +129,8 @@ describe("lengthBuckets", () => {
     const buckets = lengthBuckets([]);
 
     expect(buckets.map((b) => b.label)).toEqual([
+      // Spin wins lead the axis: no length, so no length bin.
+      "$",
       "4",
       "6",
       "8",
