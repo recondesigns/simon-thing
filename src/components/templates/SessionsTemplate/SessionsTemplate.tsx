@@ -7,12 +7,30 @@ import EmptyState from "@/components/organisms/EmptyState/EmptyState";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./SessionsTemplate.module.css";
 
+/** The colour a round's ending reads in, keyed by tone. */
+const TONES = {
+  success: styles.endedSuccess,
+  warning: styles.endedWarning,
+  danger: styles.endedDanger,
+  info: styles.endedInfo,
+} as const;
+
 export interface DotView {
+  /**
+   * The pad's number on the grid — "2" is the blue one — rather than the dot's
+   * place in the round. The order is already the order of the rows, so counting
+   * them off was the one thing the label could say that the list was saying
+   * anyway.
+   *
+   * "—" for a dot with no recorded pad, which is every dot of a round banked
+   * before store v2: the number isn't unknown to the player, it was never
+   * written down.
+   */
   label: string;
   /**
-   * Which pad the dot landed on, shown as a colour chip and nothing else — the
-   * chip *is* the pad, so printing its number beside it said the same thing
-   * twice.
+   * Which pad the dot landed on, as a colour chip beside the number. The two
+   * say the same thing on purpose — the chip is what makes a round scannable
+   * without reading it, and the number is what makes it exact.
    *
    * Absent for rounds banked before store v2, which recorded no pad identity at
    * all: those rows say a dot happened without saying where it went.
@@ -34,6 +52,32 @@ export interface RoundView {
    */
   elapsed: string;
   /**
+   * How the round ended, on the line its length would otherwise have taken —
+   * "Completed: 3m11s", "Ended: Mistake", "Ended: Spin won".
+   *
+   * It takes the line rather than sharing it because *how it ended* is the fact
+   * worth carrying, and the length of a round that was abandoned answers a
+   * question nobody asked. The whole line keeps the size and weight of the
+   * duration it replaces, in the body face its own label is set in; only the
+   * value is coloured, in the tone Insights counts that category in — green for
+   * a round carried to the cap, amber for distractions, red for a mistake, blue
+   * for a spin — so the same fact is the same colour on both surfaces.
+   *
+   * **Only a completed round keeps a figure, and it is its own duration**: the
+   * round that went the distance is the one whose length is worth reading. The
+   * others carry none — what a spin paid is the round's payout, on the right,
+   * and one row saying it twice would only invite the reader to check the two
+   * against each other.
+   *
+   * Absent for a round with nothing to say but its length: the one in progress,
+   * and any banked before endings were recorded.
+   */
+  ended?: {
+    label: string;
+    value: string;
+    tone: "success" | "warning" | "danger" | "info";
+  };
+  /**
    * What the round did to the balance, right-aligned and signed — "+$0.25",
    * "−$5". Every round of a visit that recorded a stake has one, because every
    * round costs the bet whether or not it pays anything back.
@@ -45,19 +89,6 @@ export interface RoundView {
   payout?: string;
   /** Green for money made, red for money gone. */
   payoutTone?: "default" | "success" | "danger";
-  /**
-   * How the round ended, as a row of its own — "Ended early / Mistake", or
-   * "Spin won / $12.50". Both halves come resolved, because a spin win is not
-   * an early end with a label but a different sentence entirely.
-   *
-   * Absent when the round reached the cap, or when the player skipped the
-   * prompt — those are different things, but neither has anything to show.
-   */
-  ending?: {
-    label: string;
-    value: string;
-    tone?: "default" | "success" | "danger";
-  };
   dots: DotView[];
   /** The round being played right now. */
   live?: boolean;
@@ -204,19 +235,31 @@ export default function SessionsTemplate({
                   ) : (
                     <span>{round.label}</span>
                   )}
-                  <span className={styles.roundMeta}>{round.elapsed}</span>
+                  <span
+                    className={[
+                      styles.roundMeta,
+                      round.ended && styles.roundMetaWords,
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    {round.ended ? (
+                      <>
+                        {round.ended.label}:{" "}
+                        <span className={TONES[round.ended.tone]}>
+                          {round.ended.value}
+                        </span>
+                      </>
+                    ) : (
+                      round.elapsed
+                    )}
+                  </span>
                 </span>
               }
             >
-              {/* Above the dots because it is about the round, not about any
-                  one of them. */}
-              {round.ending && (
-                <DataRow
-                  label={round.ending.label}
-                  value={round.ending.value}
-                  tone={round.ending.tone}
-                />
-              )}
+              {/* No row for how the round ended: it reads in the header, where
+                  the length would be, so a row here would be the same fact one
+                  line below itself. Only the dots are left. */}
               {round.dots.map((dot, i) => (
                 <DataRow key={i} label={dot.label} dot={dot.color} />
               ))}

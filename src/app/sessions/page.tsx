@@ -12,7 +12,7 @@ import {
   type Round,
   type Session,
 } from "@/lib/store/gameStore";
-import { formatDuration, formatRoundTotal } from "@/lib/time";
+import { formatDuration } from "@/lib/time";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import { COMPLETED_ROUND_PAYOUT } from "@/lib/game/payout";
 import {
@@ -79,37 +79,46 @@ const money = (
 };
 
 /**
- * How a round's ending reads, or undefined when it has none to show.
+ * How a round ended, for the line its length would otherwise have taken, or
+ * undefined when the bare length is all there is to say.
  *
- * A spin win is its own sentence rather than an early end with a label — it
- * carries a figure, and "Spin won / $12.50" says more than "Ended early /
- * Spin". The amount is optional even here, because that prompt is skippable
- * too: an unrecorded amount reads as the bare fact that the spin won, never as
- * a win of nothing.
+ * Every ending reads the same way — a label, then how — including a spin win,
+ * which is a way for a round to be over like any other. **Only the completed
+ * round keeps a figure here**, and it is its own duration: a round that went the
+ * distance is the one whose length is worth reading, so the label names the
+ * outcome and the time stays where it was. The others carry no figures at all —
+ * what a spin paid is already the round's payout on the right, and saying it
+ * twice on one row would only invite the reader to check them against each
+ * other.
  */
 const ending = (
   round: Round,
-): { label: string; value: string; tone?: "success" | "danger" } | undefined => {
-  if (round.endedReason === "spin") {
-    if (round.spinWon === undefined) {
-      // Nothing to celebrate in a dash — the amount simply wasn't recorded.
-      return { label: "Spin won", value: "—" };
+  elapsed: string,
+):
+  | {
+      label: string;
+      value: string;
+      tone: "success" | "warning" | "danger" | "info";
     }
-    return {
-      label: "Spin won",
-      value: formatMoney(round.spinWon),
-      tone: "success",
-    };
+  | undefined => {
+  if (round.dots >= ROUND_CAP) {
+    // Green for the same reason Insights counts it green: reaching the cap is
+    // the one outcome that isn't something going wrong.
+    return { label: "Completed", value: elapsed, tone: "success" };
   }
-  // Both picker reasons read red here. On Insights they are told apart —
-  // distractions amber, mistake red — because there the point is which is
-  // which; on a single round the point is only that it ended on something
-  // going wrong.
+  if (round.endedReason === "spin") {
+    // Blue rather than the green money usually takes here, because this is the
+    // colour Insights counts spin wins in: neither a success at the pattern nor
+    // a failure of it. See `RoundsSummary`.
+    return { label: "Ended", value: "Spin won", tone: "info" };
+  }
   const reason = ENDED_REASON_OPTIONS.find(
     (o) => o.value === round.endedReason,
   );
   return reason
-    ? { label: "Ended early", value: reason.label, tone: "danger" }
+    ? // The tone travels with the reason rather than being decided here, so
+      // this reads in the same colour Insights counts it in.
+      { label: "Ended", value: reason.label, tone: reason.tone }
     : undefined;
 };
 
@@ -126,8 +135,9 @@ const ending = (
  * Null on the server and until the first tick, which keeps the server render and
  * the first client render identical — neither has a live round.
  *
- * 100ms because {@link formatRoundTotal} shows tenths; anything finer re-renders
- * for digits nobody can read.
+ * 500ms because the readout is whole seconds: at 100ms, nine renders in ten
+ * changed nothing, and anything slower would let the displayed second lag the
+ * real one by long enough to notice.
  */
 function useTickingNow(active: boolean): number | null {
   const nowRef = useRef<number | null>(null);
@@ -141,7 +151,7 @@ function useTickingNow(active: boolean): number | null {
       const id = setInterval(() => {
         nowRef.current = Date.now();
         onStoreChange();
-      }, 100);
+      }, 500);
       return () => {
         clearInterval(id);
         nowRef.current = null;
@@ -218,11 +228,10 @@ export default function SessionsPage() {
       rounds: allRounds
         .map((round, roundIndex) => {
           const ms = roundElapsedMs(round);
-          // Every round reports both, in two places that each mean one thing:
-          // how long it took under the label, what it paid on the right. The
-          // payout used to *replace* the time on a completed round, which meant
-          // the rounds that went the full distance were the only ones whose
-          // length you couldn't read.
+          // A dash, not "0:00.0" — see the v2 → v3 migration. These rounds were
+          // timed per dot, which is not the same quantity.
+          const elapsed = ms === null ? "—" : formatDuration(ms);
+
           // The machine's own two figures, which is how the round is remembered
           // from the other side of it: **$5.25 won, or the $5 lost.** A round
           // pays or it doesn't, and one that doesn't has taken the bet.
@@ -253,25 +262,25 @@ export default function SessionsPage() {
           return {
             key: String(roundIndex),
             label: `Round ${roundIndex + 1}`,
-            // A dash, not "0:00.0" — see the v2 → v3 migration. These rounds
-            // were timed per dot, which is not the same quantity.
-            elapsed: ms === null ? "—" : formatRoundTotal(ms),
+            elapsed,
+            ended: ending(round, elapsed),
             payout,
             payoutTone,
-            ending: ending(round),
             live: roundIndex === liveIndex,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {
               const pad = round.pads[dotIndex];
+              // The pad's own number on the grid, which is the same value the
+              // chip is coloured from — a pad *is* its number and its colour,
+              // and the row says it both ways. Rounds banked before store v2
+              // recorded no pads at all, so theirs get a dash and no chip: they
+              // know the dot happened, not where it landed. See `Round.pads`.
+              const number =
+                pad === undefined
+                  ? undefined
+                  : (Number(CELL_NUMBERS[CELL_POSITIONS[pad]]) as GameColor);
               return {
-                label: `Dot ${dotIndex + 1}`,
-                // The chip *is* the pad — printing its number beside it said the
-                // same thing twice. Rounds banked before store v2 recorded no
-                // pads at all, so theirs show neither: they know the dot
-                // happened, not where it landed. See `Round.pads`.
-                color:
-                  pad === undefined
-                    ? undefined
-                    : (Number(CELL_NUMBERS[CELL_POSITIONS[pad]]) as GameColor),
+                label: number === undefined ? "—" : String(number),
+                color: number,
               };
             }),
           };

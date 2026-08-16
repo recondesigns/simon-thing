@@ -151,6 +151,46 @@
   color: var(--sem-text-secondary);
 }
 
+/*
+ * The same line when it carries words instead of a duration, in the body face
+ * the round's own label is set in. The numeral face is monospaced so a ticking
+ * time doesn't jitter — a reason has no digits to hold still, and mono words
+ * under a Space Grotesk label read as a different kind of thing. Same 14px and
+ * same weight either way, so only the family changes.
+ */
+.roundMetaWords {
+  font: var(--type-body-sm);
+}
+
+/*
+ * The reason itself, in the tone Insights counts that category in — amber for
+ * an interruption from outside, red for the one early end where the pattern
+ * beat you. Size and weight are inherited, so the colour is the only thing
+ * separating the answer from its label, and it is carrying a second meaning
+ * while it does it. The bright semantic *text* colours, not the tinted
+ * surfaces: the word is what is being read, not something sitting under it.
+ */
+/* Reaching the cap is the one outcome that isn't something going wrong, which
+   is the same reason Insights counts it green. */
+.endedSuccess {
+  color: var(--sem-text-success);
+}
+
+.endedWarning {
+  color: var(--sem-text-warning);
+}
+
+.endedDanger {
+  color: var(--sem-text-danger);
+}
+
+/* A spin win: neither a success at the pattern nor a failure of it, which is
+   why Insights gives it its own colour rather than the green money usually
+   takes here. */
+.endedInfo {
+  color: var(--sem-text-info);
+}
+
 .liveTitle {
   display: inline-flex;
   align-items: center;

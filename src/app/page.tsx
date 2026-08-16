@@ -404,6 +404,10 @@ export default function Home() {
       onTap={handleTap}
       onPrimary={handlePrimary}
       onSpinWin={handleSpinWin}
+      // Off from the first pad press. A spin win is a round that never needed
+      // playing, so once one has been played the button is describing a
+      // different round than the one on screen.
+      spinWinDisabled={taps.length > 0}
       spinWinOpen={askingSpinAmount}
       onSpinWinSave={handleSpinAmountSave}
       onSpinWinSkip={handleSpinAmountSkip}

@@ -12,7 +12,7 @@ const SESSIONS: SessionView[] = [
       amount: "$1,234.50",
       difference: { text: "+$2.50", direction: "up" },
     },
-    meta: "0:03 · 2 rounds · $5 a round",
+    meta: "3s · 2 rounds · $5 a round",
     isActive: true,
     rounds: [
       // Banked before round-level timing and before pads: it knows it was two
@@ -21,16 +21,16 @@ const SESSIONS: SessionView[] = [
         key: "b",
         label: "Round 2",
         elapsed: "—",
-        dots: [{ label: "Dot 1" }, { label: "Dot 2" }],
+        dots: [{ label: "—" }, { label: "—" }],
       },
       {
         key: "a",
         label: "Round 1",
-        elapsed: "0:02.4",
+        elapsed: "2s",
         payout: "$0.25",
         dots: [
-          { label: "Dot 1", color: 5 },
-          { label: "Dot 2", color: 1 },
+          { label: "5", color: 5 },
+          { label: "1", color: 1 },
         ],
       },
     ],
@@ -40,7 +40,7 @@ const SESSIONS: SessionView[] = [
     title: "Session 1",
     // No stake recorded, so it can say what it won and not what it is worth.
     money: { amount: "$0", label: "Won", positive: false },
-    meta: "0:12 · 3 rounds",
+    meta: "12s · 3 rounds",
     isActive: false,
     rounds: [],
   },

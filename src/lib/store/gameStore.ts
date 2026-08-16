@@ -159,9 +159,22 @@ export type EndedReason = "distractions" | "mistake" | "spin";
  * as "the round never needed playing". The player won on the spin, so there was
  * no pattern to record.
  */
-export const ENDED_REASON_OPTIONS: { value: EndedReason; label: string }[] = [
-  { value: "distractions", label: "Distractions" },
-  { value: "mistake", label: "Mistake" },
+export const ENDED_REASON_OPTIONS: {
+  value: EndedReason;
+  label: string;
+  /**
+   * How the reason is painted wherever it is named.
+   *
+   * **Amber for distractions, red for a mistake**, and the difference is the
+   * point: being interrupted from outside isn't a failure of play, while a
+   * mistake is the one early end where the pattern beat you. `RoundsSummary`
+   * paints the same two categories in the same two tones on Insights — keep
+   * them in step, or the same fact will be a different colour on each surface.
+   */
+  tone: "warning" | "danger";
+}[] = [
+  { value: "distractions", label: "Distractions", tone: "warning" },
+  { value: "mistake", label: "Mistake", tone: "danger" },
 ];
 
 /**
