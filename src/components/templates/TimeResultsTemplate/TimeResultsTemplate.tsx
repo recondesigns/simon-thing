@@ -24,13 +24,21 @@ export interface RoundView {
   key: string;
   label: string;
   /**
-   * What the row reports on the right: the round's wall-clock length
-   * ("0:07.0"), what it paid if it reached the cap ("$0.25"), or "—" for rounds
-   * banked before round-level timing existed.
+   * The round's wall-clock length, under the label — the same two-row shape a
+   * session heading uses, name over figures.
+   *
+   * It sits here rather than on the right because the right-hand slot now means
+   * money, and one slot meaning a duration on one row and a payout on the next
+   * is what made the time disappear from a completed round in the first place.
+   * "—" for rounds banked before round-level timing existed.
    */
-  total: string;
-  /** Greens the figure. Set when it is money rather than a duration. */
-  totalTone?: "default" | "success";
+  elapsed: string;
+  /**
+   * What the round paid, right-aligned and green. Absent when it paid nothing,
+   * which is most rounds — an unpaid round shows no figure rather than `$0`,
+   * since the visit's total above already says what the whole session won.
+   */
+  payout?: string;
   /**
    * How the round ended, as a row of its own — "Ended early / Mistake", or
    * "Spin won / $12.50". Both halves come resolved, because a spin win is not
@@ -132,18 +140,21 @@ export default function TimeResultsTemplate({
               key={round.key}
               level={1}
               defaultOpen={round.live}
-              meta={round.total}
-              metaTone={round.totalTone ?? (round.live ? "success" : "default")}
+              meta={round.payout}
+              metaTone="success"
               title={
-                round.live ? (
-                  <span className={styles.liveTitle}>
-                    <span className={styles.pulse} aria-hidden="true" />
-                    {round.label}
-                    <span className={styles.inProgress}>In progress</span>
-                  </span>
-                ) : (
-                  round.label
-                )
+                <span className={styles.roundTitle}>
+                  {round.live ? (
+                    <span className={styles.liveTitle}>
+                      <span className={styles.pulse} aria-hidden="true" />
+                      {round.label}
+                      <span className={styles.inProgress}>In progress</span>
+                    </span>
+                  ) : (
+                    <span>{round.label}</span>
+                  )}
+                  <span className={styles.roundMeta}>{round.elapsed}</span>
+                </span>
               }
             >
               {/* Above the dots because it is about the round, not about any

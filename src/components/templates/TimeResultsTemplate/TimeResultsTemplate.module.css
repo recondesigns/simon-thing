@@ -107,6 +107,26 @@
   color: var(--sem-text-secondary);
 }
 
+/*
+ * The same two-row shape as a session heading, one level down: what the round
+ * is on top, how long it took beneath. The vertical padding is what keeps the
+ * row past the 44px touch minimum now that its header holds two lines rather
+ * than one — `min-height` alone would have the text sitting flush against it.
+ */
+.roundTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) 0;
+}
+
+/* Quieter than the label above it, in the numeral face so a ticking live round
+   doesn't jitter as its digits change — same treatment as `.sessionMeta`. */
+.roundMeta {
+  font: var(--type-numeral-sm);
+  color: var(--sem-text-secondary);
+}
+
 .liveTitle {
   display: inline-flex;
   align-items: center;
