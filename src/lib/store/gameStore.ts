@@ -316,6 +316,16 @@ export interface GameStore {
   sessions: Session[];
   /** Whether tapped numbers are read back aloud. Persisted preference. */
   speechEnabled: boolean;
+  /**
+   * Paints the whole app in neutrals — no pad colours, no status colours.
+   * Persisted preference.
+   *
+   * The store holds the flag and nothing else: the repaint is one CSS scope in
+   * `globals.css`, applied to `<body>` by `AppShell`. No component knows this
+   * exists, which is what keeps it from being forgotten by the next one that
+   * paints a pad.
+   */
+  incognito: boolean;
   /** How much space to leave between read-back numbers. Persisted preference. */
   cadence: Cadence;
   /** How many numbers to a group in the read-back. Persisted preference. */
@@ -423,6 +433,8 @@ export interface GameStore {
   unlock: () => void;
   /** Flip number read-back on/off. */
   toggleSpeech: () => void;
+  /** Flip the neutral palette on/off. */
+  toggleIncognito: () => void;
   /** Set the read-back cadence. */
   setCadence: (cadence: Cadence) => void;
   /** Set how many numbers the read-back groups together. */
@@ -504,6 +516,7 @@ const freshStake = {
 type PersistedGameState = {
   sessions: Session[];
   speechEnabled?: boolean;
+  incognito?: boolean;
   cadence?: Cadence;
   groupSize?: GroupSize;
   groupGapMs?: number;
@@ -607,6 +620,7 @@ export const useGameStore = create<GameStore>()(
       startedAt: null,
       sessions: [],
       speechEnabled: true,
+      incognito: false,
       cadence: "relaxed",
       groupSize: DEFAULT_GROUP_SIZE,
       groupGapMs: DEFAULT_GROUP_GAP_MS,
@@ -740,6 +754,7 @@ export const useGameStore = create<GameStore>()(
         set({
           sessions: [],
           speechEnabled: true,
+          incognito: false,
           cadence: "relaxed",
           groupSize: DEFAULT_GROUP_SIZE,
           groupGapMs: DEFAULT_GROUP_GAP_MS,
@@ -792,6 +807,9 @@ export const useGameStore = create<GameStore>()(
       toggleSpeech: () =>
         set((state) => ({ speechEnabled: !state.speechEnabled })),
 
+      toggleIncognito: () =>
+        set((state) => ({ incognito: !state.incognito })),
+
       setCadence: (cadence) => set({ cadence }),
 
       setGroupSize: (groupSize) => set({ groupSize }),
@@ -826,6 +844,7 @@ export const useGameStore = create<GameStore>()(
       partialize: (state) => ({
         sessions: state.sessions,
         speechEnabled: state.speechEnabled,
+        incognito: state.incognito,
         cadence: state.cadence,
         groupSize: state.groupSize,
         groupGapMs: state.groupGapMs,

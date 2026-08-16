@@ -15,6 +15,130 @@
   --app-bar-h: 60px;
 }
 
+/*
+ * Incognito — the app in neutrals, no hue anywhere.
+ *
+ * **One scope, no component changes.** Every colour in the app resolves through
+ * a custom property at the point of use, so redefining the hued ones under a
+ * scope repaints all of it — and it can't be forgotten in the tenth place that
+ * paints a pad, which branching inside each component would guarantee
+ * eventually.
+ *
+ * Three things about how this is written:
+ *
+ * - **It lives here, not in `tokens.css`.** That file is generated from Figma
+ *   and must not be hand-edited, the same reason `--app-bar-h` is up above.
+ * - **The neutrals are tokens, never literals** — and they are tokens that
+ *   already existed. Pad 7 is grey by design, so the other eight point at it;
+ *   the semantic hues point at their own family's neutral. Nothing here invents
+ *   a colour, so nothing here can drift from the design system.
+ * - **The attribute goes on `<body>`, not `<html>`.** MUI portals every sheet
+ *   and drawer to `document.body`, so a scope on the shell's own element would
+ *   miss all four of them. Body also sidesteps a specificity tie: `:root` and
+ *   `[data-incognito]` weigh the same, so on the same element the winner would
+ *   come down to file order.
+ *
+ * `--game-7` is deliberately absent below. It is already the neutral everything
+ * else is pointing at, and redefining it in terms of itself is a cycle, which
+ * CSS resolves by throwing both values away.
+ */
+[data-incognito] {
+  --game-1: var(--game-7);
+  --game-1-dim: var(--game-7-dim);
+  --game-1-ink: var(--game-7-ink);
+  --game-1-glow: var(--game-7-glow);
+  --game-2: var(--game-7);
+  --game-2-dim: var(--game-7-dim);
+  --game-2-ink: var(--game-7-ink);
+  --game-2-glow: var(--game-7-glow);
+  --game-3: var(--game-7);
+  --game-3-dim: var(--game-7-dim);
+  --game-3-ink: var(--game-7-ink);
+  --game-3-glow: var(--game-7-glow);
+  --game-4: var(--game-7);
+  --game-4-dim: var(--game-7-dim);
+  --game-4-ink: var(--game-7-ink);
+  --game-4-glow: var(--game-7-glow);
+  --game-5: var(--game-7);
+  --game-5-dim: var(--game-7-dim);
+  --game-5-ink: var(--game-7-ink);
+  --game-5-glow: var(--game-7-glow);
+  --game-6: var(--game-7);
+  --game-6-dim: var(--game-7-dim);
+  --game-6-ink: var(--game-7-ink);
+  --game-6-glow: var(--game-7-glow);
+  --game-8: var(--game-7);
+  --game-8-dim: var(--game-7-dim);
+  --game-8-ink: var(--game-7-ink);
+  --game-8-glow: var(--game-7-glow);
+  --game-9: var(--game-7);
+  --game-9-dim: var(--game-7-dim);
+  --game-9-ink: var(--game-7-ink);
+  --game-9-glow: var(--game-7-glow);
+
+  /*
+   * The status hues go too, each to the neutral of its own family, so every
+   * pairing keeps the contrast it was designed with: bright text still sits on
+   * a dark surface, it just has no colour left. A single flat grey across text
+   * and background alike would have made half of these unreadable rather than
+   * neutral.
+   *
+   * **This is the deliberate cost of the mode.** The unlock cue, the Sessions
+   * outcome chips and both Insights charts read their category *as* colour, and
+   * in here they can't say which is which. Incognito is used briefly and on
+   * purpose; that is the trade it makes.
+   */
+  --sem-text-success: var(--sem-text-surface);
+  --sem-text-danger: var(--sem-text-surface);
+  --sem-text-warning: var(--sem-text-surface);
+  --sem-text-info: var(--sem-text-surface);
+
+  --sem-icon-success: var(--sem-icon-surface);
+  --sem-icon-danger: var(--sem-icon-surface);
+  --sem-icon-warning: var(--sem-icon-surface);
+  --sem-icon-info: var(--sem-icon-surface);
+
+  --sem-bg-success: var(--sem-bg-surface-raised);
+  --sem-bg-danger: var(--sem-bg-surface-raised);
+  --sem-bg-danger-hover: var(--sem-bg-surface-hover);
+  --sem-bg-danger-pressed: var(--sem-bg-surface-pressed);
+  --sem-bg-warning: var(--sem-bg-surface-raised);
+  --sem-bg-info: var(--sem-bg-surface-raised);
+
+  --sem-border-success: var(--sem-border-surface-strong);
+  --sem-border-danger: var(--sem-border-surface-strong);
+  --sem-border-warning: var(--sem-border-surface-strong);
+  --sem-border-info: var(--sem-border-surface-strong);
+}
+
+/*
+ * Transitions off for the single frame the palette swaps in.
+ *
+ * **This is load-bearing, not a nicety.** A pad declares
+ * `background-color: var(--pad-dim)` and never changes that declaration — the
+ * value underneath it does, three levels up on `<body>`. Chrome does not start
+ * a transition for that, and until something else invalidates the element it
+ * goes on painting the *old* colour while `getComputedStyle` reports the new
+ * one. Measured: a pad read `#2c2e33` for `--pad-dim` and painted `#3c1b43`,
+ * through a full reload, until transitions were taken off it.
+ *
+ * So the swap is made with transitions suppressed and they come back the next
+ * frame. It has the side benefit of the switch reading as instant rather than
+ * as nine pads slowly draining of colour.
+ */
+[data-palette-swap] * {
+  transition: none !important;
+}
+
+/*
+ * The focus ring keeps its amber, in both modes.
+ *
+ * It is an accessibility affordance rather than part of how the app looks: it
+ * paints only under `:focus-visible`, which a finger never triggers, so it is
+ * invisible in the use this mode is for. Neutralising it would weaken the one
+ * indicator that has to stay obvious, to hide something nobody is looking at.
+ */
+
 /* Base resets only — colors, background, and typography come from the MUI
    theme via CssBaseline, so nothing here should set them. */
 
