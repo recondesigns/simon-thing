@@ -75,6 +75,12 @@
   color: var(--sem-text-success);
 }
 
+/* The bright danger text, not the tinted `bg/danger` surface — the figure is
+   what is being read rather than something sitting under it. */
+.metaDanger {
+  color: var(--sem-text-danger);
+}
+
 /* Indented past the chevron so the nesting reads down the left edge. */
 .session > .body {
   padding: 0 var(--space-3) var(--space-3) var(--space-8);

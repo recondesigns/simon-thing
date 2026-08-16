@@ -10,10 +10,17 @@ import {
   roundElapsedMs,
   ENDED_REASON_OPTIONS,
   type Round,
+  type Session,
 } from "@/lib/store/gameStore";
 import { formatDuration, formatRoundTotal } from "@/lib/time";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import { COMPLETED_ROUND_PAYOUT } from "@/lib/game/payout";
+import {
+  formatMoney,
+  formatSignedMoney,
+  roundReturn,
+  sessionMoney,
+} from "@/lib/money";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
 import { CELL_NUMBERS } from "@/lib/game/cellNumbers";
 import type { GameColor } from "@/lib/theme/tokens";
@@ -21,22 +28,54 @@ import type { GameColor } from "@/lib/theme/tokens";
 const sum = (values: number[]) => values.reduce((total, v) => total + v, 0);
 
 /**
- * Money, with a thousands separator — a visit's winnings run to four figures
- * more readily than a single round's do. Client-only, like every other format
- * here, because the store rehydrates after mount.
+ * The headline figure for a visit, in whichever of the two readings it can
+ * support.
  *
- * Cents only appear when there are cents: a whole amount reads "$12", not
- * "$12.00". The machine pays round numbers most of the time, and two zeros on
- * every figure is noise on the common case rather than precision. Tested on the
- * rounded cents, not on `amount % 1`, so a total assembled from several payouts
- * can't land on 12.000000000000002 and sprout decimals.
+ * **Balance** once the visit recorded what it started with and what it was
+ * betting: where the money stands now, and the swing that got it there. The
+ * swing is what carries the colour — the balance itself is neither good news
+ * nor bad, it is just where you are.
+ *
+ * **Won** for a visit with no stake recorded — every one banked before the
+ * prompt existed, and any where it was skipped. Those know what came *out* of
+ * the machine and nothing about what went in, so they report winnings, exactly
+ * as this surface did before balances existed. Answering "what is it worth"
+ * would need a starting balance, and there is no honest way to invent one.
  */
-const formatMoney = (amount: number) => {
-  const whole = Math.round(amount * 100) % 100 === 0;
-  return `$${amount.toLocaleString(undefined, {
-    minimumFractionDigits: whole ? 0 : 2,
-    maximumFractionDigits: 2,
-  })}`;
+const money = (
+  rounds: Round[],
+  stake: Session["stake"],
+): SessionView["money"] => {
+  if (stake === undefined) {
+    const won =
+      sum(
+        rounds
+          .map((round) => round.spinWon)
+          .filter((amount): amount is number => amount !== undefined),
+      ) +
+      rounds.filter((round) => round.dots >= ROUND_CAP).length *
+        COMPLETED_ROUND_PAYOUT;
+    return { label: "Won", amount: formatMoney(won), positive: won > 0 };
+  }
+
+  const { balance, difference } = sessionMoney(rounds, stake);
+  return {
+    // No label: the figure at the head of a session *is* what the session is
+    // worth, and "Balance:" only repeated that. The `Won` reading keeps its
+    // one, because there it says the number means something else.
+    amount: formatMoney(balance),
+    // Nothing in front of the slash on a visit that is exactly level: "$0 /
+    // $50" is a swing of nothing dressed as a swing, and the balance alone
+    // already says it.
+    ...(difference === 0
+      ? {}
+      : {
+          difference: {
+            text: formatSignedMoney(difference),
+            direction: difference > 0 ? ("up" as const) : ("down" as const),
+          },
+        }),
+  };
 };
 
 /**
@@ -156,32 +195,24 @@ export default function SessionsPage() {
       .map(roundElapsedMs)
       .filter((ms): ms is number => ms !== null);
 
-    // Two ways to be paid on a visit, added together because they are the same
-    // money: the spins that won, and the rounds taken all the way to the cap.
-    //
-    // Only spin amounts actually recorded count — one whose prompt was skipped
-    // contributes nothing rather than zero, so the figure can under-report but
-    // never invent. Completed rounds need nothing recorded at all: reaching the
-    // cap is evidence of itself.
-    const won =
-      sum(
-        allRounds
-          .map((round) => round.spinWon)
-          .filter((amount): amount is number => amount !== undefined),
-      ) +
-      allRounds.filter((round) => round.dots >= ROUND_CAP).length *
-        COMPLETED_ROUND_PAYOUT;
-
     return {
       key: String(index),
       title: isEarlier ? "Earlier" : `Session ${number}`,
-      won: { amount: formatMoney(won), positive: won > 0 },
-      // How long the visit ran and how many rounds it held — no timestamp. Which
-      // visit this is gets answered by the name above, and the date said nothing
-      // the order of the list wasn't already saying.
+      // The round in progress is in here too, so the balance drops the moment a
+      // round opens rather than when it is banked — which is when the bet is
+      // actually gone.
+      money: money(allRounds, session.stake),
+      // How long the visit ran, how many rounds it held, and what it was played
+      // for — no timestamp. Which visit this is gets answered by the name above,
+      // and the date said nothing the order of the list wasn't already saying.
+      // The bet is here because the balance above is unreadable without it: the
+      // same swing means a very different visit at 25¢ and at $5.
       meta: [
         timed.length > 0 ? formatDuration(sum(timed)) : "—",
         `${allRounds.length} ${allRounds.length === 1 ? "round" : "rounds"}`,
+        ...(session.stake === undefined
+          ? []
+          : [`${formatMoney(session.stake.denomination)} a round`]),
       ].join(" · "),
       isActive,
       rounds: allRounds
@@ -192,12 +223,33 @@ export default function SessionsPage() {
           // payout used to *replace* the time on a completed round, which meant
           // the rounds that went the full distance were the only ones whose
           // length you couldn't read.
+          // The machine's own two figures, which is how the round is remembered
+          // from the other side of it: **$5.25 won, or the $5 lost.** A round
+          // pays or it doesn't, and one that doesn't has taken the bet.
+          //
+          // Deliberately not the net — a capped round reads $5.25 rather than
+          // the 25¢ it actually moved the balance. The balance is where that
+          // arithmetic is done, once, at the head of the session; down here the
+          // figures are the ones the player watched happen.
+          //
+          // A visit with no stake recorded can't know what a round cost, so it
+          // keeps the old reading: a payout on the rounds that paid, nothing on
+          // the rest.
           const completed = round.dots >= ROUND_CAP;
-          const payout = completed
-            ? formatMoney(COMPLETED_ROUND_PAYOUT)
-            : round.spinWon !== undefined
-              ? formatMoney(round.spinWon)
-              : undefined;
+          const returned =
+            session.stake === undefined
+              ? (completed ? COMPLETED_ROUND_PAYOUT : 0) + (round.spinWon ?? 0)
+              : roundReturn(round, session.stake.denomination);
+          const payout =
+            returned > 0
+              ? formatMoney(returned)
+              : session.stake === undefined
+                ? undefined
+                : // Signed, unlike the payout: the minus is the whole message,
+                  // and this figure is the one round in the list to be sorry
+                  // about.
+                  formatSignedMoney(-session.stake.denomination);
+          const payoutTone = returned > 0 ? ("success" as const) : ("danger" as const);
           return {
             key: String(roundIndex),
             label: `Round ${roundIndex + 1}`,
@@ -205,6 +257,7 @@ export default function SessionsPage() {
             // were timed per dot, which is not the same quantity.
             elapsed: ms === null ? "—" : formatRoundTotal(ms),
             payout,
+            payoutTone,
             ending: ending(round),
             live: roundIndex === liveIndex,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {

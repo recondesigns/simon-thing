@@ -9,8 +9,8 @@ export interface CollapsibleRowProps {
   title: ReactNode;
   /** Right-aligned summary — a round count, a total time. */
   meta?: ReactNode;
-  /** Tints the meta green. Used for the round being played right now. */
-  metaTone?: "default" | "success";
+  /** Tints the meta — green for money made, red for money gone. */
+  metaTone?: "default" | "success" | "danger";
   /**
    * 0 is a session card — a raised, bordered surface.
    * 1 is a round inside one — a plain row, indented.
@@ -70,6 +70,7 @@ export default function CollapsibleRow({
             className={[
               styles.meta,
               metaTone === "success" && styles.metaSuccess,
+              metaTone === "danger" && styles.metaDanger,
             ]
               .filter(Boolean)
               .join(" ")}

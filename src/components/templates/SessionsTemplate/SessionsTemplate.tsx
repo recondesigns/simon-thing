@@ -34,11 +34,17 @@ export interface RoundView {
    */
   elapsed: string;
   /**
-   * What the round paid, right-aligned and green. Absent when it paid nothing,
-   * which is most rounds — an unpaid round shows no figure rather than `$0`,
-   * since the visit's total above already says what the whole session won.
+   * What the round did to the balance, right-aligned and signed — "+$0.25",
+   * "−$5". Every round of a visit that recorded a stake has one, because every
+   * round costs the bet whether or not it pays anything back.
+   *
+   * Absent only on a visit with no stake recorded, where the bet is unknown and
+   * so is the cost: those show the machine's payout on the rounds that paid,
+   * and nothing at all on the rest.
    */
   payout?: string;
+  /** Green for money made, red for money gone. */
+  payoutTone?: "default" | "success" | "danger";
   /**
    * How the round ended, as a row of its own — "Ended early / Mistake", or
    * "Spin won / $12.50". Both halves come resolved, because a spin win is not
@@ -61,14 +67,33 @@ export interface SessionView {
   key: string;
   title: string;
   /**
-   * Total won across the visit. Always shown, `$0` included — a visit that won
-   * nothing is a fact worth stating, not an absence.
+   * The visit's headline figure. Always shown, `$0` included — a visit that is
+   * worth nothing is a fact worth stating, not an absence.
    *
-   * `positive` is what colours the figure: only real winnings go green, so the
-   * colour means "there is money here" rather than merely "this is a money
-   * field". The `Won:` label never takes it — it is a caption, not a value.
+   * Two readings. A **balance** carries no label at all — a figure at the head
+   * of a session is what the session is worth, and "Balance:" was a caption
+   * saying what the number beside it already said. The **`Won`** label is what
+   * survives, and only on visits with no stake recorded (every one banked
+   * before the prompt existed, and any where it was skipped): those can say
+   * what they won but not what they are worth, and a bare figure would be read
+   * as a balance. The odd one out is the one that needs naming.
+   *
+   * `positive` colours the amount, and only the `Won` reading uses it: winnings
+   * going green means "there is money here", while a balance is just where the
+   * visit stands and takes the ordinary ink. The label never takes the colour —
+   * it is a caption, not a value.
    */
-  won: { amount: string; positive: boolean };
+  money: {
+    label?: string;
+    amount: string;
+    positive?: boolean;
+    /**
+     * How far the balance has moved from what the visit started with, already
+     * signed — "+$2.50", "−$3". Absent when the visit is exactly level, or when
+     * there is no starting balance to be level with.
+     */
+    difference?: { text: string; direction: "up" | "down" };
+  };
   /** Formatted summary, e.g. "6 rounds · 0:55". */
   meta: string;
   rounds: RoundView[];
@@ -118,16 +143,42 @@ export default function SessionsTemplate({
               <span className={styles.sessionHead}>
                 <span className={styles.sessionName}>{session.title}</span>
                 <span className={styles.sessionWon}>
-                  <span className={styles.wonLabel}>Won:</span>
+                  {session.money.label && (
+                    <span className={styles.wonLabel}>
+                      {session.money.label}:
+                    </span>
+                  )}
+                  {/* The swing leads and the balance follows. How the visit is
+                      going is the question being asked of this row; what the
+                      balance stands at is the answer's context, and it is the
+                      figure that stays put while the other one moves. The slash
+                      is decoration between two numbers — a screen reader gets
+                      them as an ordinary pair. */}
+                  {session.money.difference && (
+                    <>
+                      <span
+                        className={
+                          session.money.difference.direction === "up"
+                            ? styles.wonPositive
+                            : styles.wonNegative
+                        }
+                      >
+                        {session.money.difference.text}
+                      </span>
+                      <span className={styles.wonSlash} aria-hidden="true">
+                        /
+                      </span>
+                    </>
+                  )}
                   <span
                     className={[
                       styles.wonAmount,
-                      session.won.positive && styles.wonPositive,
+                      session.money.positive && styles.wonPositive,
                     ]
                       .filter(Boolean)
                       .join(" ")}
                   >
-                    {session.won.amount}
+                    {session.money.amount}
                   </span>
                 </span>
               </span>
@@ -141,7 +192,7 @@ export default function SessionsTemplate({
               level={1}
               defaultOpen={round.live}
               meta={round.payout}
-              metaTone="success"
+              metaTone={round.payoutTone ?? "success"}
               title={
                 <span className={styles.roundTitle}>
                   {round.live ? (

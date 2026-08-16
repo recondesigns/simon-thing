@@ -8,8 +8,11 @@ const SESSIONS: SessionView[] = [
   {
     key: "1",
     title: "Session 2",
-    won: { amount: "$1,234.50", positive: true },
-    meta: "2 rounds · 0:03",
+    money: {
+      amount: "$1,234.50",
+      difference: { text: "+$2.50", direction: "up" },
+    },
+    meta: "0:03 · 2 rounds · $5 a round",
     isActive: true,
     rounds: [
       // Banked before round-level timing and before pads: it knows it was two
@@ -35,8 +38,9 @@ const SESSIONS: SessionView[] = [
   {
     key: "0",
     title: "Session 1",
-    won: { amount: "$0", positive: false },
-    meta: "3 rounds · 0:12",
+    // No stake recorded, so it can say what it won and not what it is worth.
+    money: { amount: "$0", label: "Won", positive: false },
+    meta: "0:12 · 3 rounds",
     isActive: false,
     rounds: [],
   },

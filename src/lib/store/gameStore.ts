@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import { DEFAULT_GROUP_SIZE } from "@/lib/speech";
+import type { Denomination } from "@/lib/game/payout";
 
 /**
  * How much silence to leave between spoken numbers in the read-back. It's the
@@ -230,6 +231,22 @@ export function roundElapsedMs(round: Round): number | null {
   return Math.max(0, round.endedAt - round.startedAt);
 }
 
+/**
+ * What a visit is being played for: the money in hand when it opened, and what
+ * one round of it costs.
+ *
+ * **One object rather than two fields, because they are recorded together or
+ * not at all.** A balance without a denomination can't be moved forward (no bet
+ * to subtract) and a denomination without a balance has nothing to move, so
+ * "half answered" is a state worth making unrepresentable.
+ */
+export interface SessionStake {
+  /** Money in hand when the visit opened, in dollars. */
+  startingBalance: number;
+  /** What one round costs to play. Every round of the visit is at this bet. */
+  denomination: Denomination;
+}
+
 export interface Session {
   /** When the visit began (epoch ms), or null for the legacy "Earlier" bucket. */
   startedAt: number | null;
@@ -237,6 +254,15 @@ export interface Session {
   endedAt: number | null;
   /** Completed rounds, oldest first. */
   rounds: Round[];
+  /**
+   * What this visit was played for, if the player said.
+   *
+   * **Absent means "not recorded", never "free"** — the prompt is skippable,
+   * and every visit banked before it existed has none. A visit without one can
+   * report what it won but not what it is worth, because neither the money it
+   * started with nor the money it staked was ever written down.
+   */
+  stake?: SessionStake;
 }
 
 /**
@@ -290,6 +316,28 @@ export interface GameStore {
    * runs) and applied via `unlock`.
    */
   locked: boolean;
+  /**
+   * Whether the stake prompt is showing. Not persisted — it belongs to the
+   * moment a visit opens, and a reload is not that moment.
+   */
+  stakePromptOpen: boolean;
+  /**
+   * Whether this visit has already been asked what it is playing for. Skipping
+   * counts as asked: a prompt that can be dodged and then returns is a nag.
+   *
+   * Not persisted either, and it doesn't need to be. It only ever gates the
+   * prompt on the tick a session *opens*, and a reload leaves the open session
+   * open — so there is no tick for a stale value to be read on.
+   */
+  stakeAsked: boolean;
+  /**
+   * A stake answered before there was a session to put it on.
+   *
+   * New session closes a visit without opening the next one — that happens on
+   * Start — so the answer has to wait somewhere for the session it describes.
+   * Cleared onto that session the moment it opens.
+   */
+  pendingStake: SessionStake | null;
 
   /** Begin the round: start the clock, ungate the pads, open a session if none is. */
   start: () => void;
@@ -345,6 +393,16 @@ export interface GameStore {
    * means is unambiguous. A no-op if nothing has been banked.
    */
   setLastRoundEndedReason: (reason: EndedReason, spinWon?: number) => void;
+  /**
+   * Record what this visit is being played for, and close the prompt.
+   *
+   * Written straight onto the open session, or held as `pendingStake` until one
+   * opens — the prompt can arrive on either side of a session existing, since
+   * New session and the first Start both ask.
+   */
+  setStake: (stake: SessionStake) => void;
+  /** Close the stake prompt without recording anything. Doesn't ask again. */
+  skipStake: () => void;
   /** Release the one-tap-per-dot lock once the read-back has finished. */
   unlock: () => void;
   /** Flip number read-back on/off. */
@@ -364,6 +422,21 @@ function activeSession(sessions: Session[]): Session | null {
 }
 
 /**
+ * A new, open visit — carrying whatever stake was answered before it existed.
+ *
+ * Every path that opens a session goes through here, so a stake answered at New
+ * session lands on the visit it was meant for whichever way that visit starts.
+ */
+function openSession(now: number, stake: SessionStake | null): Session {
+  return {
+    startedAt: now,
+    endedAt: null,
+    rounds: [],
+    ...(stake === null ? {} : { stake }),
+  };
+}
+
+/**
  * Append a finished round to the open session, opening one if none is (a safety
  * net — Start normally opens it). A round with no dots is dropped, not banked.
  */
@@ -371,6 +444,7 @@ function bankRound(
   sessions: Session[],
   round: Round,
   now: number,
+  stake: SessionStake | null = null,
 ): Session[] {
   // A round with no dots is normally dropped — nothing happened, so there is
   // nothing to bank. **A spin win is the exception, and it is the common case
@@ -385,7 +459,7 @@ function bankRound(
       { ...last, rounds: [...last.rounds, round] },
     ];
   }
-  return [...sessions, { startedAt: now, endedAt: null, rounds: [round] }];
+  return [...sessions, { ...openSession(now, stake), rounds: [round] }];
 }
 
 /** The current round is cleared back to its not-yet-started state. */
@@ -393,6 +467,17 @@ const freshRound = {
   taps: [] as number[],
   startedAt: null as number | null,
   locked: false,
+};
+
+/**
+ * No visit has been asked what it is playing for. The state a fresh install is
+ * in, and the one wiping history puts it back into — the next session to open
+ * is a new visit and gets the question.
+ */
+const freshStake = {
+  stakePromptOpen: false,
+  stakeAsked: false,
+  pendingStake: null as SessionStake | null,
 };
 
 /**
@@ -510,19 +595,33 @@ export const useGameStore = create<GameStore>()(
       groupSize: DEFAULT_GROUP_SIZE,
       groupGapMs: DEFAULT_GROUP_GAP_MS,
       locked: false,
+      ...freshStake,
 
       start: () =>
         set((state) => {
           if (state.startedAt !== null) return {};
           const now = Date.now();
+          const opening = activeSession(state.sessions) === null;
           // Open a session for this visit if one isn't already open.
-          const sessions = activeSession(state.sessions)
-            ? state.sessions
-            : [...state.sessions, { startedAt: now, endedAt: null, rounds: [] }];
+          const sessions = opening
+            ? [...state.sessions, openSession(now, state.pendingStake)]
+            : state.sessions;
           // `startedAt` both opens the round and starts its clock. The machine's
           // setup and pattern playback happen after this point and are counted,
           // which is the intent: they're part of how long the round took.
-          return { sessions, startedAt: now, locked: false };
+          return {
+            sessions,
+            startedAt: now,
+            locked: false,
+            pendingStake: null,
+            // Ask what the visit is playing for, but only on the tick it opens
+            // and only if New session didn't already ask. Every Start after
+            // that joins a visit that has had its answer, or has declined to
+            // give one.
+            ...(opening && !state.stakeAsked && state.pendingStake === null
+              ? { stakePromptOpen: true }
+              : {}),
+          };
         }),
 
       tap: (index, max) =>
@@ -560,16 +659,15 @@ export const useGameStore = create<GameStore>()(
               ...(endedReason === undefined ? {} : { endedReason }),
             },
             now,
+            state.pendingStake,
           );
           // Roll straight into the next round — keep (or open) a session for it.
           if (!activeSession(sessions)) {
-            sessions = [
-              ...sessions,
-              { startedAt: now, endedAt: null, rounds: [] },
-            ];
+            sessions = [...sessions, openSession(now, state.pendingStake)];
           }
           return {
             sessions,
+            pendingStake: null,
             taps: [],
             // Roll into the next round with its clock already running. Ending a
             // round *is* the next one beginning: the machine sets up and plays
@@ -600,10 +698,25 @@ export const useGameStore = create<GameStore>()(
           if (last && last.endedAt === null) {
             sessions = [...sessions.slice(0, -1), { ...last, endedAt: now }];
           }
-          return { sessions, ...freshRound };
+          // Ask straight away rather than waiting for Start. This is the moment
+          // the player is walking up to a machine, which is when they know what
+          // they have in hand — and the answer waits in `pendingStake` for the
+          // session it describes.
+          return {
+            sessions,
+            ...freshRound,
+            stakePromptOpen: true,
+            stakeAsked: false,
+            pendingStake: null,
+          };
         }),
 
-      clearHistory: () => set({ sessions: [], ...freshRound }),
+      clearHistory: () =>
+        set({
+          sessions: [],
+          ...freshRound,
+          ...freshStake,
+        }),
 
       resetApp: () => {
         // Reset in-memory to defaults first (this re-persists), then drop the
@@ -615,6 +728,7 @@ export const useGameStore = create<GameStore>()(
           groupSize: DEFAULT_GROUP_SIZE,
           groupGapMs: DEFAULT_GROUP_GAP_MS,
           ...freshRound,
+          ...freshStake,
         });
         useGameStore.persist.clearStorage();
       },
@@ -640,6 +754,23 @@ export const useGameStore = create<GameStore>()(
           return { sessions };
         }),
 
+      setStake: (stake) =>
+        set((state) => {
+          const closed = { stakePromptOpen: false, stakeAsked: true };
+          const index = state.sessions.length - 1;
+          // Straight onto the open visit when there is one — the first Start of
+          // a visit opens the session *before* the prompt, so this is the
+          // ordinary case. Only New session leaves nothing to write to.
+          if (index < 0 || state.sessions[index].endedAt !== null) {
+            return { ...closed, pendingStake: stake };
+          }
+          const sessions = [...state.sessions];
+          sessions[index] = { ...sessions[index], stake };
+          return { ...closed, sessions, pendingStake: null };
+        }),
+
+      skipStake: () => set({ stakePromptOpen: false, stakeAsked: true }),
+
       unlock: () => set({ locked: false }),
 
       toggleSpeech: () =>
@@ -664,6 +795,12 @@ export const useGameStore = create<GameStore>()(
       skipHydration: true,
       // Persist sessions and the preferences only — never the in-progress
       // round or the running clock.
+      //
+      // A session's `stake` rides along inside `sessions` and needed no version
+      // bump either: it is an optional field on a shape that already persists,
+      // so a visit banked before it existed simply hasn't got one — which is
+      // exactly what its absence is defined to mean. Nothing to migrate, and
+      // nothing a migration could invent.
       //
       // `groupSize` and `groupGapMs` were both added without bumping the
       // version, on purpose. Zustand merges the persisted object over the

@@ -57,7 +57,17 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-3);
+  /* Row gap first: the 24px that separates the two *columns* is far too much
+     air between them once they stack, and `gap` would otherwise apply it in
+     both directions. */
+  gap: var(--space-1) var(--space-3);
+  /* The figures drop to their own line rather than being clipped. A balance
+     and its swing can both run to four figures at once — "$2,229.50 /
+     +$1,229.50" overruns the 400px column by about 10px beside even a short
+     name — and the money block can't shrink, since it is one unbroken number
+     either side of a slash. Wrapping costs a line on the visits that need it
+     and nothing on the ones that don't. */
+  flex-wrap: wrap;
 }
 
 .sessionName {
@@ -78,6 +88,9 @@
   /* Never squeezed by a long name — it is the shorter, harder fact. */
   white-space: nowrap;
   flex-shrink: 0;
+  /* Holds it against the right edge on the line it lands on, wrapped or not —
+     `space-between` alone only aligns it while it shares a line with the name. */
+  margin-left: auto;
 }
 
 .wonLabel {
@@ -96,6 +109,17 @@
  */
 .wonPositive {
   color: var(--sem-text-success);
+}
+
+/* The same argument in the other direction, and the same reason it is the
+   bright danger *text* rather than the tinted danger surface. */
+.wonNegative {
+  color: var(--sem-text-danger);
+}
+
+/* Quieter than either figure it separates — it is punctuation, not a value. */
+.wonSlash {
+  color: var(--sem-text-secondary);
 }
 
 /*
