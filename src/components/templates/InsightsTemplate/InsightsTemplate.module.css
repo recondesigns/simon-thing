@@ -1,5 +1,5 @@
 /*
- * Scrolls inside itself, like Times and unlike the board.
+ * Scrolls inside itself, like Sessions and unlike the board.
  *
  * The shell is 100dvh with overflow hidden, so each route owns its overflow.
  * This one has no reason to fit — the sections are a fixed set today, but the
@@ -18,7 +18,7 @@
 }
 
 /* Centres the empty state in the page rather than letting it sit under the
-   bar — the same treatment the Times screen gives its own. */
+   bar — the same treatment the Sessions screen gives its own. */
 .pageEmpty {
   display: flex;
   flex: 1;

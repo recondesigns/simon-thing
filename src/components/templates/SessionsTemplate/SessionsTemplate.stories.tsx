@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent } from "storybook/test";
-import TimeResultsTemplate, {
+import SessionsTemplate, {
   type SessionView,
-} from "./TimeResultsTemplate";
+} from "./SessionsTemplate";
 
 const SESSIONS: SessionView[] = [
   {
@@ -43,11 +43,11 @@ const SESSIONS: SessionView[] = [
 ];
 
 const meta = {
-  title: "Templates/TimeResultsTemplate",
-  component: TimeResultsTemplate,
+  title: "Templates/SessionsTemplate",
+  component: SessionsTemplate,
   parameters: { layout: "fullscreen" },
   args: { sessions: SESSIONS, onClear: fn() },
-} satisfies Meta<typeof TimeResultsTemplate>;
+} satisfies Meta<typeof SessionsTemplate>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

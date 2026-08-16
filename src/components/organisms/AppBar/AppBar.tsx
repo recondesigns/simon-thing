@@ -21,7 +21,7 @@ export interface AppBarProps {
  *
  * The wordmark is the way back to the board from anywhere, and is now the
  * *only* one — the text link that used to name the other surface is gone, and
- * both Times and Insights are reached from the menu instead. Three surfaces
+ * both Sessions and Insights are reached from the menu instead. Three surfaces
  * could never be served by a single link that named "the one you are not on",
  * and picking one of the three to privilege made the other two second-class.
  *

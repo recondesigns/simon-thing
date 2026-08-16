@@ -5,7 +5,7 @@ import CollapsibleRow from "@/components/organisms/CollapsibleRow/CollapsibleRow
 import DataRow from "@/components/organisms/DataRow/DataRow";
 import EmptyState from "@/components/organisms/EmptyState/EmptyState";
 import type { GameColor } from "@/lib/theme/tokens";
-import styles from "./TimeResultsTemplate.module.css";
+import styles from "./SessionsTemplate.module.css";
 
 export interface DotView {
   label: string;
@@ -75,7 +75,7 @@ export interface SessionView {
   isActive: boolean;
 }
 
-export interface TimeResultsTemplateProps {
+export interface SessionsTemplateProps {
   /** Newest first. */
   sessions: SessionView[];
   onClear?: () => void;
@@ -89,10 +89,10 @@ export interface TimeResultsTemplateProps {
  * scroll away once there's more than a screenful. A destructive control
  * shouldn't sit permanently under a thumb on a surface you scroll.
  */
-export default function TimeResultsTemplate({
+export default function SessionsTemplate({
   sessions,
   onClear,
-}: TimeResultsTemplateProps) {
+}: SessionsTemplateProps) {
   if (sessions.length === 0) {
     return (
       <div className={styles.pageEmpty}>

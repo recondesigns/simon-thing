@@ -3,7 +3,7 @@ import { expect, fn, userEvent } from "storybook/test";
 import MenuSheet from "./MenuSheet";
 
 const ITEMS = [
-  { icon: "chevron-right" as const, label: "Times", meta: "3 sessions" },
+  { icon: "chevron-right" as const, label: "Sessions", meta: "3 sessions" },
   { icon: "plus" as const, label: "New session" },
   { icon: "trash" as const, label: "Scrap round", danger: true },
   { icon: "undo" as const, label: "Unavailable", disabled: true },

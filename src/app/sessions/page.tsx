@@ -2,20 +2,16 @@
 
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
-import TimeResultsTemplate, {
+import SessionsTemplate, {
   type SessionView,
-} from "@/components/templates/TimeResultsTemplate/TimeResultsTemplate";
+} from "@/components/templates/SessionsTemplate/SessionsTemplate";
 import {
   useGameStore,
   roundElapsedMs,
   ENDED_REASON_OPTIONS,
   type Round,
 } from "@/lib/store/gameStore";
-import {
-  formatDuration,
-  formatRoundTotal,
-  formatSessionStart,
-} from "@/lib/time";
+import { formatDuration, formatRoundTotal } from "@/lib/time";
 import { ROUND_CAP } from "@/lib/game/roundCap";
 import { COMPLETED_ROUND_PAYOUT } from "@/lib/game/payout";
 import { CELL_POSITIONS } from "@/lib/game/cellPositions";
@@ -28,12 +24,20 @@ const sum = (values: number[]) => values.reduce((total, v) => total + v, 0);
  * Money, with a thousands separator — a visit's winnings run to four figures
  * more readily than a single round's do. Client-only, like every other format
  * here, because the store rehydrates after mount.
+ *
+ * Cents only appear when there are cents: a whole amount reads "$12", not
+ * "$12.00". The machine pays round numbers most of the time, and two zeros on
+ * every figure is noise on the common case rather than precision. Tested on the
+ * rounded cents, not on `amount % 1`, so a total assembled from several payouts
+ * can't land on 12.000000000000002 and sprout decimals.
  */
-const formatMoney = (amount: number) =>
-  `$${amount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
+const formatMoney = (amount: number) => {
+  const whole = Math.round(amount * 100) % 100 === 0;
+  return `$${amount.toLocaleString(undefined, {
+    minimumFractionDigits: whole ? 0 : 2,
     maximumFractionDigits: 2,
   })}`;
+};
 
 /**
  * How a round's ending reads, or undefined when it has none to show.
@@ -54,7 +58,7 @@ const ending = (
     }
     return {
       label: "Spin won",
-      value: `$${round.spinWon.toFixed(2)}`,
+      value: formatMoney(round.spinWon),
       tone: "success",
     };
   }
@@ -114,7 +118,7 @@ function useTickingNow(active: boolean): number | null {
   );
 }
 
-export default function TimeResultsPage() {
+export default function SessionsPage() {
   const sessions = useGameStore((state) => state.sessions);
   const startedAt = useGameStore((state) => state.startedAt);
   const taps = useGameStore((state) => state.taps);
@@ -171,19 +175,13 @@ export default function TimeResultsPage() {
     return {
       key: String(index),
       title: isEarlier ? "Earlier" : `Session ${number}`,
-      // `$0` rather than `$0.00`: a visit that won nothing is saying so, not
-      // reporting a precise amount, and the cents are noise on a round number.
-      won: { amount: won > 0 ? formatMoney(won) : "$0", positive: won > 0 },
-      // The date trails the figures rather than leading them: which visit this
-      // is gets answered by the name above, so the timestamp is the least
-      // urgent thing here. The legacy "Earlier" bucket predates sessions and
-      // has none to show.
+      won: { amount: formatMoney(won), positive: won > 0 },
+      // How long the visit ran and how many rounds it held — no timestamp. Which
+      // visit this is gets answered by the name above, and the date said nothing
+      // the order of the list wasn't already saying.
       meta: [
         timed.length > 0 ? formatDuration(sum(timed)) : "—",
         `${allRounds.length} ${allRounds.length === 1 ? "round" : "rounds"}`,
-        ...(isEarlier
-          ? []
-          : [formatSessionStart(session.startedAt as number)]),
       ].join(" · "),
       isActive,
       rounds: allRounds
@@ -232,5 +230,5 @@ export default function TimeResultsPage() {
 
   views.reverse();
 
-  return <TimeResultsTemplate sessions={views} onClear={clearHistory} />;
+  return <SessionsTemplate sessions={views} onClear={clearHistory} />;
 }

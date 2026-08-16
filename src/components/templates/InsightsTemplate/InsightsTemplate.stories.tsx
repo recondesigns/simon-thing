@@ -74,7 +74,7 @@ export const ScrollsRatherThanSquashes: Story = {
 
 /**
  * Nothing played: the shared empty state, not three empty charts — and the same
- * one the Times screen shows, down to the idling board.
+ * one the Sessions screen shows, down to the idling board.
  */
 export const Empty: Story = {
   args: { insights: buildInsights([]) },

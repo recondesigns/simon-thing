@@ -21,7 +21,7 @@ export interface InsightsTemplateProps {
  */
 export default function InsightsTemplate({ insights }: InsightsTemplateProps) {
   if (insights.empty) {
-    // The same idling board the Times screen shows when it has nothing —
+    // The same idling board the Sessions screen shows when it has nothing —
     // two empty surfaces in one app should not be empty in two different ways.
     return (
       <div className={styles.pageEmpty}>

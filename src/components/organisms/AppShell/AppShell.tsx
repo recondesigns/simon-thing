@@ -22,7 +22,7 @@ import {
 import styles from "./AppShell.module.css";
 
 const BOARD_PATH = "/";
-const TIMES_PATH = "/time-results";
+const SESSIONS_PATH = "/sessions";
 const INSIGHTS_PATH = "/insights";
 
 /** Mirrors the slider's own `valueLabelFormat` for the at-rest readout beside it. */
@@ -60,7 +60,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const resetApp = useGameStore((state) => state.resetApp);
 
   const onBoard = pathname === BOARD_PATH;
-  const onTimes = pathname === TIMES_PATH;
+  const onSessions = pathname === SESSIONS_PATH;
   const onInsights = pathname === INSIGHTS_PATH;
 
   // The open visit, and which number it is. Only sessions with a start time are
@@ -74,8 +74,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const subtitle = onInsights
     ? "Insights"
-    : onTimes
-      ? "Times"
+    : onSessions
+      ? "Sessions"
       : started
       ? `Round ${roundNumber}`
       : `Session ${sessionNumber}`;
@@ -123,9 +123,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           },
           {
             icon: "chevron-right" as const,
-            label: "Times",
-            disabled: onTimes,
-            onSelect: run(() => router.push(TIMES_PATH)),
+            label: "Sessions",
+            disabled: onSessions,
+            onSelect: run(() => router.push(SESSIONS_PATH)),
           },
           {
             icon: "chevron-right" as const,
