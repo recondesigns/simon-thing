@@ -12,6 +12,10 @@ export interface AppBarProps {
   onOpenSettings?: () => void;
   /** Opens navigation and the session actions, as a side sheet. */
   onOpenMenu?: () => void;
+  /** Whether the neutral palette is on — flips the eye and what it says. */
+  incognito?: boolean;
+  /** Toggles the neutral palette. Acts on the tap; opens nothing. */
+  onToggleIncognito?: () => void;
   /** Names the mark for assistive tech, which sees a grid of spans otherwise. */
   title?: string;
 }
@@ -21,14 +25,21 @@ export interface AppBarProps {
  *
  * The wordmark is the way back to the board from anywhere, and is now the
  * *only* one — the text link that used to name the other surface is gone, and
- * both Times and Insights are reached from the menu instead. Three surfaces
+ * both Sessions and Insights are reached from the menu instead. Three surfaces
  * could never be served by a single link that named "the one you are not on",
  * and picking one of the three to privilege made the other two second-class.
  *
- * Two icons rather than one, because the sheets behind them answer different
- * questions and are opened at different times: the gear is read-back tuning,
- * adjusted mid-session while standing at the machine; the menu is where you go,
- * plus the session actions and the destructive controls.
+ * Two of the three icons open sheets, and they answer different questions at
+ * different times: the gear is read-back tuning, adjusted mid-session while
+ * standing at the machine; the menu is where you go, plus the session actions
+ * and the destructive controls.
+ *
+ * **The eye is the odd one — it acts rather than opens.** It belongs in the bar
+ * rather than behind either sheet because it is the one preference with a
+ * *moment*: someone glances over, and the colours have to be gone now, not
+ * after two taps and a drawer animation. It is also its own state readout —
+ * open eye for the app as designed, closed for neutral — so the bar says which
+ * mode you are in without being asked.
  *
  * The wordmark is the app's own board reduced to a mark rather than the word
  * "DOTS": the player already knows that shape from every screen, so it says the
@@ -47,6 +58,8 @@ export default function AppBar({
   subtitle,
   onOpenSettings,
   onOpenMenu,
+  incognito = false,
+  onToggleIncognito,
   title = "DOTS",
 }: AppBarProps) {
   return (
@@ -62,6 +75,17 @@ export default function AppBar({
       {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
 
       <div className={styles.controls}>
+        {/* Leads the row, furthest from the menu: it is the one control here
+            that changes something on the spot rather than opening a surface to
+            change it in, and a mis-tap that opens a sheet over the board is a
+            worse accident than one that doesn't. */}
+        <IconButton
+          icon="eye"
+          iconToggled="eye-off"
+          pressed={incognito}
+          onToggle={onToggleIncognito}
+          label={incognito ? "Show the app's colours" : "Hide the app's colours"}
+        />
         <IconButton
           icon="settings"
           label="Read-back settings"

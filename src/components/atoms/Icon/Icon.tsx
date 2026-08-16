@@ -14,6 +14,13 @@ export const ICON_NAMES = [
   "trash",
   "chevron-right",
   "chevron-down",
+  // Which way the money went on a round, and whether the app is showing its
+  // colours. Added in code ahead of the Figma set, which is the source this
+  // list mirrors — see the note above.
+  "arrow-up",
+  "arrow-down",
+  "eye",
+  "eye-off",
   "plus",
   "undo",
   "check",
@@ -65,6 +72,32 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
   "chevron-right": <path d="m9 18 6-6-6-6" />,
   "chevron-down": <path d="m6 9 6 6 6-6" />,
+  "arrow-up": (
+    <>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </>
+  ),
+  "arrow-down": (
+    <>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  "eye-off": (
+    <>
+      <path d="M10.73 5.08a10.74 10.74 0 0 1 11.2 6.57 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-1.44 2.49" />
+      <path d="M14.08 14.16a3 3 0 0 1-4.24-4.24" />
+      <path d="M17.48 17.5a10.75 10.75 0 0 1-15.42-5.15 1 1 0 0 1 0-.7 10.75 10.75 0 0 1 4.45-5.14" />
+      <path d="m2 2 20 20" />
+    </>
+  ),
   plus: (
     <>
       <path d="M5 12h14" />

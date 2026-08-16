@@ -1,15 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, fn, userEvent } from "storybook/test";
-import TimeResultsTemplate, {
+import SessionsTemplate, {
   type SessionView,
-} from "./TimeResultsTemplate";
+} from "./SessionsTemplate";
 
 const SESSIONS: SessionView[] = [
   {
     key: "1",
     title: "Session 2",
-    won: { amount: "$1,234.50", positive: true },
-    meta: "2 rounds · 0:03",
+    money: {
+      amount: "$1,234.50",
+      difference: { text: "+$2.50", direction: "up" },
+    },
+    meta: "3s · 2 rounds · $5 a round",
     isActive: true,
     rounds: [
       // Banked before round-level timing and before pads: it knows it was two
@@ -18,16 +21,17 @@ const SESSIONS: SessionView[] = [
         key: "b",
         label: "Round 2",
         elapsed: "—",
-        dots: [{ label: "Dot 1" }, { label: "Dot 2" }],
+        dots: [{ label: "—" }, { label: "—" }],
       },
       {
         key: "a",
         label: "Round 1",
-        elapsed: "0:02.4",
-        payout: "$0.25",
+        elapsed: "2s",
+        money: { amount: "$0.25", direction: "up" as const },
+        ended: { label: "Completed", tone: "success" as const },
         dots: [
-          { label: "Dot 1", color: 5 },
-          { label: "Dot 2", color: 1 },
+          { label: "5", color: 5 },
+          { label: "1", color: 1 },
         ],
       },
     ],
@@ -35,19 +39,20 @@ const SESSIONS: SessionView[] = [
   {
     key: "0",
     title: "Session 1",
-    won: { amount: "$0", positive: false },
-    meta: "3 rounds · 0:12",
+    // No stake recorded, so it can say what it won and not what it is worth.
+    money: { amount: "$0", label: "Won", positive: false },
+    meta: "12s · 3 rounds",
     isActive: false,
     rounds: [],
   },
 ];
 
 const meta = {
-  title: "Templates/TimeResultsTemplate",
-  component: TimeResultsTemplate,
+  title: "Templates/SessionsTemplate",
+  component: SessionsTemplate,
   parameters: { layout: "fullscreen" },
   args: { sessions: SESSIONS, onClear: fn() },
-} satisfies Meta<typeof TimeResultsTemplate>;
+} satisfies Meta<typeof SessionsTemplate>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

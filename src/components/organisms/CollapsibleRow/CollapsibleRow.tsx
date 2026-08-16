@@ -9,7 +9,7 @@ export interface CollapsibleRowProps {
   title: ReactNode;
   /** Right-aligned summary — a round count, a total time. */
   meta?: ReactNode;
-  /** Tints the meta green. Used for the round being played right now. */
+  /** Tints the meta green. */
   metaTone?: "default" | "success";
   /**
    * 0 is a session card — a raised, bordered surface.

@@ -1,0 +1,48 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  /* Tighter than a control's 32px on purpose: nothing here is aimed at, so the
+     44px touch minimum doesn't apply and the pill can sit inside a line of
+     text without pushing the row taller. */
+  height: 22px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font: var(--type-caption);
+  letter-spacing: var(--tracking-caption);
+  text-transform: uppercase;
+  /* Never wrapped or squeezed — it is one short word about the row, and half of
+     it on a second line says nothing. */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.neutral {
+  border-color: var(--sem-border-surface-strong);
+  background-color: var(--sem-bg-surface-raised);
+  color: var(--sem-text-secondary);
+}
+
+.success {
+  border-color: var(--sem-border-success);
+  background-color: var(--sem-bg-success);
+  color: var(--sem-text-success);
+}
+
+.warning {
+  border-color: var(--sem-border-warning);
+  background-color: var(--sem-bg-warning);
+  color: var(--sem-text-warning);
+}
+
+.danger {
+  border-color: var(--sem-border-danger);
+  background-color: var(--sem-bg-danger);
+  color: var(--sem-text-danger);
+}
+
+.info {
+  border-color: var(--sem-border-info);
+  background-color: var(--sem-bg-info);
+  color: var(--sem-text-info);
+}
