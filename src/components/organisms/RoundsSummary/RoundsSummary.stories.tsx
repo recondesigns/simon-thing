@@ -40,7 +40,7 @@ export const MostlyEndedEarly: Story = {
     await expect(all.map((s) => s.textContent)).toEqual(["5", "7", "1", "3"]);
     // The words survive only for assistive tech, which gets no colour.
     await expect(all.map((s) => s.getAttribute("aria-label"))).toEqual([
-      "5 ended early — distractions",
+      "5 ended early — distraction",
       "7 ended early — mistake",
       "1 ended early — won on the spin",
       "3 finished",

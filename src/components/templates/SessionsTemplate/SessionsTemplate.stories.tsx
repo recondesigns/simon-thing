@@ -27,7 +27,8 @@ const SESSIONS: SessionView[] = [
         key: "a",
         label: "Round 1",
         elapsed: "2s",
-        payout: "$0.25",
+        money: { amount: "$0.25", direction: "up" as const },
+        ended: { label: "Completed", tone: "success" as const },
         dots: [
           { label: "5", color: 5 },
           { label: "1", color: 1 },

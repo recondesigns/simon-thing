@@ -1,19 +1,13 @@
 "use client";
 
 import Button from "@/components/atoms/Button/Button";
+import Chip from "@/components/atoms/Chip/Chip";
+import Icon from "@/components/atoms/Icon/Icon";
 import CollapsibleRow from "@/components/organisms/CollapsibleRow/CollapsibleRow";
 import DataRow from "@/components/organisms/DataRow/DataRow";
 import EmptyState from "@/components/organisms/EmptyState/EmptyState";
 import type { GameColor } from "@/lib/theme/tokens";
 import styles from "./SessionsTemplate.module.css";
-
-/** The colour a round's ending reads in, keyed by tone. */
-const TONES = {
-  success: styles.endedSuccess,
-  warning: styles.endedWarning,
-  danger: styles.endedDanger,
-  info: styles.endedInfo,
-} as const;
 
 export interface DotView {
   /**
@@ -52,43 +46,36 @@ export interface RoundView {
    */
   elapsed: string;
   /**
-   * How the round ended, on the line its length would otherwise have taken —
-   * "Completed: 3m11s", "Ended: Mistake", "Ended: Spin won".
+   * How the round ended, as a chip at the far end of its row — "Completed",
+   * "Mistake", "Spin won".
    *
-   * It takes the line rather than sharing it because *how it ended* is the fact
-   * worth carrying, and the length of a round that was abandoned answers a
-   * question nobody asked. The whole line keeps the size and weight of the
-   * duration it replaces, in the body face its own label is set in; only the
-   * value is coloured, in the tone Insights counts that category in — green for
-   * a round carried to the cap, amber for distractions, red for a mistake, blue
-   * for a spin — so the same fact is the same colour on both surfaces.
+   * A chip rather than a labelled line because the word *is* the label: once it
+   * is set apart in its own pill and painted in the tone Insights counts that
+   * category in — green for a round carried to the cap, amber for a
+   * distraction, red for a mistake, blue for a spin — "Ended:" in front of it
+   * was saying what its position already said.
    *
-   * **Only a completed round keeps a figure, and it is its own duration**: the
-   * round that went the distance is the one whose length is worth reading. The
-   * others carry none — what a spin paid is the round's payout, on the right,
-   * and one row saying it twice would only invite the reader to check the two
-   * against each other.
+   * The round being played now carries one too, reading "In progress", so the
+   * far end of every round's row answers the same question.
    *
-   * Absent for a round with nothing to say but its length: the one in progress,
-   * and any banked before endings were recorded.
+   * Absent only for a round that can't say: anything banked before endings were
+   * recorded.
    */
-  ended?: {
-    label: string;
-    value: string;
-    tone: "success" | "warning" | "danger" | "info";
-  };
+  ended?: { label: string; tone: "success" | "warning" | "danger" | "info" };
   /**
-   * What the round did to the balance, right-aligned and signed — "+$0.25",
-   * "−$5". Every round of a visit that recorded a stake has one, because every
-   * round costs the bet whether or not it pays anything back.
+   * What the machine paid or took, beside the round's name.
    *
-   * Absent only on a visit with no stake recorded, where the bet is unknown and
-   * so is the cost: those show the machine's payout on the rounds that paid,
-   * and nothing at all on the rest.
+   * `direction` carries the sign — an arrow up for money in, down for money out
+   * — so the amount itself is unsigned. An arrow reads across a list faster
+   * than a leading minus, which at this size is a hyphen's worth of pixels
+   * doing the most important job in the row.
+   *
+   * Every round of a visit that recorded a stake has one, because every round
+   * costs the bet whether or not it pays anything back. Absent only on a visit
+   * with no stake recorded, where the bet is unknown and so is the cost: those
+   * show the machine's payout on the rounds that paid, and nothing on the rest.
    */
-  payout?: string;
-  /** Green for money made, red for money gone. */
-  payoutTone?: "default" | "success" | "danger";
+  money?: { amount: string; direction: "up" | "down" };
   dots: DotView[];
   /** The round being played right now. */
   live?: boolean;
@@ -222,38 +209,51 @@ export default function SessionsTemplate({
               key={round.key}
               level={1}
               defaultOpen={round.live}
-              meta={round.payout}
-              metaTone={round.payoutTone ?? "success"}
               title={
                 <span className={styles.roundTitle}>
-                  {round.live ? (
-                    <span className={styles.liveTitle}>
-                      <span className={styles.pulse} aria-hidden="true" />
+                  {/* Name and money to the left, the ending chip hard right. No
+                      fixed gap between them: what the row is about and how it
+                      turned out are read from opposite ends, so they are pushed
+                      apart rather than spaced. */}
+                  <span className={styles.roundHead}>
+                    <span className={styles.roundName}>
+                      {round.live && (
+                        <span className={styles.pulse} aria-hidden="true" />
+                      )}
                       {round.label}
-                      <span className={styles.inProgress}>In progress</span>
+                      {round.money && (
+                        <>
+                          {/* The same separator the session's own summary uses
+                              — two facts on one line, not a label and a value. */}
+                          <span className={styles.roundDot} aria-hidden="true">
+                            ·
+                          </span>
+                          <span
+                            className={
+                              round.money.direction === "up"
+                                ? styles.moneyUp
+                                : styles.moneyDown
+                            }
+                          >
+                            <Icon
+                              name={
+                                round.money.direction === "up"
+                                  ? "arrow-up"
+                                  : "arrow-down"
+                              }
+                              size={13}
+                              className={styles.moneyArrow}
+                            />
+                            {round.money.amount}
+                          </span>
+                        </>
+                      )}
                     </span>
-                  ) : (
-                    <span>{round.label}</span>
-                  )}
-                  <span
-                    className={[
-                      styles.roundMeta,
-                      round.ended && styles.roundMetaWords,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    {round.ended ? (
-                      <>
-                        {round.ended.label}:{" "}
-                        <span className={TONES[round.ended.tone]}>
-                          {round.ended.value}
-                        </span>
-                      </>
-                    ) : (
-                      round.elapsed
+                    {round.ended && (
+                      <Chip tone={round.ended.tone}>{round.ended.label}</Chip>
                     )}
                   </span>
+                  <span className={styles.roundMeta}>{round.elapsed}</span>
                 </span>
               }
             >

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Select from "./Select";
 
 const OPTIONS = [
-  { value: "distractions", label: "Distractions" },
+  { value: "distractions", label: "Distraction" },
   { value: "mistake", label: "Mistake" },
 ];
 

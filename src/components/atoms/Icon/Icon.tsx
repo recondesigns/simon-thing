@@ -14,6 +14,10 @@ export const ICON_NAMES = [
   "trash",
   "chevron-right",
   "chevron-down",
+  // Which way the money went on a round. Added in code ahead of the Figma set,
+  // which is the source this list mirrors — see the note on `ICON_NAMES`.
+  "arrow-up",
+  "arrow-down",
   "plus",
   "undo",
   "check",
@@ -65,6 +69,18 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
   "chevron-right": <path d="m9 18 6-6-6-6" />,
   "chevron-down": <path d="m6 9 6 6 6-6" />,
+  "arrow-up": (
+    <>
+      <path d="M12 19V5" />
+      <path d="m5 12 7-7 7 7" />
+    </>
+  ),
+  "arrow-down": (
+    <>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </>
+  ),
   plus: (
     <>
       <path d="M5 12h14" />

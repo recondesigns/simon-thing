@@ -173,7 +173,10 @@ export const ENDED_REASON_OPTIONS: {
    */
   tone: "warning" | "danger";
 }[] = [
-  { value: "distractions", label: "Distractions", tone: "warning" },
+  // The label reads singular; the stored value stays plural, because it is a
+  // persisted key and every round already banked carries it. They are allowed
+  // to differ — the value is an identity, the label is what a player reads.
+  { value: "distractions", label: "Distraction", tone: "warning" },
   { value: "mistake", label: "Mistake", tone: "danger" },
 ];
 

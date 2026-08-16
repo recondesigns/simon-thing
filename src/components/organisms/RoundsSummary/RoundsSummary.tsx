@@ -55,7 +55,7 @@ export default function RoundsSummary({ totals }: RoundsSummaryProps) {
           {
             value: early.distractions,
             tone: "warning",
-            label: "ended early — distractions",
+            label: "ended early — distraction",
             icon: <Icon name="bell" size={14} />,
           },
           {

@@ -79,38 +79,35 @@ const money = (
 };
 
 /**
- * How a round ended, for the line its length would otherwise have taken, or
- * undefined when the bare length is all there is to say.
+ * How a round ended, for the chip at the end of its row, or undefined when it
+ * can't say — anything banked before endings were recorded.
  *
- * Every ending reads the same way — a label, then how — including a spin win,
- * which is a way for a round to be over like any other. **Only the completed
- * round keeps a figure here**, and it is its own duration: a round that went the
- * distance is the one whose length is worth reading, so the label names the
- * outcome and the time stays where it was. The others carry no figures at all —
- * what a spin paid is already the round's payout on the right, and saying it
- * twice on one row would only invite the reader to check them against each
- * other.
+ * One word each, because the chip's position is the question and the word is
+ * the answer. A spin win is a way for a round to be over like any other and
+ * carries no figure here: what the spin paid is already beside the round's
+ * name, and one row saying it twice would only invite the reader to check the
+ * two against each other.
  */
 const ending = (
   round: Round,
-  elapsed: string,
+  live: boolean,
 ):
-  | {
-      label: string;
-      value: string;
-      tone: "success" | "warning" | "danger" | "info";
-    }
+  | { label: string; tone: "success" | "warning" | "danger" | "info" }
   | undefined => {
+  // The round being played hasn't ended, but the chip answers "where is this
+  // round up to", and "still going" is an answer. Green because it is the one
+  // round that can still reach the cap.
+  if (live) return { label: "In progress", tone: "success" };
   if (round.dots >= ROUND_CAP) {
     // Green for the same reason Insights counts it green: reaching the cap is
     // the one outcome that isn't something going wrong.
-    return { label: "Completed", value: elapsed, tone: "success" };
+    return { label: "Completed", tone: "success" };
   }
   if (round.endedReason === "spin") {
     // Blue rather than the green money usually takes here, because this is the
     // colour Insights counts spin wins in: neither a success at the pattern nor
     // a failure of it. See `RoundsSummary`.
-    return { label: "Ended", value: "Spin won", tone: "info" };
+    return { label: "Spin won", tone: "info" };
   }
   const reason = ENDED_REASON_OPTIONS.find(
     (o) => o.value === round.endedReason,
@@ -118,7 +115,7 @@ const ending = (
   return reason
     ? // The tone travels with the reason rather than being decided here, so
       // this reads in the same colour Insights counts it in.
-      { label: "Ended", value: reason.label, tone: reason.tone }
+      { label: reason.label, tone: reason.tone }
     : undefined;
 };
 
@@ -249,24 +246,27 @@ export default function SessionsPage() {
             session.stake === undefined
               ? (completed ? COMPLETED_ROUND_PAYOUT : 0) + (round.spinWon ?? 0)
               : roundReturn(round, session.stake.denomination);
-          const payout =
+          //
+          // Unsigned either way: the arrow beside it says which direction the
+          // money went, and a minus in front of an arrow would be saying it
+          // twice.
+          const money =
             returned > 0
-              ? formatMoney(returned)
+              ? { amount: formatMoney(returned), direction: "up" as const }
               : session.stake === undefined
                 ? undefined
-                : // Signed, unlike the payout: the minus is the whole message,
-                  // and this figure is the one round in the list to be sorry
-                  // about.
-                  formatSignedMoney(-session.stake.denomination);
-          const payoutTone = returned > 0 ? ("success" as const) : ("danger" as const);
+                : {
+                    amount: formatMoney(session.stake.denomination),
+                    direction: "down" as const,
+                  };
+          const live = roundIndex === liveIndex;
           return {
             key: String(roundIndex),
             label: `Round ${roundIndex + 1}`,
             elapsed,
-            ended: ending(round, elapsed),
-            payout,
-            payoutTone,
-            live: roundIndex === liveIndex,
+            ended: ending(round, live),
+            money,
+            live,
             dots: Array.from({ length: round.dots }, (_, dotIndex) => {
               const pad = round.pads[dotIndex];
               // The pad's own number on the grid, which is the same value the
