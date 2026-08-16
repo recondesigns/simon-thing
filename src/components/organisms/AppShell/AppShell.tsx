@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AppBar from "@/components/organisms/AppBar/AppBar";
 import MenuSheet from "@/components/organisms/MenuSheet/MenuSheet";
@@ -49,10 +49,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const sessions = useGameStore((state) => state.sessions);
   const started = useGameStore((state) => state.startedAt !== null);
   const speechEnabled = useGameStore((state) => state.speechEnabled);
+  const incognito = useGameStore((state) => state.incognito);
   const cadence = useGameStore((state) => state.cadence);
   const groupSize = useGameStore((state) => state.groupSize);
   const groupGapMs = useGameStore((state) => state.groupGapMs);
   const toggleSpeech = useGameStore((state) => state.toggleSpeech);
+  const toggleIncognito = useGameStore((state) => state.toggleIncognito);
   const setCadence = useGameStore((state) => state.setCadence);
   const setGroupSize = useGameStore((state) => state.setGroupSize);
   const setGroupGapMs = useGameStore((state) => state.setGroupGapMs);
@@ -62,6 +64,31 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const stakePromptOpen = useGameStore((state) => state.stakePromptOpen);
   const setStake = useGameStore((state) => state.setStake);
   const skipStake = useGameStore((state) => state.skipStake);
+
+  /*
+   * The neutral palette is a scope on `<body>` — see `globals.css`. It goes
+   * there rather than on the element below because MUI portals every sheet and
+   * drawer to `document.body`, outside this tree entirely, and a mode that
+   * skipped all four of them would be a mode with holes in it.
+   *
+   * An effect because `<body>` is outside React's tree: this is syncing an
+   * external system, not deriving state. Nothing cleans up on unmount — the
+   * shell wraps every route and only leaves when the document does.
+   */
+  useEffect(() => {
+    const { body } = document;
+    // Transitions off across the swap, then back the next frame — see the note
+    // in `globals.css`. Without it the pads keep painting the palette they had.
+    body.setAttribute("data-palette-swap", "");
+    if (incognito) body.setAttribute("data-incognito", "");
+    else body.removeAttribute("data-incognito");
+    // Forces the recalculation that repaints them, while nothing can animate.
+    void body.offsetHeight;
+    const frame = requestAnimationFrame(() =>
+      body.removeAttribute("data-palette-swap"),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [incognito]);
 
   const onBoard = pathname === BOARD_PATH;
   const onSessions = pathname === SESSIONS_PATH;
@@ -104,6 +131,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
           subtitle={subtitle}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenMenu={() => setMenuOpen(true)}
+          incognito={incognito}
+          onToggleIncognito={toggleIncognito}
         />
       </div>
 
@@ -159,6 +188,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 checked={speechEnabled}
                 onChange={toggleSpeech}
                 label="Read the pattern back aloud"
+              />
+            </div>
+
+            {/* Beside Sound rather than in the gear, by the same rule that put
+                Sound here: the gear is for what you adjust mid-round at the
+                machine, and this is set once and left. */}
+            <div className={styles.settingRow}>
+              <span className={styles.settingLabel}>Incognito</span>
+              <Switch
+                checked={incognito}
+                onChange={toggleIncognito}
+                label="Paint the app in neutrals, with no colour anywhere"
               />
             </div>
 
