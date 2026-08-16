@@ -65,10 +65,10 @@ export const ControlledStaysPut: Story = {
 
 /** The round being played right now. */
 export const SuccessMeta: Story = {
-  args: { level: 1, title: "Round 7", meta: "0:08.4", metaTone: "success" },
+  args: { level: 1, title: "Round 7", meta: "8s", metaTone: "success" },
   play: async ({ canvasElement }) => {
     const spans = [...canvasElement.querySelectorAll("span")];
-    const meta = spans.find((s) => s.textContent === "0:08.4")!;
+    const meta = spans.find((s) => s.textContent === "8s")!;
     // text/success (#7FE0A8).
     await expect(getComputedStyle(meta).color).toBe("rgb(127, 224, 168)");
   },

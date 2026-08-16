@@ -32,11 +32,17 @@ export interface HomeTemplateProps {
   onTap?: (index: number) => void;
   onPrimary?: () => void;
   /**
-   * Logs a spin win, then asks what it paid. Never disabled: a spin can pay out
-   * before the player has started anything, and that win is still worth
-   * recording.
+   * Logs a spin win, then asks what it paid. Live before Start as well as
+   * during an untouched round: a spin can pay out before the player has started
+   * anything, and that win is still worth recording.
    */
   onSpinWin?: () => void;
+  /**
+   * Shut off once the round has a dot in it. Winning on the spin means there
+   * was no pattern to copy, so a round with dots in it is not one — the button
+   * would bank the taps as a spin win and quietly throw away what they were.
+   */
+  spinWinDisabled?: boolean;
   /** The "what did the spin pay?" sheet, opened after that round is banked. */
   spinWinOpen?: boolean;
   onSpinWinSave?: (amount: number) => void;
@@ -82,6 +88,7 @@ export default function HomeTemplate({
   onTap,
   onPrimary,
   onSpinWin,
+  spinWinDisabled = false,
   spinWinOpen = false,
   onSpinWinSave,
   onSpinWinSkip,
@@ -134,6 +141,7 @@ export default function HomeTemplate({
             variant="raised"
             className={styles.iconControl}
             label="Log a spin win"
+            disabled={spinWinDisabled}
             onClick={onSpinWin}
           />
         </div>

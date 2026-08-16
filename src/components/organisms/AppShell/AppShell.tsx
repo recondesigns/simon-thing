@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import AppBar from "@/components/organisms/AppBar/AppBar";
 import MenuSheet from "@/components/organisms/MenuSheet/MenuSheet";
+import StakeSheet from "@/components/organisms/StakeSheet/StakeSheet";
 import Button from "@/components/atoms/Button/Button";
 import Switch from "@/components/atoms/Switch/Switch";
 import SegmentedControl from "@/components/atoms/SegmentedControl/SegmentedControl";
@@ -22,7 +23,7 @@ import {
 import styles from "./AppShell.module.css";
 
 const BOARD_PATH = "/";
-const TIMES_PATH = "/time-results";
+const SESSIONS_PATH = "/sessions";
 const INSIGHTS_PATH = "/insights";
 
 /** Mirrors the slider's own `valueLabelFormat` for the at-rest readout beside it. */
@@ -58,9 +59,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const newSession = useGameStore((state) => state.newSession);
   const discardRound = useGameStore((state) => state.discardRound);
   const resetApp = useGameStore((state) => state.resetApp);
+  const stakePromptOpen = useGameStore((state) => state.stakePromptOpen);
+  const setStake = useGameStore((state) => state.setStake);
+  const skipStake = useGameStore((state) => state.skipStake);
 
   const onBoard = pathname === BOARD_PATH;
-  const onTimes = pathname === TIMES_PATH;
+  const onSessions = pathname === SESSIONS_PATH;
   const onInsights = pathname === INSIGHTS_PATH;
 
   // The open visit, and which number it is. Only sessions with a start time are
@@ -74,8 +78,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   const subtitle = onInsights
     ? "Insights"
-    : onTimes
-      ? "Times"
+    : onSessions
+      ? "Sessions"
       : started
       ? `Round ${roundNumber}`
       : `Session ${sessionNumber}`;
@@ -123,9 +127,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           },
           {
             icon: "chevron-right" as const,
-            label: "Times",
-            disabled: onTimes,
-            onSelect: run(() => router.push(TIMES_PATH)),
+            label: "Sessions",
+            disabled: onSessions,
+            onSelect: run(() => router.push(SESSIONS_PATH)),
           },
           {
             icon: "chevron-right" as const,
@@ -232,6 +236,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         }
+      />
+
+      {/* Lives in the shell rather than on the board because both the things
+          that open it do: New session is in the menu above, and the first Start
+          of a visit sets the same flag from inside the store. One instance, two
+          triggers, and no route has to know about it. */}
+      <StakeSheet
+        open={stakePromptOpen}
+        onSave={setStake}
+        onSkip={skipStake}
       />
     </div>
   );

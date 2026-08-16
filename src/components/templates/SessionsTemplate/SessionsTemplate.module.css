@@ -45,7 +45,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-2) 0;
+  padding: var(--space-4) 0;
 }
 
 /*
@@ -57,7 +57,17 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-3);
+  /* Row gap first: the 24px that separates the two *columns* is far too much
+     air between them once they stack, and `gap` would otherwise apply it in
+     both directions. */
+  gap: var(--space-1) var(--space-3);
+  /* The figures drop to their own line rather than being clipped. A balance
+     and its swing can both run to four figures at once — "$2,229.50 /
+     +$1,229.50" overruns the 400px column by about 10px beside even a short
+     name — and the money block can't shrink, since it is one unbroken number
+     either side of a slash. Wrapping costs a line on the visits that need it
+     and nothing on the ones that don't. */
+  flex-wrap: wrap;
 }
 
 .sessionName {
@@ -78,6 +88,9 @@
   /* Never squeezed by a long name — it is the shorter, harder fact. */
   white-space: nowrap;
   flex-shrink: 0;
+  /* Holds it against the right edge on the line it lands on, wrapped or not —
+     `space-between` alone only aligns it while it shares a line with the name. */
+  margin-left: auto;
 }
 
 .wonLabel {
@@ -96,6 +109,17 @@
  */
 .wonPositive {
   color: var(--sem-text-success);
+}
+
+/* The same argument in the other direction, and the same reason it is the
+   bright danger *text* rather than the tinted danger surface. */
+.wonNegative {
+  color: var(--sem-text-danger);
+}
+
+/* Quieter than either figure it separates — it is punctuation, not a value. */
+.wonSlash {
+  color: var(--sem-text-secondary);
 }
 
 /*
@@ -117,7 +141,66 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-1) 0;
+  padding: var(--space-4) 0;
+}
+
+/*
+ * Name and money at one end, the ending chip at the other. `space-between`
+ * rather than a gap, for the same reason the session heading uses one: the two
+ * halves are read from opposite edges, and a fixed gap would let them drift
+ * towards the middle on a short round name.
+ */
+.roundHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/*
+ * The name and, beside it, what the round paid or cost. `min-width: 0` so the
+ * pair gives way before the chip does — the chip is one short word and can't be
+ * usefully squeezed, while this can.
+ */
+.roundName {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Punctuation between two facts, not a label — same weight the session's own
+   summary gives it. */
+.roundDot {
+  color: var(--sem-text-secondary);
+}
+
+/*
+ * The money, in the numeral face so a column of amounts lines up down the
+ * session. The arrow carries the sign, so nothing here is signed.
+ */
+.moneyUp,
+.moneyDown {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font: var(--type-numeral-sm);
+  white-space: nowrap;
+}
+
+.moneyUp {
+  color: var(--sem-text-success);
+}
+
+.moneyDown {
+  color: var(--sem-text-danger);
+}
+
+/* Optically centred against the digits rather than the line box: the arrow is
+   drawn to the full 24px em square while a numeral only fills the middle of
+   it. */
+.moneyArrow {
+  margin-top: -1px;
 }
 
 /* Quieter than the label above it, in the numeral face so a ticking live round
@@ -127,26 +210,16 @@
   color: var(--sem-text-secondary);
 }
 
-.liveTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
+/* Marks the round being played, beside its name. The chip at the other end of
+   the row says so in words; this is what catches the eye on the way past. */
 .pulse {
+  flex-shrink: 0;
   width: 8px;
   height: 8px;
   border-radius: var(--radius-round);
   background-color: var(--sem-text-success);
   box-shadow: 0 0 8px var(--sem-text-success);
   animation: dots-breathe var(--dur-pulse) var(--ease-in-out) infinite;
-}
-
-.inProgress {
-  font: var(--type-caption);
-  letter-spacing: var(--tracking-caption);
-  text-transform: uppercase;
-  color: var(--sem-text-success);
 }
 
 /*

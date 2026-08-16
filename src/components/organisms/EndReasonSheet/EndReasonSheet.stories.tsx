@@ -3,7 +3,7 @@ import { expect, fn, userEvent } from "storybook/test";
 import EndReasonSheet from "./EndReasonSheet";
 
 const OPTIONS = [
-  { value: "distractions", label: "Distractions" },
+  { value: "distractions", label: "Distraction" },
   { value: "mistake", label: "Mistake" },
 ];
 

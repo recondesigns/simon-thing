@@ -32,8 +32,13 @@
   transition: background-color var(--dur-tap) var(--ease-out);
 }
 
+/* Wider gutters than a round's, matching the extra air the session heading
+   itself takes: the card is the outer surface and its contents shouldn't sit
+   against the edge. A round is already inset by the card's own body padding,
+   so it keeps the tighter 12px. */
 .session > .header {
   min-height: 56px;
+  padding: 0 var(--space-5);
 }
 
 .round > .header {

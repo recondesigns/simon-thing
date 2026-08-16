@@ -43,23 +43,60 @@
   color: var(--sem-text-disabled);
 }
 
-/* Square, as the frame draws them. There is no radius token below 10px, and a
-   10px radius on a 6px bar would erase the bar. */
+/*
+ * Square, as the frame draws them. There is no radius token below 10px, and a
+ * 10px radius on a 6px bar would erase the bar.
+ *
+ * `column-reverse` stacks the parts from the bottom, so a column reads bottom
+ * to top in the order the split bar above reads left to right. The cream is
+ * what shows through a column with no rounds in it — every stub on the axis.
+ */
 .bar {
+  display: flex;
+  flex-direction: column-reverse;
   width: 100%;
   height: var(--bar-height);
   background-color: var(--sem-text-primary);
 }
 
+/* Sized by `flex-grow` alone, so the parts divide exactly the height the
+   column was given however the counts fall. */
+.part {
+  flex-basis: 0;
+  min-height: 0;
+  width: 100%;
+}
+
 /*
- * The 20 column is the one outcome that isn't a round lost, so it is the one
- * that reads in the success colour rather than the neutral cream. It marks the
- * cap, not a high score.
+ * The categories, in the same colours the bar above counts them in. `neutral`
+ * is a round banked before reasons were recorded and keeps the plain cream
+ * every column used to be — the colours only ever add to what was there.
  */
-.cap .bar {
+.danger {
+  background-color: var(--sem-text-danger);
+}
+
+.warning {
+  background-color: var(--sem-text-warning);
+}
+
+.info {
+  background-color: var(--sem-text-info);
+}
+
+.success {
   background-color: var(--sem-text-success);
 }
 
+.neutral {
+  background-color: var(--sem-text-primary);
+}
+
+/*
+ * The 20 column is the one outcome that isn't a round lost, and the `$` column
+ * is the one that was never played, so both label their axis in their own
+ * colour. The bars themselves are painted by their parts.
+ */
 .cap .count {
   color: var(--sem-text-success);
 }
@@ -81,4 +118,8 @@
 
 .capLabel {
   color: var(--sem-text-success);
+}
+
+.spinLabel {
+  color: var(--sem-text-info);
 }

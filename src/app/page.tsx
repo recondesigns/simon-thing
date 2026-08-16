@@ -264,7 +264,7 @@ export default function Home() {
 
   // How many taps this mount has already reacted to. Null until the first effect
   // run, which lets us tell a genuinely new tap from a pattern that was already
-  // on screen when the page (re)mounted — e.g. after coming back from Times.
+  // on screen when the page (re)mounted — e.g. after coming back from Sessions.
   const handledCount = useRef<number | null>(null);
 
   // Read the pattern back after a *new* tap, and release the one-tap-per-round
@@ -404,6 +404,10 @@ export default function Home() {
       onTap={handleTap}
       onPrimary={handlePrimary}
       onSpinWin={handleSpinWin}
+      // Off from the first pad press. A spin win is a round that never needed
+      // playing, so once one has been played the button is describing a
+      // different round than the one on screen.
+      spinWinDisabled={taps.length > 0}
       spinWinOpen={askingSpinAmount}
       onSpinWinSave={handleSpinAmountSave}
       onSpinWinSkip={handleSpinAmountSkip}

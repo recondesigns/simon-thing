@@ -37,16 +37,16 @@ export const MostlyEndedEarly: Story = {
     // never sorted by size.
     const all = segments(canvasElement);
     // Worst outcome first, building towards the green at the right-hand end.
-    await expect(all.map((s) => s.textContent)).toEqual(["5", "7", "1", "3"]);
+    await expect(all.map((s) => s.textContent)).toEqual(["7", "5", "1", "3"]);
     // The words survive only for assistive tech, which gets no colour.
     await expect(all.map((s) => s.getAttribute("aria-label"))).toEqual([
-      "5 ended early — distractions",
       "7 ended early — mistake",
+      "5 ended early — distraction",
       "1 ended early — won on the spin",
       "3 finished",
     ]);
 
-    const [distracted, mistake, spin, finished] = all;
+    const [mistake, distracted, spin, finished] = all;
     await expect(getComputedStyle(finished).backgroundColor).toBe(
       "rgb(127, 224, 168)", // text/success — reached the cap
     );
@@ -76,8 +76,9 @@ export const WidthsMatchTheCounts: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    // Distractions first, finished last — 5 against 10.
-    const [distracted, , , finished] = segments(canvasElement).map(
+    // Second in the bar and finished last — 5 against 10. Mistake leads the
+    // order and is zero here, so it draws nothing.
+    const [, distracted, , finished] = segments(canvasElement).map(
       (s) => s.getBoundingClientRect().width,
     );
     await expect(Math.round((finished / distracted) * 10) / 10).toBe(2);
